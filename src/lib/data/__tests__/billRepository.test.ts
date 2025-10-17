@@ -8,6 +8,11 @@ import {
   getAllBills,
   updateBillStatus,
   deleteBill,
+  restoreBill,
+  getDeletedBills,
+  cleanupOldDeletedBills,
+  restoreBillsBatch,
+  deleteBillsBatch,
   updateParticipantStatus,
   getBillStatistics,
   searchBills,
@@ -206,6 +211,123 @@ describe('Bill Repository', () => {
         expect.stringContaining('UPDATE bills SET status'),
         [BillStatus.DELETED, expect.any(Number), expect.any(Number), 'bill-1']
       );
+    });
+  });
+
+  describe('restoreBill', () => {
+    it('should restore soft-deleted bill', async () => {
+      await restoreBill('bill-1');
+
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE bills SET status'),
+        [BillStatus.ACTIVE, expect.any(Number), 'bill-1', BillStatus.DELETED]
+      );
+    });
+  });
+
+  describe('getDeletedBills', () => {
+    it('should retrieve all soft-deleted bills', async () => {
+      mockDb.getAllAsync
+        .mockResolvedValueOnce([
+          {
+            id: 'bill-1',
+            title: 'Deleted Bill',
+            total_amount_paise: 100000,
+            created_at: Date.now(),
+            updated_at: Date.now(),
+            status: 'DELETED',
+            deleted_at: Date.now(),
+          },
+        ])
+        .mockResolvedValueOnce([]);
+
+      const result = await getDeletedBills();
+
+      expect(mockDb.getAllAsync).toHaveBeenCalledWith(
+        expect.stringContaining('WHERE status = ?'),
+        [BillStatus.DELETED]
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].status).toBe(BillStatus.DELETED);
+    });
+  });
+
+  describe('cleanupOldDeletedBills', () => {
+    it('should permanently delete bills older than specified days', async () => {
+      mockDb.getAllAsync.mockResolvedValueOnce([
+        { id: 'bill-1' },
+        { id: 'bill-2' },
+      ]);
+
+      const result = await cleanupOldDeletedBills(30);
+
+      expect(result).toBe(2);
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        'DELETE FROM participants WHERE bill_id = ?',
+        expect.any(Array)
+      );
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        'DELETE FROM bills WHERE id = ?',
+        expect.any(Array)
+      );
+    });
+
+    it('should use default 30 days if not specified', async () => {
+      mockDb.getAllAsync.mockResolvedValueOnce([]);
+
+      const result = await cleanupOldDeletedBills();
+
+      expect(result).toBe(0);
+      expect(mockDb.getAllAsync).toHaveBeenCalledWith(
+        expect.any(String),
+        [BillStatus.DELETED, expect.any(Number)]
+      );
+    });
+  });
+
+  describe('restoreBillsBatch', () => {
+    it('should restore multiple bills in a transaction', async () => {
+      mockDb.runAsync.mockResolvedValue({ changes: 1 });
+
+      const result = await restoreBillsBatch(['bill-1', 'bill-2', 'bill-3']);
+
+      expect(result).toBe(3);
+      expect(mockDb.withTransactionAsync).toHaveBeenCalled();
+      expect(mockDb.runAsync).toHaveBeenCalledTimes(3);
+    });
+
+    it('should only count successfully restored bills', async () => {
+      mockDb.runAsync
+        .mockResolvedValueOnce({ changes: 1 })
+        .mockResolvedValueOnce({ changes: 0 }) // Already restored or doesn't exist
+        .mockResolvedValueOnce({ changes: 1 });
+
+      const result = await restoreBillsBatch(['bill-1', 'bill-2', 'bill-3']);
+
+      expect(result).toBe(2);
+    });
+  });
+
+  describe('deleteBillsBatch', () => {
+    it('should delete multiple bills in a transaction', async () => {
+      mockDb.runAsync.mockResolvedValue({ changes: 1 });
+
+      const result = await deleteBillsBatch(['bill-1', 'bill-2', 'bill-3']);
+
+      expect(result).toBe(3);
+      expect(mockDb.withTransactionAsync).toHaveBeenCalled();
+      expect(mockDb.runAsync).toHaveBeenCalledTimes(3);
+    });
+
+    it('should only count successfully deleted bills', async () => {
+      mockDb.runAsync
+        .mockResolvedValueOnce({ changes: 1 })
+        .mockResolvedValueOnce({ changes: 0 }) // Already deleted
+        .mockResolvedValueOnce({ changes: 1 });
+
+      const result = await deleteBillsBatch(['bill-1', 'bill-2', 'bill-3']);
+
+      expect(result).toBe(2);
     });
   });
 

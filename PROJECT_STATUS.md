@@ -1,7 +1,7 @@
 # Vasooly - Project Status
 
 **Last Updated**: 2025-10-17
-**Phase**: Week 1 - Day 1-4 Complete ✅
+**Phase**: Week 1 - Day 1-5 Complete ✅
 
 ## ✅ Day 1-2: Project Initialization - COMPLETE
 
@@ -134,9 +134,58 @@ Coverage:    100% on critical paths
 - 📊 Foreign key constraints (data integrity)
 - 🔄 Transaction-safe operations
 
-## 📋 Next Steps - Week 1 Day 5-7
+## ✅ Day 5: Soft Delete Enhancement - COMPLETE
 
-### Day 5-7: UPI Integration
+### Advanced Soft Delete Features ✅
+- ✅ Restore functionality for soft-deleted bills
+- ✅ Query deleted bills for recovery UI (`getDeletedBills`)
+- ✅ Auto-cleanup for old deleted records (configurable retention)
+- ✅ Batch operations for bulk delete/restore
+- ✅ 8 additional tests (41 total passing)
+- ✅ Comprehensive soft delete guide documentation
+
+### Features Implemented
+**Core Recovery**:
+- `restoreBill()` - Undelete bills back to ACTIVE status
+- `getDeletedBills()` - Query all soft-deleted bills for trash UI
+- `cleanupOldDeletedBills(days)` - Auto-cleanup with configurable retention (default: 30 days)
+
+**Batch Operations**:
+- `restoreBillsBatch(ids)` - Bulk restore with transaction safety
+- `deleteBillsBatch(ids)` - Bulk soft delete with transaction safety
+- Returns count of successfully processed bills
+
+**Documentation**:
+- `docs/SOFT_DELETE_GUIDE.md` - Complete implementation guide
+- API reference with usage patterns
+- UI implementation examples (trash screen, undo, bulk selection)
+- Best practices and troubleshooting
+
+### Test Results
+```
+Test Suites: 4 passed, 4 total
+Tests:       41 passed, 41 total (19 data layer, 9 encryption, 10 business, 3 other)
+Coverage:    100% on critical paths
+```
+
+### Usage Example
+```typescript
+// Trash screen with restore
+const deletedBills = await getDeletedBills();
+
+// Undo delete
+await restoreBill(billId);
+
+// Bulk restore
+await restoreBillsBatch(['bill-1', 'bill-2', 'bill-3']);
+
+// Auto-cleanup (30+ days old)
+await cleanupOldDeletedBills(30);
+```
+
+## 📋 Next Steps - Week 1 Day 6-7
+
+### Day 6-7: UPI Integration
 - [ ] Implement UPI link generator
 - [ ] Add fallback URIs for different apps
 - [ ] Create QR code generation
@@ -174,10 +223,11 @@ npm run lint:fix        # Auto-fix issues
 
 ## 📊 Project Metrics
 
-**Timeline**: 18 weeks total, 4/126 days complete (3.2%)
-**Files Created**: 30+ configuration and source files
-**Lines of Code**: ~2000 (including tests, config, and documentation)
+**Timeline**: 18 weeks total, 5/126 days complete (4.0%)
+**Files Created**: 31 configuration, source, and documentation files
+**Lines of Code**: ~2500 (including tests, config, and documentation)
 **Test Coverage**: 100% on business logic and data layer
+**Tests**: 41 passing tests across 4 suites
 **Dependencies**: 50+ packages installed
 
 ## ⚠️ Known Issues
@@ -186,7 +236,7 @@ None! All systems operational ✅
 
 ## 🎯 Success Criteria Met
 
-Day 1-4 Checklist:
+Week 1 Checklist:
 - [x] React Native project initialized
 - [x] All dependencies installed
 - [x] TypeScript configured
@@ -198,7 +248,11 @@ Day 1-4 Checklist:
 - [x] Secure key management with OS Keychain
 - [x] Complete data access layer
 - [x] Migration system with rollback
-- [x] 33 passing tests (100% coverage)
+- [x] Soft delete with restore functionality
+- [x] Batch operations for bulk actions
+- [x] Auto-cleanup with retention policies
+- [x] 41 passing tests (100% coverage)
 - [x] All quality checks passing
+- [x] Comprehensive documentation
 
-**Status**: ✅ Day 3-4 Complete - Ready for Day 5-7 (UPI Integration)
+**Status**: ✅ Day 5 Complete - Ready for Day 6-7 (UPI Integration)
