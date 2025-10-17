@@ -9,7 +9,7 @@
  */
 
 import { Linking, Platform } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
+import * as Device from 'expo-device';
 import { UPIApp, UPILinkResult } from '../business/upiGenerator';
 
 /**
@@ -95,8 +95,8 @@ export function getCurrentDevice(): TestDevice {
   return {
     os: Platform.OS === 'ios' ? 'iOS' : 'Android',
     version: Platform.Version.toString(),
-    model: DeviceInfo.getModel(),
-    manufacturer: DeviceInfo.getManufacturerSync(),
+    model: Device.modelName || Device.deviceName || 'Unknown Device',
+    manufacturer: Device.manufacturer || undefined,
   };
 }
 
