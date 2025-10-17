@@ -39,3 +39,14 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Testing
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+temp/
+vasooly_backup/
