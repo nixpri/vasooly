@@ -97,6 +97,40 @@ export async function createBill(bill: Bill): Promise<void> {
 }
 
 /**
+ * Updates an existing bill with participants in a transaction
+ */
+export async function updateBill(bill: Bill): Promise<void> {
+  const db = getDatabase();
+
+  await db.withTransactionAsync(async () => {
+    // Update bill
+    await db.runAsync(
+      `UPDATE bills SET title = ?, total_amount_paise = ?, updated_at = ? WHERE id = ?`,
+      [bill.title, bill.totalAmountPaise, bill.updatedAt.getTime(), bill.id]
+    );
+
+    // Delete existing participants
+    await db.runAsync('DELETE FROM participants WHERE bill_id = ?', [bill.id]);
+
+    // Insert updated participants
+    for (const participant of bill.participants) {
+      await db.runAsync(
+        `INSERT INTO participants (id, bill_id, name, phone, amount_paise, status)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          participant.id,
+          bill.id,
+          participant.name,
+          participant.phone ?? null,
+          participant.amountPaise,
+          participant.status,
+        ]
+      );
+    }
+  });
+}
+
+/**
  * Retrieves a bill by ID with all participants
  */
 export async function getBillById(billId: string): Promise<Bill | null> {

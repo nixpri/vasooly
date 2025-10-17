@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { BillCreateScreen } from './src/screens/BillCreateScreen';
+import { AppNavigator } from './src/navigation/AppNavigator';
 // import { UPIValidationScreen } from './src/screens/UPIValidationScreen';
 import { initializeDatabase } from './src/lib/data/database';
 
@@ -39,7 +39,7 @@ export default function App() {
     );
   }
 
-  return <BillCreateScreen />;
+  return <AppNavigator />;
   // Uncomment for UPI testing: return <UPIValidationScreen />;
 }
 

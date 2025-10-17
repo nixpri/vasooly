@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
-  KeyboardAvoidingView,
   Platform,
   Alert,
   TextInput,
+  StatusBar,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { BillAmountInput } from '@/components/BillAmountInput';
 import { ParticipantList } from '@/components/ParticipantList';
@@ -20,7 +20,7 @@ import {
   SplitValidationError,
 } from '@/lib/business/splitEngine';
 import type { DetailedSplitResult } from '@/lib/business/splitEngine';
-import { createBill } from '@/lib/data/billRepository';
+import { createBill, updateBill } from '@/lib/data/billRepository';
 import { BillStatus, PaymentStatus } from '@/types';
 import type { Bill, Participant } from '@/types';
 
@@ -29,23 +29,40 @@ interface ParticipantInput {
   name: string;
 }
 
+interface BillCreateScreenProps {
+  existingBill?: Bill; // If provided, edit mode
+  onSuccess?: () => void; // Callback after create/edit
+  onCancel?: () => void; // Callback for cancel in edit mode
+  onViewHistory?: () => void; // Callback to view history
+}
+
 /**
- * BillCreateScreen - Main screen for creating bills with split calculations
+ * BillCreateScreen - Main screen for creating/editing bills with split calculations
  * Integrates amount input, participant management, and split display
  */
-export const BillCreateScreen: React.FC = () => {
-  // State
-  const [billTitle, setBillTitle] = useState('');
-  const [amountPaise, setAmountPaise] = useState(0);
-  const [participants, setParticipants] = useState<ParticipantInput[]>([
-    { id: 'default-1', name: 'You' },
-  ]);
+export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
+  existingBill,
+  onSuccess,
+  onCancel,
+  onViewHistory,
+}) => {
+  const isEditMode = !!existingBill;
+
+  // Initialize state from existingBill if in edit mode
+  const [billTitle, setBillTitle] = useState(existingBill?.title ?? '');
+  const [amountPaise, setAmountPaise] = useState(existingBill?.totalAmountPaise ?? 0);
+  const [participants, setParticipants] = useState<ParticipantInput[]>(
+    existingBill
+      ? existingBill.participants.map((p) => ({ id: p.id, name: p.name }))
+      : [{ id: 'default-1', name: 'You' }]
+  );
   const [splitResult, setSplitResult] = useState<DetailedSplitResult | null>(
     null
   );
   const [amountError, setAmountError] = useState<string>('');
   const [participantError, setParticipantError] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Calculate split whenever amount or participants change
   useEffect(() => {
@@ -90,7 +107,7 @@ export const BillCreateScreen: React.FC = () => {
     }
   }, [amountPaise, participants]);
 
-  const handleCreateBill = async () => {
+  const handleSaveBill = async () => {
     // Validation
     if (!billTitle.trim()) {
       Alert.alert('Missing Title', 'Please enter a bill title');
@@ -124,10 +141,15 @@ export const BillCreateScreen: React.FC = () => {
     setIsSaving(true);
 
     try {
-      // Map split result to Participant objects
+      const now = new Date();
+      const timestamp = Date.now();
+
+      // Map split result to Participant objects with NEW unique IDs
       const participantData: Participant[] = splitResult.splits.map(
-        (split) => ({
-          id: split.participantId,
+        (split, index) => ({
+          id: isEditMode && existingBill
+            ? existingBill.participants[index]?.id || `participant-${timestamp}-${index}`
+            : `participant-${timestamp}-${index}`,
           name: split.participantName,
           amountPaise: split.amountPaise,
           status: PaymentStatus.PENDING,
@@ -135,45 +157,75 @@ export const BillCreateScreen: React.FC = () => {
         })
       );
 
-      // Create bill in database
-      const billId = `bill-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      const now = new Date();
+      if (isEditMode && existingBill) {
+        // Update existing bill
+        const updatedBill: Bill = {
+          ...existingBill,
+          title: billTitle.trim(),
+          totalAmountPaise: amountPaise,
+          participants: participantData,
+          updatedAt: now,
+        };
 
-      const newBill: Bill = {
-        id: billId,
-        title: billTitle.trim(),
-        totalAmountPaise: amountPaise,
-        status: BillStatus.ACTIVE,
-        participants: participantData,
-        createdAt: now,
-        updatedAt: now,
-      };
+        await updateBill(updatedBill);
 
-      await createBill(newBill);
-
-      // Success
-      Alert.alert(
-        'Bill Created',
-        `Bill "${newBill.title}" created successfully with ${newBill.participants.length} participants!`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Reset form
-              setBillTitle('');
-              setAmountPaise(0);
-              setParticipants([
-                { id: `reset-1-${Date.now()}`, name: 'You' },
-              ]);
-              setSplitResult(null);
+        // Success
+        Alert.alert(
+          'Bill Updated',
+          `Bill "${updatedBill.title}" updated successfully!`,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                onSuccess?.();
+              },
             },
-          },
-        ]
-      );
+          ]
+        );
+      } else {
+        // Create new bill
+        const billId = `bill-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+        const newBill: Bill = {
+          id: billId,
+          title: billTitle.trim(),
+          totalAmountPaise: amountPaise,
+          status: BillStatus.ACTIVE,
+          participants: participantData,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        await createBill(newBill);
+
+        // Success
+        Alert.alert(
+          'Bill Created',
+          `Bill "${newBill.title}" created successfully with ${newBill.participants.length} participants!`,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                if (onSuccess) {
+                  onSuccess();
+                } else {
+                  // Reset form if no callback
+                  setBillTitle('');
+                  setAmountPaise(0);
+                  setParticipants([
+                    { id: `reset-1-${Date.now()}`, name: 'You' },
+                  ]);
+                  setSplitResult(null);
+                }
+              },
+            },
+          ]
+        );
+      }
     } catch (error) {
       Alert.alert(
         'Error',
-        error instanceof Error ? error.message : 'Failed to create bill'
+        error instanceof Error ? error.message : `Failed to ${isEditMode ? 'update' : 'create'} bill`
       );
     } finally {
       setIsSaving(false);
@@ -187,26 +239,47 @@ export const BillCreateScreen: React.FC = () => {
     !isSaving;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
-      >
-        {/* Header */}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'android' ? -150 : 0}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
+      {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Create Bill</Text>
-          <Text style={styles.headerSubtitle}>
-            Split your bill with friends
-          </Text>
+          {isEditMode && onCancel && (
+            <TouchableOpacity onPress={onCancel} style={styles.backButton} activeOpacity={0.7}>
+              <Text style={styles.backButtonText}>← Cancel</Text>
+            </TouchableOpacity>
+          )}
+          <View style={styles.headerTop}>
+            <View style={styles.headerText}>
+              <Text style={styles.headerTitle}>{isEditMode ? 'Edit Bill' : 'Create Bill'}</Text>
+              <Text style={styles.headerSubtitle}>
+                {isEditMode ? 'Update bill details and participants' : 'Split your bill with friends'}
+              </Text>
+            </View>
+            {!isEditMode && onViewHistory && (
+              <TouchableOpacity
+                onPress={onViewHistory}
+                style={styles.viewHistoryButton}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.viewHistoryButtonText}>History</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Content */}
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          enableOnAndroid={true}
         >
           {/* Bill Title Input */}
           <View style={styles.section}>
@@ -255,101 +328,131 @@ export const BillCreateScreen: React.FC = () => {
               styles.createButton,
               !canCreateBill && styles.createButtonDisabled,
             ]}
-            onPress={handleCreateBill}
+            onPress={handleSaveBill}
             disabled={!canCreateBill}
             activeOpacity={0.8}
           >
             <Text style={styles.createButtonText}>
-              {isSaving ? 'Creating...' : 'Create Bill & Generate UPI Link'}
+              {isSaving
+                ? isEditMode
+                  ? 'Updating...'
+                  : 'Creating...'
+                : isEditMode
+                  ? 'Update Bill'
+                  : 'Create Bill & Generate UPI Link'}
             </Text>
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: '#0A0A0F',
   },
-  container: {
-    flex: 1,
-  },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingTop: 52,
+    paddingBottom: 16,
     backgroundColor: 'rgba(20, 20, 30, 0.8)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
+  backButton: {
+    marginBottom: 8,
+  },
+  backButtonText: {
+    fontSize: 13,
+    color: '#6C5CE7',
+    fontWeight: '600',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerText: {
+    flex: 1,
+  },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontWeight: '400',
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  viewHistoryButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    backgroundColor: '#6C5CE7',
+    borderRadius: 6,
+  },
+  viewHistoryButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 24,
-    paddingBottom: 40,
+    padding: 20,
+    paddingBottom: Platform.OS === 'android' ? 300 : 20,
   },
   section: {
-    marginBottom: 32,
+    marginBottom: 20,
   },
   sectionLabel: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 12,
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginBottom: 8,
     fontWeight: '500',
   },
   titleInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   titleIcon: {
-    fontSize: 24,
-    marginRight: 12,
+    fontSize: 18,
+    marginRight: 8,
   },
   titleInput: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '500',
     padding: 0,
   },
   footer: {
-    padding: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
     backgroundColor: 'rgba(20, 20, 30, 0.95)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   createButton: {
     backgroundColor: '#6366F1',
-    borderRadius: 16,
-    paddingVertical: 18,
+    borderRadius: 10,
+    paddingVertical: 12,
     alignItems: 'center',
     shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   createButtonDisabled: {
     backgroundColor: 'rgba(99, 102, 241, 0.3)',
@@ -357,7 +460,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   createButtonText: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '700',
   },
