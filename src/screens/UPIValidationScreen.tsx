@@ -271,7 +271,7 @@ export const UPIValidationScreen: React.FC = () => {
               </Pressable>
 
               <Text style={styles.warningText}>
-                ⚠️ Live tests will open UPI app with ₹1.00 payment. Cancel in
+                ⚠️ Live tests will open UPI app with ₹100 payment. Cancel in
                 app.
               </Text>
             </View>

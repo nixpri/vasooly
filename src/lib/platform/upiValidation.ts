@@ -9,6 +9,7 @@
  */
 
 import { Linking, Platform } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 import { UPIApp, UPILinkResult } from '../business/upiGenerator';
 
 /**
@@ -94,7 +95,8 @@ export function getCurrentDevice(): TestDevice {
   return {
     os: Platform.OS === 'ios' ? 'iOS' : 'Android',
     version: Platform.Version.toString(),
-    model: Platform.OS === 'ios' ? 'iPhone' : 'Android Device',
+    model: DeviceInfo.getModel(),
+    manufacturer: DeviceInfo.getManufacturerSync(),
   };
 }
 
@@ -119,9 +121,10 @@ export async function isUPIAppInstalled(app: UPIApp): Promise<boolean> {
 
   try {
     if (Platform.OS === 'android') {
-      // On Android, check if package can be opened
-      const packageName = ANDROID_PACKAGE_NAMES[app];
-      const canOpen = await Linking.canOpenURL(`package:${packageName}`);
+      // On Android, try to check if app-specific URL scheme can be opened
+      // This is more reliable than package: URLs on modern Android
+      const scheme = getAppSpecificScheme(app);
+      const canOpen = await Linking.canOpenURL(scheme);
       return canOpen;
     } else {
       // On iOS, check if URL scheme can be opened
@@ -132,6 +135,24 @@ export async function isUPIAppInstalled(app: UPIApp): Promise<boolean> {
   } catch (error) {
     console.warn(`Error checking ${app} installation:`, error);
     return false;
+  }
+}
+
+/**
+ * Gets app-specific URL scheme for testing installation
+ */
+function getAppSpecificScheme(app: UPIApp): string {
+  switch (app) {
+    case UPIApp.GPAY:
+      return 'gpay://';
+    case UPIApp.PHONEPE:
+      return 'phonepe://';
+    case UPIApp.PAYTM:
+      return 'paytmmp://';
+    case UPIApp.BHIM:
+      return 'bhim://';
+    default:
+      return 'upi://';
   }
 }
 
