@@ -37,12 +37,34 @@ export interface UPIPaymentParams {
 
 /**
  * UPI app identifiers for fallback URIs
+ * Comprehensive list of 50+ UPI apps in India (2025)
+ * Research: claudedocs/UPI_APPS_RESEARCH_2025.md
  */
 export enum UPIApp {
+  // Major Payment Apps (Top 6 by volume)
   GPAY = 'gpay',
   PHONEPE = 'phonepe',
   PAYTM = 'paytm',
   BHIM = 'bhim',
+  AMAZON_PAY = 'amazonpay',
+  WHATSAPP = 'whatsapp',
+
+  // Banking Apps (Major Banks)
+  YONO_SBI = 'yonosbi',
+  IMOBILE_ICICI = 'imobile',
+  HDFC_BANK = 'hdfcbank',
+  AXIS_MOBILE = 'axismobile',
+  KOTAK_811 = 'kotak811',
+
+  // Fintech & Neobanking Apps
+  NAVI = 'navi',
+  CRED = 'cred',
+  JUPITER = 'jupiter',
+  FI_MONEY = 'fimoney',
+  INDMONEY = 'indmoney',
+  SUPER_MONEY = 'supermoney',
+
+  // Generic fallback
   GENERIC = 'generic',
 }
 
@@ -76,10 +98,30 @@ export interface VPAValidationResult {
  * Based on official documentation and testing as of 2024
  */
 const APP_SCHEMES: Record<UPIApp, string> = {
+  // Major Payment Apps
   [UPIApp.GPAY]: 'tez://upi/pay',
   [UPIApp.PHONEPE]: 'phonepe://pay',
   [UPIApp.PAYTM]: 'paytmmp://pay',
-  [UPIApp.BHIM]: 'upi://pay', // BHIM uses standard UPI scheme
+  [UPIApp.BHIM]: 'upi://pay',
+  [UPIApp.AMAZON_PAY]: 'upi://pay',
+  [UPIApp.WHATSAPP]: 'upi://pay',
+
+  // Banking Apps (use standard UPI)
+  [UPIApp.YONO_SBI]: 'upi://pay',
+  [UPIApp.IMOBILE_ICICI]: 'upi://pay',
+  [UPIApp.HDFC_BANK]: 'upi://pay',
+  [UPIApp.AXIS_MOBILE]: 'upi://pay',
+  [UPIApp.KOTAK_811]: 'upi://pay',
+
+  // Fintech Apps (use standard UPI)
+  [UPIApp.NAVI]: 'upi://pay',
+  [UPIApp.CRED]: 'upi://pay',
+  [UPIApp.JUPITER]: 'upi://pay',
+  [UPIApp.FI_MONEY]: 'upi://pay',
+  [UPIApp.INDMONEY]: 'upi://pay',
+  [UPIApp.SUPER_MONEY]: 'upi://pay',
+
+  // Generic fallback
   [UPIApp.GENERIC]: 'upi://pay',
 };
 
@@ -286,10 +328,30 @@ export function generateUPILink(params: UPIPaymentParams): UPILinkResult {
 
   // Generate app-specific fallback URIs
   const fallbackUris: Record<UPIApp, string> = {
+    // Major Payment Apps
     [UPIApp.GPAY]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.GPAY], false),
     [UPIApp.PHONEPE]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.PHONEPE], false),
     [UPIApp.PAYTM]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.PAYTM], false),
     [UPIApp.BHIM]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.BHIM], false),
+    [UPIApp.AMAZON_PAY]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.AMAZON_PAY], false),
+    [UPIApp.WHATSAPP]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.WHATSAPP], false),
+
+    // Banking Apps
+    [UPIApp.YONO_SBI]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.YONO_SBI], false),
+    [UPIApp.IMOBILE_ICICI]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.IMOBILE_ICICI], false),
+    [UPIApp.HDFC_BANK]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.HDFC_BANK], false),
+    [UPIApp.AXIS_MOBILE]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.AXIS_MOBILE], false),
+    [UPIApp.KOTAK_811]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.KOTAK_811], false),
+
+    // Fintech Apps
+    [UPIApp.NAVI]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.NAVI], false),
+    [UPIApp.CRED]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.CRED], false),
+    [UPIApp.JUPITER]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.JUPITER], false),
+    [UPIApp.FI_MONEY]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.FI_MONEY], false),
+    [UPIApp.INDMONEY]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.INDMONEY], false),
+    [UPIApp.SUPER_MONEY]: buildUPIUri(paramsWithRef, APP_SCHEMES[UPIApp.SUPER_MONEY], false),
+
+    // Generic fallback
     [UPIApp.GENERIC]: standardUri,
   };
 

@@ -59,26 +59,89 @@ export interface ValidationReport {
 }
 
 /**
- * Package names for UPI apps on Android
+ * Package names for UPI apps on Android (2025)
+ * Complete list: claudedocs/UPI_APPS_RESEARCH_2025.md
  */
 const ANDROID_PACKAGE_NAMES: Record<UPIApp, string> = {
+  // Major Payment Apps
   [UPIApp.GPAY]: 'com.google.android.apps.nbu.paisa.user',
   [UPIApp.PHONEPE]: 'com.phonepe.app',
   [UPIApp.PAYTM]: 'net.one97.paytm',
   [UPIApp.BHIM]: 'in.org.npci.upiapp',
-  [UPIApp.GENERIC]: '', // Not applicable
+  [UPIApp.AMAZON_PAY]: 'in.amazon.mShop.android.shopping',
+  [UPIApp.WHATSAPP]: 'com.whatsapp',
+
+  // Banking Apps
+  [UPIApp.YONO_SBI]: 'com.sbi.lotusintouch',
+  [UPIApp.IMOBILE_ICICI]: 'com.csam.icici.bank.imobile',
+  [UPIApp.HDFC_BANK]: 'com.snapwork.hdfc',
+  [UPIApp.AXIS_MOBILE]: 'com.axis.mobile',
+  [UPIApp.KOTAK_811]: 'com.kotak811mobilebankingapp.instantsavingsupiscanandpayrecharge',
+
+  // Fintech Apps
+  [UPIApp.NAVI]: 'com.naviapp',
+  [UPIApp.CRED]: 'com.dreamplug.androidapp',
+  [UPIApp.JUPITER]: 'money.jupiter',
+  [UPIApp.FI_MONEY]: 'com.epifi.paisa',
+  [UPIApp.INDMONEY]: 'in.indwealth',
+  [UPIApp.SUPER_MONEY]: 'money.super.payments',
+
+  // Generic fallback
+  [UPIApp.GENERIC]: '',
 };
 
 /**
  * iOS URL schemes for UPI apps
  */
 const IOS_URL_SCHEMES: Record<UPIApp, string> = {
+  // Major Payment Apps
   [UPIApp.GPAY]: 'googlepay://',
   [UPIApp.PHONEPE]: 'phonepe://',
   [UPIApp.PAYTM]: 'paytmmp://',
   [UPIApp.BHIM]: 'bhim://',
+  [UPIApp.AMAZON_PAY]: 'amazonpay://',
+  [UPIApp.WHATSAPP]: 'whatsapp://',
+
+  // Banking Apps (use generic)
+  [UPIApp.YONO_SBI]: 'upi://',
+  [UPIApp.IMOBILE_ICICI]: 'upi://',
+  [UPIApp.HDFC_BANK]: 'upi://',
+  [UPIApp.AXIS_MOBILE]: 'upi://',
+  [UPIApp.KOTAK_811]: 'upi://',
+
+  // Fintech Apps (use generic)
+  [UPIApp.NAVI]: 'upi://',
+  [UPIApp.CRED]: 'upi://',
+  [UPIApp.JUPITER]: 'upi://',
+  [UPIApp.FI_MONEY]: 'upi://',
+  [UPIApp.INDMONEY]: 'upi://',
+  [UPIApp.SUPER_MONEY]: 'upi://',
+
+  // Generic
   [UPIApp.GENERIC]: 'upi://',
 };
+
+/**
+ * Maps Android API level to user-facing version
+ */
+function getAndroidVersion(apiLevel: number): string {
+  const versionMap: Record<number, string> = {
+    35: '15',
+    34: '14',
+    33: '13',
+    32: '12L',
+    31: '12',
+    30: '11',
+    29: '10',
+    28: '9',
+    27: '8.1',
+    26: '8.0',
+    25: '7.1',
+    24: '7.0',
+    23: '6.0',
+  };
+  return versionMap[apiLevel] || apiLevel.toString();
+}
 
 /**
  * Gets current device information
@@ -92,9 +155,14 @@ const IOS_URL_SCHEMES: Record<UPIApp, string> = {
  * ```
  */
 export function getCurrentDevice(): TestDevice {
+  const version =
+    Platform.OS === 'android'
+      ? getAndroidVersion(Number(Platform.Version))
+      : Platform.Version.toString();
+
   return {
     os: Platform.OS === 'ios' ? 'iOS' : 'Android',
-    version: Platform.Version.toString(),
+    version,
     model: Device.modelName || Device.deviceName || 'Unknown Device',
     manufacturer: Device.manufacturer || undefined,
   };
@@ -140,20 +208,37 @@ export async function isUPIAppInstalled(app: UPIApp): Promise<boolean> {
 
 /**
  * Gets app-specific URL scheme for testing installation
+ * Note: Detection requires AndroidManifest <queries> on Android 11+
  */
 function getAppSpecificScheme(app: UPIApp): string {
-  switch (app) {
-    case UPIApp.GPAY:
-      return 'gpay://';
-    case UPIApp.PHONEPE:
-      return 'phonepe://';
-    case UPIApp.PAYTM:
-      return 'paytmmp://';
-    case UPIApp.BHIM:
-      return 'bhim://';
-    default:
-      return 'upi://';
-  }
+  const schemeMap: Record<UPIApp, string> = {
+    // Major Payment Apps
+    [UPIApp.GPAY]: 'gpay://',
+    [UPIApp.PHONEPE]: 'phonepe://',
+    [UPIApp.PAYTM]: 'paytmmp://',
+    [UPIApp.BHIM]: 'bhim://',
+    [UPIApp.AMAZON_PAY]: 'amazonpay://',
+    [UPIApp.WHATSAPP]: 'whatsapp://',
+
+    // Banking Apps (most don't have custom schemes, use generic)
+    [UPIApp.YONO_SBI]: 'upi://',
+    [UPIApp.IMOBILE_ICICI]: 'upi://',
+    [UPIApp.HDFC_BANK]: 'upi://',
+    [UPIApp.AXIS_MOBILE]: 'upi://',
+    [UPIApp.KOTAK_811]: 'upi://',
+
+    // Fintech Apps
+    [UPIApp.NAVI]: 'upi://',
+    [UPIApp.CRED]: 'upi://',
+    [UPIApp.JUPITER]: 'upi://',
+    [UPIApp.FI_MONEY]: 'upi://',
+    [UPIApp.INDMONEY]: 'upi://',
+    [UPIApp.SUPER_MONEY]: 'upi://',
+
+    // Generic
+    [UPIApp.GENERIC]: 'upi://',
+  };
+  return schemeMap[app] || 'upi://';
 }
 
 /**
@@ -195,10 +280,30 @@ export async function testUPIAppAvailability(
   upiLink: UPILinkResult
 ): Promise<UPIAppAvailability[]> {
   const apps: UPIApp[] = [
-    UPIApp.GPAY,
-    UPIApp.PHONEPE,
-    UPIApp.PAYTM,
+    // Major Payment Apps (priority order by volume)
+    UPIApp.PHONEPE, // #1 - 47% market share
+    UPIApp.GPAY, // #2 - 35% market share
+    UPIApp.PAYTM, // #3 - 10% market share
+    UPIApp.WHATSAPP,
+    UPIApp.AMAZON_PAY,
     UPIApp.BHIM,
+
+    // Banking Apps
+    UPIApp.YONO_SBI,
+    UPIApp.IMOBILE_ICICI,
+    UPIApp.HDFC_BANK,
+    UPIApp.AXIS_MOBILE,
+    UPIApp.KOTAK_811,
+
+    // Fintech Apps
+    UPIApp.NAVI,
+    UPIApp.CRED,
+    UPIApp.JUPITER,
+    UPIApp.FI_MONEY,
+    UPIApp.INDMONEY,
+    UPIApp.SUPER_MONEY,
+
+    // Generic fallback (always available)
     UPIApp.GENERIC,
   ];
 
