@@ -9,6 +9,7 @@ import {
   Linking,
   Alert,
 } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import { generateUPILink } from '../lib/business/upiGenerator';
 import {
   validateUPILink,
@@ -24,6 +25,7 @@ export const UPIValidationScreen: React.FC = () => {
     useState<UPIValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [testStatus, setTestStatus] = useState<string>('Not tested');
+  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
 
   const TEST_VPA = 'test@paytm';
   const TEST_NAME = 'Test Merchant';
@@ -96,9 +98,10 @@ export const UPIValidationScreen: React.FC = () => {
         am: TEST_AMOUNT,
         tn: 'QR Code Test',
       });
+      setQrCodeData(qrCode.data);
       Alert.alert(
         'QR Code Generated',
-        `Size: ${qrCode.size}x${qrCode.size}\nError Correction: ${qrCode.options.errorCorrectionLevel}\n\nScan with UPI app to test`
+        `Scan with UPI app to test ₹${TEST_AMOUNT} payment`
       );
     } catch (error) {
       Alert.alert('QR Generation Error', String(error));
@@ -269,6 +272,23 @@ export const UPIValidationScreen: React.FC = () => {
               <Pressable style={styles.button} onPress={testQRCode}>
                 <Text style={styles.buttonText}>Generate QR Code</Text>
               </Pressable>
+
+              {qrCodeData && (
+                <View style={styles.qrCodeContainer}>
+                  <Text style={styles.qrCodeTitle}>Scan to Pay ₹{TEST_AMOUNT}</Text>
+                  <View style={styles.qrCodeWrapper}>
+                    <QRCode
+                      value={qrCodeData}
+                      size={250}
+                      backgroundColor="white"
+                      color="black"
+                    />
+                  </View>
+                  <Text style={styles.qrCodeSubtext}>
+                    Scan with any UPI app (GPay, PhonePe, Paytm)
+                  </Text>
+                </View>
+              )}
 
               <Text style={styles.warningText}>
                 ⚠️ Live tests will open UPI app with ₹100 payment. Cancel in
@@ -495,6 +515,32 @@ const styles = StyleSheet.create({
     color: 'rgba(251, 191, 36, 0.8)',
     textAlign: 'center',
     marginTop: 8,
+  },
+  qrCodeContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    padding: 20,
+    marginVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  qrCodeTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 16,
+  },
+  qrCodeWrapper: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  qrCodeSubtext: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.6)',
+    textAlign: 'center',
   },
   instructionsCard: {
     backgroundColor: 'rgba(59, 130, 246, 0.08)',

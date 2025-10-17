@@ -709,6 +709,145 @@ Validates UPI link on current device.
 
 ---
 
+## Android Production Setup (Android 11+)
+
+### Package Visibility Restrictions
+
+Starting from Android 11 (API 30), apps cannot query for other installed packages without declaring them in AndroidManifest.xml. This affects UPI app detection.
+
+**Impact:**
+- ✅ Standard `upi://pay` links work perfectly (system handles app selector)
+- ❌ Individual app detection fails (can't query if GPay/PhonePe are installed)
+- ❌ Detection shows "generic" only in development builds
+
+**Solution:** Add `<queries>` declarations to AndroidManifest.xml for production builds.
+
+### For Expo Projects
+
+Add to `app.json`:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "manifestQueries": {
+              "package": [
+                "com.google.android.apps.nbu.paisa.user",
+                "com.phonepe.app",
+                "net.one97.paytm",
+                "in.org.npci.upiapp",
+                "com.whatsapp",
+                "in.amazon.mShop.android.shopping",
+                "com.sbi.lotusintouch",
+                "com.csam.icici.bank.imobile",
+                "com.snapwork.hdfc",
+                "com.axis.mobile",
+                "com.kotak811mobilebankingapp.instantsavingsupiscanandpayrecharge",
+                "com.naviapp",
+                "com.dreamplug.androidapp",
+                "money.jupiter",
+                "com.epifi.paisa",
+                "in.indwealth",
+                "money.super.payments"
+              ],
+              "intent": [
+                {
+                  "action": "android.intent.action.VIEW",
+                  "data": {
+                    "scheme": "upi"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    ]
+  }
+}
+```
+
+### For React Native (non-Expo)
+
+Add to `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Add BEFORE <application> tag -->
+    <queries>
+        <!-- Major Payment Apps -->
+        <package android:name="com.google.android.apps.nbu.paisa.user" />
+        <package android:name="com.phonepe.app" />
+        <package android:name="net.one97.paytm" />
+        <package android:name="in.org.npci.upiapp" />
+        <package android:name="com.whatsapp" />
+        <package android:name="in.amazon.mShop.android.shopping" />
+
+        <!-- Banking Apps -->
+        <package android:name="com.sbi.lotusintouch" />
+        <package android:name="com.csam.icici.bank.imobile" />
+        <package android:name="com.snapwork.hdfc" />
+        <package android:name="com.axis.mobile" />
+        <package android:name="com.kotak811mobilebankingapp.instantsavingsupiscanandpayrecharge" />
+
+        <!-- Fintech Apps -->
+        <package android:name="com.naviapp" />
+        <package android:name="com.dreamplug.androidapp" />
+        <package android:name="money.jupiter" />
+        <package android:name="com.epifi.paisa" />
+        <package android:name="in.indwealth" />
+        <package android:name="money.super.payments" />
+
+        <!-- Generic UPI Intent (Required) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="upi" />
+        </intent>
+    </queries>
+
+    <application>
+        <!-- Your app configuration -->
+    </application>
+
+</manifest>
+```
+
+### Testing After Setup
+
+1. **Build Production APK/AAB:**
+   ```bash
+   # Expo
+   eas build --platform android --profile production
+
+   # React Native
+   cd android && ./gradlew assembleRelease
+   ```
+
+2. **Install and Test:**
+   ```bash
+   adb install -r app-release.apk
+   ```
+
+3. **Verify Detection:**
+   - Open UPI Validation Screen
+   - Tap "Run UPI Validation"
+   - Should now show individual apps installed (not just "generic")
+
+### Why Expo Go Shows "Generic"
+
+Expo Go uses a pre-built binary with fixed AndroidManifest.xml. Cannot add custom `<queries>` without building a custom APK.
+
+**Impact:** Cosmetic only - all UPI functionality works perfectly (app selector opens with all apps).
+
+**For Full UPI Research:** See `claudedocs/UPI_APPS_RESEARCH_2025.md` for complete list of 50+ UPI apps with package names.
+
+---
+
 ## Next Steps
 
 ### Week 2: UPI Integration Enhancements

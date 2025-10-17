@@ -344,20 +344,40 @@ npm run e2e:test:android
 - ✅ Week 2 Day 5: Testing Infrastructure
 
 **Metrics**:
-- 103+ passing tests across 6 suites
-- 45+ files created
-- ~6,500 lines of code
-- Complete documentation (14 docs)
+- 104+ passing tests across 6 suites
+- 50+ files created (including UPI validation screen, QR display components)
+- ~7,000 lines of code
+- Complete documentation (13 docs - consolidated from 14)
 - CI/CD pipeline operational
+- 18 UPI apps supported (up from 5 initially)
 
 **Device Testing** (In Progress):
 - ✅ UPI device testing (1/10 devices validated - **PASS**)
   - Device: OnePlus 13, Android 15
   - Result: Standard URI ✅, Smart URI ✅, QR Code ✅
-  - UPI Apps: GPay, PhonePe, Paytm, INDMoney, Whatsapp, Navi (all working)
-  - Bugs found & fixed: App detection logic, device model display, amount warning
+  - UPI Apps: GPay, PhonePe, Paytm, INDMoney, WhatsApp, Navi (all working perfectly)
+  - App Selector: System dialog shows all 6 UPI apps installed
+  - Bugs found & fixed: 6 issues resolved (see Bug Fixes section below)
 - ⏳ UPI device testing (Need 9 more devices for 8/10 pass rate)
 - ⏳ Performance device testing (3 devices, 60fps validation)
+
+**Bug Fixes Completed**:
+1. ✅ **Expo Go Compatibility** - Replaced react-native-device-info with expo-device (fixed app crash)
+2. ✅ **Android Version Display** - Added API level mapping (35 → "15", 34 → "14", etc.)
+3. ✅ **Device Model Display** - Fixed "Android Device" → "OnePlus 13" using expo-device
+4. ✅ **UPI App Detection** - Expanded from 5 to 18 apps (GPay, PhonePe, Paytm, BHIM, Amazon Pay, WhatsApp + 12 banking/fintech apps)
+5. ✅ **Amount Warning Text** - Fixed "₹1.00" → "₹100" to match actual test amount
+6. ✅ **QR Code Display** - Fixed missing visual QR code (was showing only text, now shows scannable 250x250 QR image)
+
+**UPI Research Completed** (2025-10-17):
+- ✅ Comprehensive research on 50+ UPI apps in India
+- ✅ Verified package names from Google Play Store
+- ✅ Market share data collected (PhonePe 47%, GPay 35%, Paytm 10%)
+- ✅ Android 11+ package visibility restrictions documented
+- ✅ AndroidManifest queries configuration guide created
+- ✅ Detection limitations explained (Expo Go shows "generic", production build needed for individual app detection)
+- ✅ Documentation: `claudedocs/UPI_APPS_RESEARCH_2025.md` (comprehensive 50+ app list)
+- ✅ Documentation: `docs/ANDROIDMANIFEST_QUERIES.md` (production setup guide)
 
 ## 📋 Next Steps - Phase 1 Week 3
 
