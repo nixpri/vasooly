@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -62,7 +62,6 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
   const [amountError, setAmountError] = useState<string>('');
   const [participantError, setParticipantError] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
 
   // Calculate split whenever amount or participants change
   useEffect(() => {
@@ -239,11 +238,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
     !isSaving;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'android' ? -150 : 0}
-    >
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
       {/* Header */}
         <View style={styles.header}>
@@ -271,79 +266,83 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
           </View>
         </View>
 
-        {/* Content */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          enableOnAndroid={true}
+        {/* KeyboardAvoidingView wraps only ScrollView */}
+        <KeyboardAvoidingView
+          style={{flex: 1}}
+          behavior="padding"
         >
-          {/* Bill Title Input */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Bill Title</Text>
-            <View style={styles.titleInputContainer}>
-              <Text style={styles.titleIcon}>📝</Text>
-              <TextInput
-                style={styles.titleInput}
-                value={billTitle}
-                onChangeText={setBillTitle}
-                placeholder="e.g., Dinner at Taj, Movie tickets..."
-                placeholderTextColor="rgba(255, 255, 255, 0.3)"
+          {/* Content */}
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+          >
+            {/* Bill Title Input */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Bill Title</Text>
+              <View style={styles.titleInputContainer}>
+                <Text style={styles.titleIcon}>📝</Text>
+                <TextInput
+                  style={styles.titleInput}
+                  value={billTitle}
+                  onChangeText={setBillTitle}
+                  placeholder="e.g., Dinner at Taj, Movie tickets..."
+                  placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                />
+              </View>
+            </View>
+
+            {/* Amount Input */}
+            <View style={styles.section}>
+              <BillAmountInput
+                amount={amountPaise}
+                onAmountChange={setAmountPaise}
+                error={amountError}
               />
             </View>
-          </View>
 
-          {/* Amount Input */}
-          <View style={styles.section}>
-            <BillAmountInput
-              amount={amountPaise}
-              onAmountChange={setAmountPaise}
-              error={amountError}
-            />
-          </View>
+            {/* Participant List */}
+            <View style={styles.section}>
+              <ParticipantList
+                participants={participants}
+                onParticipantsChange={setParticipants}
+                minParticipants={2}
+                error={participantError}
+              />
+            </View>
 
-          {/* Participant List */}
-          <View style={styles.section}>
-            <ParticipantList
-              participants={participants}
-              onParticipantsChange={setParticipants}
-              minParticipants={2}
-              error={participantError}
-            />
-          </View>
+            {/* Split Result Display */}
+            <View style={styles.section}>
+              <SplitResultDisplay splitResult={splitResult} />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
 
-          {/* Split Result Display */}
-          <View style={styles.section}>
-            <SplitResultDisplay splitResult={splitResult} />
-          </View>
-        </ScrollView>
-
-        {/* Create Bill Button */}
+        {/* Create Bill Button - Outside KeyboardAvoidingView */}
         <View style={styles.footer}>
-          <TouchableOpacity
-            style={[
-              styles.createButton,
-              !canCreateBill && styles.createButtonDisabled,
-            ]}
-            onPress={handleSaveBill}
-            disabled={!canCreateBill}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.createButtonText}>
-              {isSaving
-                ? isEditMode
-                  ? 'Updating...'
-                  : 'Creating...'
-                : isEditMode
-                  ? 'Update Bill'
-                  : 'Create Bill & Generate UPI Link'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-    </KeyboardAvoidingView>
+            <TouchableOpacity
+              style={[
+                styles.createButton,
+                !canCreateBill && styles.createButtonDisabled,
+              ]}
+              onPress={handleSaveBill}
+              disabled={!canCreateBill}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.createButtonText}>
+                {isSaving
+                  ? isEditMode
+                    ? 'Updating...'
+                    : 'Creating...'
+                  : isEditMode
+                    ? 'Update Bill'
+                    : 'Create Bill'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+    </View>
   );
 };
 
@@ -403,7 +402,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: Platform.OS === 'android' ? 300 : 20,
+    paddingBottom: 20,
   },
   section: {
     marginBottom: 20,

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   RefreshControl,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { GlassCard } from '@/components/GlassCard';
@@ -206,51 +207,57 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({
         </View>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <GlassCard style={styles.searchCard} borderRadius={12}>
-          <View style={styles.searchInputWrapper}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search bills..."
-              placeholderTextColor="rgba(255, 255, 255, 0.4)"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchQuery('')}
-                style={styles.clearButton}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.clearButtonText}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </GlassCard>
-      </View>
+      {/* KeyboardAvoidingView wraps search and list */}
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior='padding'
+      >
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <GlassCard style={styles.searchCard} borderRadius={12}>
+            <View style={styles.searchInputWrapper}>
+              <Text style={styles.searchIcon}>🔍</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search bills..."
+                placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setSearchQuery('')}
+                  style={styles.clearButton}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.clearButtonText}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </GlassCard>
+        </View>
 
-      {/* Bill List */}
-      <View style={styles.listContainer}>
-        <FlashList
-          data={filteredBills}
-          renderItem={renderBillCard}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={renderEmpty}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              tintColor="#6C5CE7"
-              colors={['#6C5CE7']}
-            />
-          }
-        />
-      </View>
+        {/* Bill List */}
+        <View style={styles.listContainer}>
+          <FlashList
+            data={filteredBills}
+            renderItem={renderBillCard}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={renderEmpty}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                tintColor="#6C5CE7"
+                colors={['#6C5CE7']}
+              />
+            }
+          />
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };
