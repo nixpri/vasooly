@@ -1,221 +1,258 @@
 # Phase Status and Priorities
 
 **Last Updated**: 2025-10-20
-**Current Phase**: Phase 1 COMPLETE ✅ (Weeks 3-6)
-**Overall Progress**: 42/126 days (33.3%)
+**Current Phase**: Phase 2 IN PROGRESS (Week 7 Complete)
+**Overall Progress**: 49/126 days (38.9%)
 
 ## Current Status
 
-### Phase 1 Progress ✅ **COMPLETE**
-- ✅ Week 1: Foundation Setup (Complete)
-- ✅ Week 2: Data Models + Database (Complete)
-- ✅ Week 3: Split Engine Enhancement (Complete)
-- ✅ Week 4: Bill History & Management (Complete)
-- ✅ Week 5: UPI Generator + Status Manager (Complete)
-- ✅ Week 6: Basic UI (Complete - implemented during Week 3-4)
+### Phase 2 Progress 🔄 **IN PROGRESS**
+- ✅ Week 7: Native Modules Integration (Complete)
+- ⏳ Week 8: State Management (Next)
+- ⏳ Week 9: Complete UI Flows (Pending)
+- ⏳ Week 10: Animations & Polish (Pending)
 
-**Phase 1 Status**: ✅ **COMPLETE** - All core development milestones achieved
+**Phase 2 Status**: **IN PROGRESS** - Week 7 complete, Week 8 next
 
-## Week 6 Completion ✅
+## Week 7 Completion ✅
 
-### Basic UI (Bill Create Screen) - COMPLETE
+### Native Modules Integration - COMPLETE
 
-**Status**: ✅ **COMPLETE** (Implemented during Weeks 3-4)
-**Note**: Week 6 deliverables were completed ahead of schedule
+**Status**: ✅ **COMPLETE**
+**Duration**: 1 day
+**Focus**: Native service layer for contacts, sharing, QR codes, file attachments
 
-#### Components Implemented
-1. **BillCreateScreen** (`src/screens/BillCreateScreen.tsx` - 466 lines)
-   - Full bill creation and editing workflow
-   - Bill title input with emoji placeholder
-   - Real-time split calculation integration
-   - Form validation with inline errors
-   - Create and Edit mode support
-   - Keyboard-aware scrolling (Android optimized)
-   - Database integration (createBill, updateBill)
-   - Success/error handling with alerts
+#### Services Implemented
+1. **Contact Service** (`src/services/contactsService.ts` - ~250 lines)
+   - Contact picker with expo-contacts integration
+   - Permission handling (request, check, graceful fallback)
+   - Single/multiple contact selection
+   - Contact search functionality
+   - Error handling for denied permissions
 
-2. **BillAmountInput** (`src/components/BillAmountInput.tsx` - 180 lines)
-   - Currency input with ₹ symbol
-   - Paise precision handling
-   - Quick amount buttons (₹100, ₹500, ₹1000, ₹2000)
-   - Real-time validation
-   - Glass-morphism design
+2. **Share Service** (`src/services/shareService.ts` - ~400 lines)
+   - WhatsApp sharing with phone number support
+   - SMS sharing (iOS/Android platform-specific)
+   - Generic share dialog (React Native Share API)
+   - Message templates (payment, reminder, summary)
+   - Share cancellation handling
 
-3. **ParticipantList** (`src/components/ParticipantList.tsx` - 280 lines)
-   - Add/remove participants dynamically
-   - Inline name editing
-   - Minimum participant validation (2)
-   - Duplicate name detection
-   - Scrollable for 10+ participants
+3. **QR Code Service** (`src/services/qrCodeService.ts` - ~290 lines)
+   - UPI payment QR code generation
+   - Customizable options (size, colors, error correction)
+   - Vasooly branding (#6C5CE7 purple, #0A0A0F dark)
+   - Batch generation for all participants
+   - Bill sharing QR codes (deep linking ready)
 
-4. **SplitResultDisplay** (`src/components/SplitResultDisplay.tsx` - 220 lines)
-   - Per-participant breakdown
-   - Visual remainder indicators (+1p badges)
-   - Summary statistics
-   - Empty state handling
+4. **File Picker Service** (`src/services/filePickerService.ts` - ~350 lines)
+   - Image picker (JPEG, PNG)
+   - PDF document picker
+   - Multiple file selection
+   - File validation (size, type, extension)
+   - Utility functions (format, icons, display names)
 
-5. **GlassCard** (`src/components/GlassCard.tsx`)
-   - Reusable glass-morphism container
-   - CRED-like premium UI
-   - Consistent design system
+#### Testing Complete ✅
+- **QR Code Service**: 34 tests (100% coverage)
+- **File Picker Service**: 21 tests (100% utilities coverage)
+- **Share Service**: 20 tests (100% message generation coverage)
+- **Total**: 75 new passing tests
+- **Overall**: 251 passing tests (was 176)
 
-#### Integration Complete
-- ✅ Split Engine: Real-time `calculateDetailedSplit()` on input changes
-- ✅ Validation: `validateSplitInputs()` with error display
-- ✅ Database: `createBill()` and `updateBill()` integration
-- ✅ Navigation: Multi-screen flow (Create → History → Detail → Edit)
-- ✅ Type Safety: Full TypeScript integration
-- ✅ Form Validation: Amount, participants, title validation
+#### Files Created (9 new files)
+**Production** (5 files):
+1. `src/services/contactsService.ts`
+2. `src/services/shareService.ts`
+3. `src/services/qrCodeService.ts`
+4. `src/services/filePickerService.ts`
+5. `src/services/index.ts`
 
-#### Design System
-- Dark theme (#0A0A0F background)
-- Glass-morphism effects (rgba transparency)
-- Purple accent colors (#6C5CE7, #6366F1)
-- Consistent spacing (20px padding)
-- Typography hierarchy
-- Reanimated 4.x integration points
+**Tests** (3 files):
+6. `src/services/__tests__/qrCodeService.test.ts`
+7. `src/services/__tests__/filePickerService.test.ts`
+8. `src/services/__tests__/shareService.test.ts`
+
+#### Native Modules Integrated
+- ✅ expo-contacts (15.0.9) - Contact picker
+- ✅ expo-sharing (14.0.7) - Share dialog
+- ✅ expo-document-picker (14.0.7) - File/image picker
+- ✅ react-native-qrcode-svg (6.3.15) - QR generation
+- ✅ react-native-svg (15.12.1) - SVG rendering
 
 #### Code Metrics
-- **Total Lines**: ~1,146 lines of UI code
-- **Components**: 4 reusable components
-- **Screens**: 3 complete screens (Create, History, Detail)
-- **Complete Workflow**: Create → History → Detail → Edit
-- **Test Coverage**: 98.52% on Split Engine, 100% on data layer
+- **Total Lines**: ~2,140 lines (production + tests)
+- **Production Code**: ~1,290 lines
+- **Test Code**: ~850 lines
+- **Functions**: 50+ service functions
+- **Test Coverage**: 100% on pure functions
 
-### Week 6 Success Criteria ✅
-- ✅ Design tokens and glass-morphism system established
-- ✅ Base components built (GlassCard, inputs, displays)
-- ✅ BillCreateScreen fully functional with create/edit modes
-- ✅ Split Engine integrated with real-time calculation
-- ✅ Comprehensive form validation with inline errors
-- ✅ Navigation system with multi-screen flow
-- ✅ TypeScript and ESLint validation passing
-- ✅ Keyboard handling optimized for Android
-- ✅ CRED-like premium UI with glass effects
+### Week 7 Success Criteria ✅
+- ✅ Native modules installed (expo-contacts, expo-sharing, expo-document-picker)
+- ✅ Contact service with permission handling
+- ✅ Share service with WhatsApp/SMS/generic
+- ✅ QR code generation service
+- ✅ File picker service with validation
+- ✅ Comprehensive tests (75 passing)
+- ✅ TypeScript validation passing
+- ✅ ESLint validation passing
 
-## Phase 1 Summary ✅
+## Phase Summary
 
-### All Weeks Complete
-**Week 3**: Split Engine Enhancement
-- Enhanced split engine with participant-aware calculations
-- 98.52% test coverage (32 comprehensive tests)
-- 4 new functions for production readiness
+### Phase 1 ✅ **COMPLETE** (Weeks 3-6)
+All core development milestones achieved:
+- ✅ Week 3: Split Engine (98.52% coverage)
+- ✅ Week 4: Bill History & Management
+- ✅ Week 5: UPI Generator + Status Manager (100% coverage)
+- ✅ Week 6: Basic UI (Bill Create Screen)
 
-**Week 4**: Bill History & Management
-- BillHistoryScreen with FlashList virtualization (456 lines)
-- BillDetailScreen with payment tracking (571 lines)
-- Multi-screen navigation system
-- Android keyboard handling optimized
-- Edit/Delete/Duplicate functionality
+**Deliverables**:
+- 176 passing tests → 251 passing tests (75 new service tests)
+- 4 reusable UI components
+- 3 complete screens
+- Complete bill management workflow
+- Native services layer complete
 
-**Week 5**: UPI Generator + Status Manager
-- Status Manager (8 core functions, 100% coverage)
-- UPI Generator verification (100% coverage)
-- 176 total passing tests
-- Payment status tracking complete
+### Phase 2 🔄 **IN PROGRESS** (Weeks 7-10)
 
-**Week 6**: Basic UI (Bill Create Screen)
-- Complete bill management UI
-- Glass-morphism design system
-- Real-time split calculation
-- Form validation and error handling
-- Multi-screen navigation
+**Week 7**: Native Modules Integration ✅ **COMPLETE**
+- Services layer for contacts, sharing, QR, files
+- 75 new comprehensive tests
+- Full TypeScript type safety
 
-### Phase 1 Success Criteria ✅ **ALL MET**
-- ✅ Split engine: 98.52% test coverage, all edge cases handled
-- ✅ Database: All CRUD working, migrations tested
-- ✅ UPI Generator: 100% test coverage, links validated
-- ✅ Status Manager: 100% test coverage, payment tracking complete
-- ✅ Basic UI: Complete bill management workflow
-- ✅ Bill Create Screen: Fully functional with create/edit modes
-- ✅ Bill History: List, search, filter functionality
-- ✅ Bill Details: Payment tracking and UPI integration
-- ✅ Navigation: Multi-screen flow with edit mode
-- ✅ Design System: Glass-morphism with dark theme
-- ✅ Components: 4 reusable UI components built
-- ✅ Business Logic: 176 passing tests, 100% coverage on critical paths
-
-## Next Steps - Phase 2: Integration & Polish
-
-### Week 7: Payment Status UI 🔜 **NEXT PRIORITY**
-
-**Goal**: Integrate Status Manager into existing UI components
+**Week 8**: State Management ⏳ **NEXT PRIORITY**
+**Goal**: Implement Zustand state stores
 
 **Tasks**:
-1. **Refactor BillDetailScreen** to use Status Manager functions
-   - Replace manual `calculateProgress()` with `computeSettlementSummary()`
-   - Replace manual `getPaymentSummary()` with `computeSettlementSummary()`
-   - Replace manual status updates with `updatePaymentStatus()`
+1. Create billStore.ts for bill state
+   - Bill creation, update, delete actions
+   - Current bill selection
+   - Optimistic updates
+   - SQLite persistence backing
 
-2. **Add Settlement Progress Indicators**
-   - Visual progress bar using `paidPercentage` from settlement summary
-   - Display paid/pending counts and amounts
-   - Show settlement status (ACTIVE/SETTLED)
+2. Create historyStore.ts for history caching
+   - Bill list caching
+   - Search/filter state
+   - Pull-to-refresh state
+   - Pagination support
 
-3. **Remainder Calculation Display**
-   - Show remaining amount for partial payments
-   - List pending participants with amounts
-   - Visual indicators for participants who paid vs pending
+3. Create settingsStore.ts for preferences
+   - Default UPI VPA
+   - Theme preferences (future)
+   - Notification settings (future)
+   - App configuration
 
-4. **Bulk Payment Status Updates**
-   - "Mark All Paid" button using `updateBillPaymentStatuses()`
-   - "Mark All Pending" button for reversal
-   - Batch status updates with confirmation
+4. Implement SQLite persistence
+   - Auto-save to database on state changes
+   - Load from database on app start
+   - Sync state with repository layer
 
-5. **Bill Status Visual Indicators**
-   - Badge/tag for ACTIVE bills (payments pending)
-   - Badge/tag for SETTLED bills (fully paid)
-   - Color-coded status indicators
+5. Add selectors for re-render optimization
+   - Memoized selectors
+   - Partial state subscriptions
+   - Performance profiling
 
-### Timeline Estimate
-**Week 7 Completion**: 3-5 days
-- Day 1: Refactor BillDetailScreen with Status Manager
-- Day 2: Add settlement progress indicators
-- Day 3: Implement remainder calculations display
-- Day 4: Bulk updates and visual polish
-- Day 5: Testing and validation
+6. Write store tests
+   - Unit tests for actions/selectors
+   - Integration tests with persistence
+   - Performance benchmarks
 
-### Dependencies & Blockers
+7. Profile re-render performance
+   - React DevTools Profiler
+   - Identify unnecessary re-renders
+   - Optimize with selectors
+
+**Timeline**: 3-5 days estimated
+- Day 1: billStore.ts + tests
+- Day 2: historyStore.ts + tests
+- Day 3: settingsStore.ts + tests
+- Day 4: SQLite persistence integration
+- Day 5: Performance profiling + optimization
+
+**Week 9**: Complete UI Flows ⏳ **PLANNED**
+- BillReview screen (share UPI links/QRs)
+- Settings screen (default VPA, policies)
+- React Navigation stack setup
+- Deep linking implementation
+
+**Week 10**: Animations & Polish ⏳ **PLANNED**
+- Spring-based screen transitions
+- Micro-interactions (buttons, status changes)
+- "All Paid" celebration animation
+- Haptic feedback
+- Glass effects with Skia
+- 60fps validation on devices
+
+## Dependencies & Blockers
 
 **No Current Blockers ✅**
 
 **All Dependencies Available**:
-- ✅ Status Manager (8 functions, 100% coverage)
-- ✅ UPI Generator (7 functions, 100% coverage)
-- ✅ Split Engine (98.52% coverage)
-- ✅ Bill Repository (CRUD operations, 100% coverage)
-- ✅ Database Layer (SQLite + SQLCipher, working)
-- ✅ UI Components (4 components, glass-morphism design)
-- ✅ Type System (Bill, Participant, enums)
+- ✅ zustand (5.0.8) - State management
+- ✅ SQLite + billRepository - Persistence
+- ✅ Native services - Contact, share, QR, files
+- ✅ Split Engine - 98.52% coverage
+- ✅ Status Manager - 100% coverage
+- ✅ UPI Generator - 100% coverage
+- ✅ UI Components - 4 glass-morphism components
+- ✅ Type System - Full TypeScript types
 
-### External Dependencies Status
-
-**React Native Packages**:
+**External Dependencies Status**:
 - ✅ Expo SDK 54 (compatible)
 - ✅ React Native 0.76.1 (compatible)
-- ✅ FlashList 2.0.2 (compatible)
-- ✅ Moti (animations working)
-- ✅ Reanimated 4.x (working with entry point import)
-
-**No Outstanding Issues**: All 17/17 expo-doctor checks passing
+- ✅ All native modules installed and ready
+- ✅ All 17/17 expo-doctor checks passing
 
 ## Risk Assessment
 
 ### Low Risk ✅
-- Status Manager integration (pure functions, no side effects)
-- UPI link generation (already tested, 100% coverage)
-- Settlement indicators (read-only display from Status Manager)
+- Zustand integration (simple, well-documented)
+- SQLite persistence (repository layer ready)
+- State selectors (standard React patterns)
 
 ### Medium Risk ⚠️
-- QR code generation (requires react-native-qrcode-svg testing)
-- Contact integration (permissions, privacy concerns)
-- Push notifications (infrastructure setup needed)
+- Performance optimization (needs profiling)
+- Re-render management (requires testing)
+- State sync with database (edge cases)
 
 ### High Risk 🚨
 - None currently identified
 
+## Next Steps - Week 8: State Management
+
+### Immediate Tasks
+1. **Create billStore.ts**
+   - Actions: createBill, updateBill, deleteBill
+   - State: bills, currentBill, loading
+   - Persistence: Auto-save to billRepository
+   - Selectors: getBillById, getPendingBills
+
+2. **Create historyStore.ts**
+   - State: billHistory, searchQuery, filters
+   - Caching: Cache loaded bills for performance
+   - Actions: search, filter, refresh, loadMore
+   - Selectors: getFilteredBills, getSearchResults
+
+3. **Create settingsStore.ts**
+   - State: defaultVPA, preferences
+   - Persistence: expo-secure-store for sensitive data
+   - Actions: updateVPA, updatePreferences
+   - Validation: VPA format validation
+
+4. **Integration Testing**
+   - Test store + repository integration
+   - Test optimistic updates
+   - Test error recovery
+   - Performance profiling
+
+### Timeline Estimate
+**Week 8 Completion**: 3-5 days
+- billStore: 1 day
+- historyStore: 1 day
+- settingsStore: 1 day
+- Integration + tests: 1-2 days
+
 ---
 
-**Status**: Phase 1 Complete ✅ | Week 6 Complete ✅
-**Next Action**: Plan and implement Week 7 (Payment Status UI)
-**Confidence**: High (all dependencies ready, no blockers)
+**Status**: Week 7 Complete ✅ | Week 8 Next ⏳
+**Progress**: 38.9% (49/126 days)
+**Next Action**: Begin Week 8 - State Management implementation
+**Confidence**: High (all dependencies ready, clear plan, comprehensive foundation)
