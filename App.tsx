@@ -2,7 +2,6 @@ import 'react-native-reanimated';
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { AppNavigator } from './src/navigation/AppNavigator';
-// import { UPIValidationScreen } from './src/screens/UPIValidationScreen';
 import { initializeDatabase } from './src/lib/data/database';
 
 export default function App() {
@@ -40,7 +39,6 @@ export default function App() {
   }
 
   return <AppNavigator />;
-  // Uncomment for UPI testing: return <UPIValidationScreen />;
 }
 
 const styles = StyleSheet.create({

@@ -11,6 +11,7 @@ import {
   getShareErrorMessage,
 } from '../shareService';
 import type { Bill, Participant } from '../../types';
+import { BillStatus, PaymentStatus } from '../../types';
 import type { ShareResult } from '../shareService';
 
 describe('Share Service', () => {
@@ -25,16 +26,16 @@ describe('Share Service', () => {
         id: 'p1',
         name: 'Alice',
         amountPaise: 5000,
-        status: 'PENDING',
+        status: PaymentStatus.PENDING,
       },
       {
         id: 'p2',
         name: 'Bob',
         amountPaise: 5000,
-        status: 'PAID',
+        status: PaymentStatus.PAID,
       },
     ],
-    status: 'ACTIVE',
+    status: BillStatus.ACTIVE,
   };
 
   const mockParticipant: Participant = mockBill.participants[0];
@@ -107,19 +108,19 @@ describe('Share Service', () => {
           id: 'p1',
           name: 'Alice',
           amountPaise: 3000,
-          status: 'PENDING' as const,
+          status: PaymentStatus.PENDING,
         },
         {
           id: 'p2',
           name: 'Bob',
           amountPaise: 4000,
-          status: 'PENDING' as const,
+          status: PaymentStatus.PENDING,
         },
         {
           id: 'p3',
           name: 'Charlie',
           amountPaise: 3000,
-          status: 'PENDING' as const,
+          status: PaymentStatus.PENDING,
         },
       ];
 
@@ -155,13 +156,13 @@ describe('Share Service', () => {
           id: 'p1',
           name: 'Alice',
           amountPaise: 12345,
-          status: 'PENDING' as const,
+          status: PaymentStatus.PENDING,
         },
         {
           id: 'p2',
           name: 'Bob',
           amountPaise: 67890,
-          status: 'PENDING' as const,
+          status: PaymentStatus.PENDING,
         },
       ];
 
@@ -200,7 +201,7 @@ describe('Share Service', () => {
           id: `p${i}`,
           name: `Person ${i + 1}`,
           amountPaise: 1000,
-          status: i % 2 === 0 ? ('PAID' as const) : ('PENDING' as const),
+          status: i % 2 === 0 ? PaymentStatus.PAID : PaymentStatus.PENDING,
         })),
       };
 
@@ -219,13 +220,13 @@ describe('Share Service', () => {
             id: 'p1',
             name: 'Alice',
             amountPaise: 6173,
-            status: 'PENDING',
+            status: PaymentStatus.PENDING,
           },
           {
             id: 'p2',
             name: 'Bob',
             amountPaise: 6172,
-            status: 'PAID',
+            status: PaymentStatus.PAID,
           },
         ],
       };

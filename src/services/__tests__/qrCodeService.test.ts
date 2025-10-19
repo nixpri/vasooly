@@ -16,6 +16,7 @@ import {
   DEFAULT_QR_OPTIONS,
 } from '../qrCodeService';
 import type { Bill, Participant } from '../../types';
+import { BillStatus, PaymentStatus } from '../../types';
 
 describe('QR Code Service', () => {
   const mockBill: Bill = {
@@ -29,16 +30,16 @@ describe('QR Code Service', () => {
         id: 'p1',
         name: 'Alice',
         amountPaise: 5000,
-        status: 'PENDING',
+        status: PaymentStatus.PENDING,
       },
       {
         id: 'p2',
         name: 'Bob',
         amountPaise: 5000,
-        status: 'PAID',
+        status: PaymentStatus.PAID,
       },
     ],
-    status: 'ACTIVE',
+    status: BillStatus.ACTIVE,
   };
 
   const mockParticipant: Participant = mockBill.participants[0];

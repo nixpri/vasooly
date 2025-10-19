@@ -254,7 +254,12 @@ export async function pickMultipleDocuments(
  * @returns Validation result
  */
 function validateFile(
-  asset: DocumentPickerResult['assets'][0],
+  asset: {
+    uri: string;
+    name: string;
+    size?: number;
+    mimeType?: string;
+  },
   options: Required<FileValidationOptions>
 ): { valid: boolean; error?: string } {
   // Check file size
