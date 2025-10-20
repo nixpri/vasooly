@@ -299,7 +299,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
               <Switch
                 value={enableHaptics}
                 onValueChange={handleHapticsToggle}
-                trackColor={{ false: '#3e3e3e', true: '#6C5CE7' }}
+                trackColor={{ false: '#3e3e3e', true: '#C2662D' }}
                 thumbColor={enableHaptics ? '#FFFFFF' : '#f4f3f4'}
               />
             </View>
@@ -317,7 +317,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
               <Switch
                 value={reminderEnabled}
                 onValueChange={handleReminderToggle}
-                trackColor={{ false: '#3e3e3e', true: '#6C5CE7' }}
+                trackColor={{ false: '#3e3e3e', true: '#C2662D' }}
                 thumbColor={reminderEnabled ? '#FFFFFF' : '#f4f3f4'}
               />
             </View>
@@ -339,7 +339,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                 step={1}
                 value={autoDeleteDays}
                 onSlidingComplete={handleAutoDeleteDaysChange}
-                minimumTrackTintColor="#6C5CE7"
+                minimumTrackTintColor="#C2662D"
                 maximumTrackTintColor="rgba(255, 255, 255, 0.2)"
                 thumbTintColor="#FFFFFF"
               />
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 13,
-    color: '#6C5CE7',
+    color: '#C2662D',
     fontWeight: '600',
   },
   headerTitle: {
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   buttonPrimary: {
-    backgroundColor: '#6C5CE7',
+    backgroundColor: '#C2662D',
   },
   buttonSecondary: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
   sliderValue: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6C5CE7',
+    color: '#C2662D',
   },
   appInfo: {
     alignItems: 'center',

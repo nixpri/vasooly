@@ -59,12 +59,12 @@ export const AppNavigator: React.FC = () => {
   const navigationTheme = {
     dark: true,
     colors: {
-      primary: '#6C5CE7',
+      primary: '#C2662D',
       background: '#0A0A0F',
       card: '#0A0A0F',
       text: '#FFFFFF',
       border: 'rgba(255, 255, 255, 0.1)',
-      notification: '#6C5CE7',
+      notification: '#C2662D',
     },
     fonts: {
       regular: {

@@ -90,7 +90,7 @@ export interface QRCodeData {
 export const DEFAULT_QR_OPTIONS: QRCodeOptions = {
   size: 256,
   backgroundColor: '#0A0A0F', // Dark theme background
-  color: '#6C5CE7', // Purple accent
+  color: '#C2662D', // Terracotta accent
   ecl: 'M', // Medium error correction (15% damage recovery)
   logoSize: 0.2,
   logoBackgroundPadding: 10,

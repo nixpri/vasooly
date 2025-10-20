@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 13,
-    color: '#6C5CE7',
+    color: '#C2662D',
     fontWeight: '600',
   },
   headerTop: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   viewHistoryButton: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    backgroundColor: '#6C5CE7',
+    backgroundColor: '#C2662D',
     borderRadius: 6,
   },
   viewHistoryButtonText: {
@@ -411,18 +411,18 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   createButton: {
-    backgroundColor: '#6C5CE7',
+    backgroundColor: '#C2662D',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
-    shadowColor: '#6C5CE7',
+    shadowColor: '#C2662D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 5,
   },
   createButtonDisabled: {
-    backgroundColor: 'rgba(108, 92, 231, 0.3)',
+    backgroundColor: 'rgba(194, 102, 45, 0.3)',
     shadowOpacity: 0,
     elevation: 0,
   },

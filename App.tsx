@@ -37,7 +37,7 @@ export default function App() {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C5CE7" />
+          <ActivityIndicator size="large" color="#C2662D" />
           <Text style={styles.loadingText}>Initializing...</Text>
         </View>
       </GestureHandlerRootView>

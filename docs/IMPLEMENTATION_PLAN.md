@@ -1,33 +1,35 @@
 # Vasooly Implementation Plan
 
-**18-Week Production Roadmap**
-**Version**: 1.0 | **Updated**: 2025-01-20
+**21.5-Week Production Roadmap** (Updated with Phase 2A: UI/UX Revamp)
+**Version**: 1.1 | **Updated**: 2025-10-20
 
 ---
 
 ## Overview
 
-This document provides the complete 18-week implementation roadmap, combining:
+This document provides the complete 21.5-week implementation roadmap, combining:
 - Week-by-week action items
-- Phase-based milestones  
+- Phase-based milestones
 - Success criteria and quality gates
 - Risk mitigation strategies
 - Session summary and key learnings
 
-**Timeline Reality**: 18 weeks to production-ready (not 2 weeks originally estimated)
+**Timeline Reality**: 21.5 weeks to production-ready (updated with UI/UX revamp before launch)
+**Major Update**: Phase 2A (UI/UX Revamp) added after Week 10 to transform MVP into world-class launchable product
 
 ---
 
 ## Phase Summary
 
-| Phase | Duration | Focus | Go/No-Go |
-|-------|----------|-------|----------|
-| **Phase 0: Foundation** | Weeks 1-2 | Security, encryption, POCs | End of Week 2 |
-| **Phase 1: Core Development** | Weeks 3-6 | Features, business logic, basic UI | End of Week 6 |
-| **Phase 2: Integration & Polish** | Weeks 7-10 | Native modules, animations, UX | End of Week 10 |
-| **Phase 3: Testing & Hardening** | Weeks 11-13 | Unit, E2E, manual testing | End of Week 13 |
-| **Phase 4: Beta Testing** | Weeks 14-15 | User testing, bug fixes | End of Week 15 |
-| **Phase 5: Production Launch** | Weeks 16-18 | Final polish, app stores | Launch |
+| Phase | Duration | Focus | Go/No-Go | Status |
+|-------|----------|-------|----------|--------|
+| **Phase 0: Foundation** | Weeks 1-2 | Security, encryption, POCs | End of Week 2 | ✅ COMPLETE |
+| **Phase 1: Core Development** | Weeks 3-6 | Features, business logic, basic UI | End of Week 6 | ✅ COMPLETE |
+| **Phase 2: Integration & Polish** | Weeks 7-10 | Native modules, animations, UX | End of Week 10 | ✅ COMPLETE |
+| **Phase 2A: UI/UX Revamp** | Weeks 10.5-16.5 | World-class design, brand identity, premium UX | End of Week 16.5 | 🔄 PLANNED |
+| **Phase 3: Testing & Hardening** | Weeks 16.5-18.5 | Unit, E2E, manual testing | End of Week 18.5 | ⏳ PENDING |
+| **Phase 4: Beta Testing** | Weeks 18.5-19.5 | User testing, bug fixes | End of Week 19.5 | ⏳ PENDING |
+| **Phase 5: Production Launch** | Weeks 19.5-21.5 | Final polish, app stores | Launch | ⏳ PENDING |
 
 ---
 
@@ -390,7 +392,7 @@ This document provides the complete 18-week implementation roadmap, combining:
 #### Design System Features
 - Dark theme (#0A0A0F background)
 - Glass-morphism effects (rgba transparency)
-- Purple accent colors (#6C5CE7, #6366F1)
+- Earthen accent colors (Terracotta #C2662D, Olive #6B7C4A)
 - Consistent spacing (20px padding)
 - Typography hierarchy
 - Reanimated 4.x integration points
@@ -466,7 +468,7 @@ This document provides the complete 18-week implementation roadmap, combining:
 - [x] Handle file picker cancellation
 - [x] File validation (size max 10MB, type, extension)
 - [x] Batch QR generation for all participants
-- [x] Vasooly branding (purple #6C5CE7, dark #0A0A0F)
+- [x] Vasooly branding (terracotta #C2662D, dark #0A0A0F)
 
 #### Testing Complete ✅
 - [x] **Unit Tests**: 75 new comprehensive tests (251 total passing)
@@ -887,9 +889,540 @@ npx expo install react-native-screens@~4.16.0
 
 ---
 
-## Phase 3: Testing & Hardening (Weeks 11-13)
+## Phase 2A: UI/UX Revamp (Weeks 10.5-16.5)
 
-### Week 11: Unit & Integration Testing
+**Status**: 🔄 **PLANNED** - Design document complete, awaiting implementation
+**Duration**: 6 weeks
+**Focus**: Transform from MVP to world-class financial app with enterprise-grade UI/UX
+
+### Goals
+
+Transform Vasooly from a functional MVP into a launchable product with:
+- Professional brand identity (beyond "typical LLM purple theme")
+- Complete user experience (onboarding, dashboard, insights, empty states)
+- Enterprise-grade design system matching Stripe, AirBnB, Revolut standards
+- 12 screens total (vs current 4) for comprehensive user journey
+- Premium visual design with dual color strategy (Blue + Purple)
+
+**Current State**: 4 screens, no onboarding, generic purple theme, no brand identity
+**Target State**: 12 screens, complete onboarding, dual-brand design system, world-class UX
+
+**Reference Document**: See `docs/VASOOLY_DESIGN_SYSTEM.md` for complete specifications
+
+---
+
+### Week 11: Design Foundation (5 days)
+
+**Focus**: Establish design system foundations and brand identity
+
+#### Day 1-2: Brand Identity & Design Tokens ✅
+- [ ] Implement dual color system:
+  - Primary Blue (#0066FF) - Trust, reliability, financial credibility
+  - Accent Purple (#6B46C1) - Innovation, premium feel, differentiation
+  - Extended palette with tints/shades for both colors
+- [ ] Typography system (Inter font):
+  - 7-level type scale (Display 48px → Caption 12px)
+  - Line heights and letter spacing specifications
+  - Font weight system (Regular 400 → Bold 700)
+- [ ] Spacing system:
+  - 4px base unit with 8-point grid
+  - Component-specific spacing tokens
+  - Responsive breakpoints
+- [ ] Icon system:
+  - Select icon library (Lucide React Native or custom)
+  - Define icon sizes and stroke widths
+  - Create custom financial icons (balance, debt, settlement)
+- [ ] Update design tokens in codebase
+- [ ] Create token documentation
+
+#### Day 3: Figma Mockups (High-Fidelity)
+- [ ] Create Figma project structure
+- [ ] Design all 12 screens in high-fidelity:
+  1. Onboarding screens (4-6 screens)
+  2. Dashboard/Home
+  3. Add Expense Modal
+  4. Friends List
+  5. Activity Feed
+  6. Bill Detail (enhanced)
+  7. Friend Detail
+  8. Settle Up Flow
+  9. Spending Insights
+  10. Profile
+  11. Settings (enhanced)
+  12. Notifications
+- [ ] Design component library in Figma
+- [ ] Create responsive variants (different screen sizes)
+- [ ] Export design specs
+
+#### Day 4: Illustrations & Empty States
+- [ ] Create or source illustration system:
+  - Onboarding illustrations (friendly, approachable)
+  - Empty state illustrations (encouraging, helpful)
+  - Error state illustrations
+  - Success/celebration illustrations
+- [ ] Choose illustration style (line art, minimal color, friendly)
+- [ ] Create empty states for:
+  - No bills yet
+  - No friends yet
+  - No activity
+  - Search no results
+  - Offline state
+- [ ] Design celebration states (all settled, first bill)
+
+#### Day 5: Component Library Audit
+- [ ] Audit existing components against new design system
+- [ ] Create component migration plan
+- [ ] Document component API changes
+- [ ] Prepare animation specifications
+- [ ] Review and finalize Week 11 deliverables
+
+### Week 11 Success Criteria
+✅ Dual color system (Blue + Purple) implemented
+✅ Inter typography system with 7-level scale
+✅ Spacing and icon systems defined
+✅ Figma mockups for all 12 screens complete
+✅ Illustration system selected/created
+✅ Empty states designed for all scenarios
+✅ Component migration plan documented
+
+---
+
+### Week 12: Core Screens Design Implementation (5 days)
+
+**Focus**: Implement Tier 1 screens (highest user impact)
+
+#### Day 1-2: Onboarding Flow
+- [ ] Create `OnboardingScreen` component stack (4-6 screens):
+  - Welcome screen with hero illustration
+  - Value proposition screens (split bills, track payments, settle up)
+  - Permission requests (contacts - optional)
+  - Get started / sign-in placeholder
+- [ ] Implement screen pagination with dots indicator
+- [ ] Add skip/next navigation
+- [ ] Integrate with first-launch detection
+- [ ] Add smooth transitions between screens
+- [ ] Store onboarding completion state
+
+#### Day 2-3: Dashboard/Home Screen (NEW)
+- [ ] Create `DashboardScreen.tsx` (replaces BillHistoryScreen as home):
+  - Hero section with balance overview card
+  - "You are owed" vs "You owe" summary with visual distinction
+  - Quick actions: Add Expense, Settle Up, Invite Friend
+  - Recent activity preview (latest 5 transactions)
+  - Friends who owe you section
+  - Pending reminders count
+- [ ] Implement balance cards with glass-morphism
+- [ ] Add skeleton loading states
+- [ ] Integrate with billStore and historyStore
+- [ ] Create summary calculations
+- [ ] Add pull-to-refresh
+
+#### Day 4: Bottom Tab Navigation
+- [ ] Migrate from Stack to Hybrid Navigation (Stack + Bottom Tabs):
+  - Tab 1: Home (Dashboard) - house icon
+  - Tab 2: Friends - users icon
+  - Tab 3: Add Expense (center, elevated) - plus-circle icon
+  - Tab 4: Activity - list icon
+  - Tab 5: Profile - user icon
+- [ ] Implement custom tab bar with elevated center button
+- [ ] Add tab bar animations (scale, color transitions)
+- [ ] Configure tab navigation types
+- [ ] Update AppNavigator structure
+- [ ] Test navigation flows
+
+#### Day 5: Enhanced Bill History (now "Activity Feed")
+- [ ] Rename and restructure BillHistoryScreen → ActivityScreen
+- [ ] Add activity feed design:
+  - Timeline view with date grouping
+  - Activity types: bill created, payment made, reminder sent, settled
+  - Visual activity icons and color coding
+  - Infinite scroll / pagination
+- [ ] Add filters (all, this month, last month, settled)
+- [ ] Enhanced search with filters
+- [ ] Activity item interactions (tap to view detail)
+- [ ] Empty state for no activity
+
+### Week 12 Success Criteria
+✅ Onboarding flow complete with 4-6 screens
+✅ Dashboard screen implemented with balance cards
+✅ Bottom tab navigation working (5 tabs)
+✅ Activity feed redesigned with timeline view
+✅ All screens use new design system tokens
+✅ Smooth animations and transitions
+✅ TypeScript and ESLint validation passing
+
+---
+
+### Week 13: Implementation Tier 2 (5 days)
+
+**Focus**: Friends, Add Expense, and enhanced existing screens
+
+#### Day 1-2: Friends Screen (NEW)
+- [ ] Create `FriendsScreen.tsx`:
+  - Friend list with avatars and balance preview
+  - Sort by: amount owed, name, recent activity
+  - Friend cards showing net balance (you owe / owes you)
+  - Search friends functionality
+  - Add friend button (+ icon)
+  - Friend groups (optional, deferred)
+- [ ] Implement friend detail navigation
+- [ ] Add balance calculation per friend
+- [ ] Integrate with contacts service
+- [ ] Empty state: "No friends yet, invite someone!"
+- [ ] Pull-to-refresh
+
+#### Day 2-3: Add Expense Modal (Enhanced)
+- [ ] Redesign BillCreateScreen as modal:
+  - Bottom sheet modal presentation (80% height)
+  - Slide-up animation
+  - Swipe-down to dismiss
+  - Enhanced visual hierarchy
+- [ ] Add expense categories (optional):
+  - Food & Drinks, Travel, Shopping, Entertainment, Other
+  - Category icons and colors
+- [ ] Add receipt photo upload:
+  - Camera button
+  - Gallery picker integration
+  - Photo preview with crop
+- [ ] Enhanced participant selection:
+  - Friend picker from Friends list
+  - Recently split-with section
+  - Contact picker fallback
+- [ ] Smart split suggestions (if time permits):
+  - Split equally (default)
+  - You paid, split with... (common scenario)
+  - Split by percentages (advanced, deferred)
+
+#### Day 3-4: Friend Detail & Settle Up
+- [ ] Create `FriendDetailScreen.tsx`:
+  - Friend info card (name, contact, total balance)
+  - Transaction history with this friend
+  - Net balance visualization
+  - "Settle Up" button
+  - "Remind" button (if they owe you)
+- [ ] Create `SettleUpScreen.tsx`:
+  - Settlement summary (amount, breakdown)
+  - Settlement method selection (UPI, cash, other)
+  - Generate UPI payment link
+  - Mark as settled confirmation
+  - Partial settlement support (optional)
+- [ ] Integrate with UPI generator
+- [ ] Add settlement success celebration
+- [ ] Update friend balance after settlement
+
+#### Day 4-5: Enhanced Bill Detail & Settings
+- [ ] Enhance `BillDetailScreen.tsx`:
+  - Add receipt photo display (if uploaded)
+  - Add bill notes/description
+  - Add bill category badge
+  - Enhanced participant list with friend avatars
+  - "Settled" vs "Active" visual distinction
+  - Activity log (created, edited, paid, settled events)
+- [ ] Enhance `SettingsScreen.tsx`:
+  - User profile section (name, photo)
+  - Payment preferences (default VPA)
+  - Notification preferences (reminders, settlements)
+  - Theme toggle (light/dark - dark only for MVP)
+  - Data export (JSON)
+  - About section (version, privacy, terms)
+  - Logout placeholder
+
+### Week 13 Success Criteria
+✅ Friends screen with balance preview and sorting
+✅ Enhanced Add Expense modal with categories and photos
+✅ Friend Detail screen with transaction history
+✅ Settle Up flow with UPI integration
+✅ Enhanced Bill Detail with receipts and activity log
+✅ Enhanced Settings with profile and preferences
+✅ All screens integrated with navigation
+✅ TypeScript and ESLint validation passing
+
+---
+
+### Week 14: Premium Features & Insights (5 days)
+
+**Focus**: Value-add features that differentiate Vasooly
+
+#### Day 1-2: Spending Insights Screen (NEW)
+- [ ] Create `InsightsScreen.tsx`:
+  - Monthly spending chart (bar chart)
+  - Category breakdown (pie chart or donut chart)
+  - Top spending friends
+  - Spending trends (this month vs last month)
+  - Average bill size
+  - Settlement rate (% bills settled on time)
+- [ ] Implement chart library integration (Victory Native or Recharts)
+- [ ] Add date range selector (this month, last 3 months, year)
+- [ ] Calculate insights from bill data
+- [ ] Add export insights (share as image)
+- [ ] Empty state for insufficient data
+
+#### Day 2-3: Visual Debt Network (Premium Feature)
+- [ ] Create debt network visualization:
+  - Graph view showing who owes whom
+  - Node sizes based on amounts
+  - Color coding (green = owes you, blue = you owe)
+  - Interactive (tap node to see friend detail)
+- [ ] Implement graph layout algorithm (force-directed)
+- [ ] Add zoom and pan gestures
+- [ ] Optimize debt paths (suggest settlements to minimize transfers)
+- [ ] Add "Simplify debts" feature (optional, complex algorithm)
+
+#### Day 3-4: Smart Features
+- [ ] Smart split suggestions:
+  - Recent participants quick select
+  - Frequent split patterns
+  - "Same as last time" option
+- [ ] Payment reminders:
+  - Auto-reminder after X days
+  - Smart reminder timing (not weekends, not late night)
+  - Reminder templates with friendly tone
+- [ ] Receipt scanner (OCR):
+  - Camera integration
+  - OCR to extract amount
+  - Participant detection (future: ML)
+  - Manual correction flow
+
+#### Day 4-5: Notifications & Activity Feed
+- [ ] Create notification system:
+  - In-app notifications (bell icon badge)
+  - Notification list screen
+  - Notification types: payment received, reminder, friend request, bill update
+  - Mark as read functionality
+  - Clear all notifications
+- [ ] Enhance activity feed:
+  - Rich activity cards with context
+  - Action buttons (mark paid, remind, view bill)
+  - Activity filtering and search
+
+### Week 14 Success Criteria
+✅ Spending Insights screen with charts
+✅ Visual debt network implemented
+✅ Smart split suggestions working
+✅ Payment reminders system
+✅ Receipt scanner with OCR (basic)
+✅ Notification system with in-app notifications
+✅ Enhanced activity feed with rich cards
+✅ All features tested and working
+
+---
+
+### Week 15: Polish & Refinement (5 days)
+
+**Focus**: Micro-interactions, animations, edge cases, accessibility
+
+#### Day 1-2: Micro-Interactions & Animations
+- [ ] Add micro-interactions:
+  - Balance card flip animation (tap to show breakdown)
+  - Friend card slide-to-remind gesture
+  - Pull-to-refresh custom animation
+  - Tab bar icon animations (scale, bounce)
+  - Success checkmark animations
+- [ ] Enhanced transitions:
+  - Screen transitions with shared element animations
+  - Modal slide-up with backdrop
+  - Bottom sheet drag handle
+  - Card expand/collapse animations
+- [ ] Loading states:
+  - Skeleton screens for all data loading
+  - Progressive image loading
+  - Shimmer effect for lists
+  - Retry buttons for errors
+
+#### Day 2-3: Empty States & Error Handling
+- [ ] Implement all empty states:
+  - Dashboard: "Start by adding your first expense"
+  - Friends: "Invite friends to split bills"
+  - Activity: "No activity yet"
+  - Insights: "Add more bills to see insights"
+  - Search: "No results found"
+- [ ] Error states:
+  - Network errors with retry
+  - Permission errors with help text
+  - Validation errors with inline feedback
+  - Crash fallback (error boundary)
+- [ ] Offline mode:
+  - Offline indicator banner
+  - Queue actions for when online
+  - Sync status indicator
+  - Offline-first optimistic updates
+
+#### Day 3-4: Accessibility & Responsive Design
+- [ ] Accessibility audit:
+  - VoiceOver/TalkBack testing
+  - Dynamic text sizing support
+  - Color contrast validation (WCAG AA)
+  - Focus indicators for interactive elements
+  - Screen reader labels for all icons
+  - Semantic headings
+- [ ] Responsive design:
+  - Small phones (iPhone SE, 4.7")
+  - Large phones (iPhone Pro Max, 6.7")
+  - Tablets (basic support, optional)
+  - Landscape orientation support
+  - Safe area handling (notches, home indicators)
+
+#### Day 4-5: Final Polish Pass
+- [ ] Visual polish:
+  - Consistent spacing audit
+  - Typography hierarchy review
+  - Color usage consistency
+  - Icon size consistency
+  - Shadow and depth refinement
+- [ ] Performance optimization:
+  - Image optimization (WebP, lazy loading)
+  - List virtualization audit
+  - Animation performance profiling
+  - Memory leak detection
+  - Bundle size optimization
+- [ ] Final QA:
+  - Cross-screen flow testing
+  - Edge case testing (empty data, max data)
+  - TypeScript strict mode validation
+  - ESLint full project scan
+  - No console.log or TODO comments in production
+
+### Week 15 Success Criteria
+✅ All micro-interactions implemented
+✅ Enhanced transitions and animations
+✅ Comprehensive empty states
+✅ Error handling and offline mode
+✅ Accessibility compliance (WCAG AA)
+✅ Responsive design for all devices
+✅ Visual polish complete
+✅ Performance optimized
+✅ No critical bugs or issues
+
+---
+
+### Week 16: Integration Testing & Refinement (2.5 days)
+
+**Focus**: End-to-end testing and final adjustments before Phase 3
+
+#### Day 1: User Flow Testing
+- [ ] Test complete user journeys:
+  - First-time user: Onboarding → Add first expense → Invite friend → Settle up
+  - Returning user: Dashboard → View friend → Remind → Mark paid
+  - Power user: Multiple bills → Insights → Export data
+- [ ] Test all navigation paths:
+  - Bottom tabs navigation
+  - Modal presentations
+  - Deep linking (prepare for future)
+  - Back button behavior
+- [ ] Test edge cases:
+  - Very long names
+  - Large amounts (₹1 crore+)
+  - 100+ participants (stress test)
+  - 1000+ bills (performance)
+  - No network connectivity
+  - Low memory devices
+
+#### Day 2: Design Review & Adjustments
+- [ ] Full design system audit:
+  - Consistency check across all screens
+  - Design token usage validation
+  - Component reuse audit
+  - Animation smoothness review
+- [ ] User feedback simulation:
+  - Internal team testing
+  - Gather feedback on UX flows
+  - Identify pain points
+  - Quick wins for UX improvements
+- [ ] Final design adjustments:
+  - Spacing tweaks
+  - Color adjustments
+  - Typography refinements
+  - Animation timing adjustments
+
+#### Day 2.5: Documentation & Handoff
+- [ ] Update design documentation:
+  - Component library documentation
+  - Design token documentation
+  - Animation specifications
+  - Accessibility guidelines
+- [ ] Create design-to-dev handoff docs:
+  - Screen specifications
+  - Component usage examples
+  - Integration notes
+  - Known issues and workarounds
+- [ ] Update IMPLEMENTATION_PLAN.md:
+  - Mark Phase 2A as complete
+  - Document key decisions
+  - Note deferred features
+- [ ] Prepare for Phase 3 (Testing & Hardening)
+
+### Week 16 Success Criteria
+✅ All user flows tested end-to-end
+✅ Edge cases handled gracefully
+✅ Design system fully consistent
+✅ Internal feedback incorporated
+✅ Documentation complete and up-to-date
+✅ Ready for comprehensive testing phase
+
+---
+
+### Phase 2A Success Criteria ✅
+
+**Design Foundation**:
+✅ Dual color system (Blue #0066FF + Purple #6B46C1) implemented
+✅ Inter typography system with 7-level scale
+✅ Complete spacing and icon systems
+✅ Figma mockups for all 12 screens
+✅ Illustration and empty state system
+
+**Screen Implementation**:
+✅ 12 screens total (vs initial 4):
+  - Onboarding (4-6 screens)
+  - Dashboard with balance overview
+  - Friends list with balance preview
+  - Enhanced Add Expense modal
+  - Activity feed (timeline view)
+  - Bill Detail (enhanced)
+  - Friend Detail
+  - Settle Up flow
+  - Spending Insights
+  - Profile
+  - Enhanced Settings
+  - Notifications
+
+**Navigation**:
+✅ Bottom tab navigation (5 tabs)
+✅ Hybrid navigation (Stack + Tabs)
+✅ Modal presentations
+✅ Smooth transitions and animations
+
+**Premium Features**:
+✅ Spending insights with charts
+✅ Visual debt network
+✅ Smart split suggestions
+✅ Payment reminders
+✅ Receipt scanner (OCR basic)
+✅ Notification system
+
+**Polish**:
+✅ Micro-interactions throughout
+✅ Comprehensive empty states
+✅ Error handling and offline mode
+✅ Accessibility compliance (WCAG AA)
+✅ Responsive design (all screen sizes)
+✅ Performance optimized
+
+**Quality**:
+✅ TypeScript strict mode (0 errors)
+✅ ESLint validation (0 errors)
+✅ Design system consistency (100%)
+✅ All user flows tested
+✅ Documentation complete
+
+**Go/No-Go Decision**: Proceed to Phase 3 (Testing & Hardening)
+
+**Phase 2A Status**: 🔄 **PLANNED** - Design document complete, implementation ready to begin
+
+---
+
+## Phase 3: Testing & Hardening (Weeks 16.5-18.5)
+
+### Week 17: Unit & Integration Testing
 
 #### Coverage Goals
 - [ ] Business logic: 90%+ unit test coverage
@@ -905,7 +1438,7 @@ npx expo install react-native-screens@~4.16.0
 - [ ] Database: Test concurrent writes, transactions
 - [ ] Error scenarios: Network failures, permission denials
 
-### Week 12: E2E Testing (Detox)
+### Week 18: E2E Testing (Detox)
 
 #### Critical User Flows
 - [ ] Create bill → Add participants → Generate links → Share
@@ -920,7 +1453,7 @@ npx expo install react-native-screens@~4.16.0
 - [ ] Run E2E tests on Android emulator
 - [ ] Run E2E tests on 2 physical devices (iOS + Android)
 
-### Week 13: Manual Testing & Bug Fixing
+### Week 18.5: Manual Testing & Bug Fixing
 
 #### Manual Test Matrix
 - [ ] UPI compatibility: Test all links on 10+ devices
@@ -946,9 +1479,9 @@ npx expo install react-native-screens@~4.16.0
 
 ---
 
-## Phase 4: Beta Testing (Weeks 14-15)
+## Phase 4: Beta Testing (Weeks 18.5-19.5)
 
-### Week 14: Beta Preparation
+### Week 19: Beta Preparation
 
 #### Beta Build
 - [ ] Create beta build with Crashlytics/Sentry
@@ -963,7 +1496,7 @@ npx expo install react-native-screens@~4.16.0
 - [ ] Mix of UPI apps (GPay, PhonePe, Paytm)
 - [ ] Send beta invitations
 
-### Week 15: Beta Testing & Feedback
+### Week 19.5: Beta Testing & Feedback
 
 #### Beta Activities
 - [ ] Monitor Crashlytics for crashes
@@ -993,9 +1526,9 @@ npx expo install react-native-screens@~4.16.0
 
 ---
 
-## Phase 5: Production Launch (Weeks 16-18)
+## Phase 5: Production Launch (Weeks 19.5-21.5)
 
-### Week 16: App Store Preparation
+### Week 20: App Store Preparation
 
 #### Assets
 - [ ] App icons (all sizes, iOS + Android)
@@ -1016,7 +1549,7 @@ npx expo install react-native-screens@~4.16.0
 - [ ] Set pricing (free with IAP for Pro)
 - [ ] Configure IAP products (if launching with Pro)
 
-### Week 17: Final Polish & Submission
+### Week 21: Final Polish & Submission
 
 #### Final Testing
 - [ ] Full regression testing
@@ -1032,7 +1565,7 @@ npx expo install react-native-screens@~4.16.0
 - [ ] Submit for review
 - [ ] Monitor review status daily
 
-### Week 18: Launch & Monitoring
+### Week 21.5: Launch & Monitoring
 
 #### Pre-Launch
 - [ ] Prepare launch announcement (social media, website)
@@ -1047,7 +1580,7 @@ npx expo install react-native-screens@~4.16.0
 - [ ] Monitor user reviews
 - [ ] Respond to critical issues within 4 hours
 
-#### Post-Launch (Week 18)
+#### Post-Launch (Week 21.5)
 - [ ] Daily monitoring (crashes, reviews, metrics)
 - [ ] Fix critical bugs (hotfix releases)
 - [ ] Gather user feedback for V1.1

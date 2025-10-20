@@ -172,7 +172,7 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
   // Animated styles for progress bar
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
-    backgroundColor: isFullySettled ? '#10B981' : '#6C5CE7',
+    backgroundColor: isFullySettled ? '#10B981' : '#C2662D',
   }));
 
   // Animated styles for celebration
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 13,
-    color: '#6C5CE7',
+    color: '#C2662D',
     fontWeight: '600',
   },
   headerContent: {
@@ -527,16 +527,16 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(108, 92, 231, 0.2)',
+    backgroundColor: 'rgba(194, 102, 45, 0.2)',
     borderWidth: 2,
-    borderColor: 'rgba(108, 92, 231, 0.4)',
+    borderColor: 'rgba(194, 102, 45, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   participantAvatarText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#6C5CE7',
+    color: '#C2662D',
   },
   participantDetails: {
     flex: 1,
@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   upiButtonPrimary: {
-    backgroundColor: '#6C5CE7',
+    backgroundColor: '#C2662D',
   },
   upiButtonSecondary: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',

@@ -122,7 +122,7 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
                         styles.progressFill,
                         {
                           width: `${progress}%`,
-                          backgroundColor: isSettled ? '#10B981' : '#6C5CE7',
+                          backgroundColor: isSettled ? '#10B981' : '#C2662D',
                         },
                       ]}
                     />
@@ -242,8 +242,8 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
               <RefreshControl
                 refreshing={isLoading}
                 onRefresh={handleRefresh}
-                tintColor="#6C5CE7"
-                colors={['#6C5CE7']}
+                tintColor="#C2662D"
+                colors={['#C2662D']}
               />
             }
           />
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   createHeaderButton: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    backgroundColor: '#6C5CE7',
+    backgroundColor: '#C2662D',
     borderRadius: 6,
   },
   createHeaderButtonText: {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: '#6C5CE7',
+    backgroundColor: '#C2662D',
     borderRadius: 10,
   },
   createButtonText: {

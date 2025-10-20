@@ -26,7 +26,7 @@ export interface LoadingSpinnerProps {
 /**
  * Animated loading spinner
  * @example
- * <LoadingSpinner size={24} color="#6C5CE7" />
+ * <LoadingSpinner size={24} color="#C2662D" />
  */
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 20,
