@@ -141,17 +141,23 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
       const now = new Date();
       const timestamp = Date.now();
 
-      // Map split result to Participant objects with NEW unique IDs
+      // Map split result to Participant objects
+      // In edit mode, preserve payment status for existing participants
       const participantData: Participant[] = splitResult.splits.map(
-        (split, index) => ({
-          id: isEditMode && existingBill
-            ? existingBill.participants[index]?.id || `participant-${timestamp}-${index}`
-            : `participant-${timestamp}-${index}`,
-          name: split.participantName,
-          amountPaise: split.amountPaise,
-          status: PaymentStatus.PENDING,
-          phone: undefined,
-        })
+        (split, index) => {
+          // Find existing participant by name to preserve payment status
+          const existingParticipant = isEditMode && existingBill
+            ? existingBill.participants.find((p) => p.name === split.participantName)
+            : undefined;
+
+          return {
+            id: existingParticipant?.id || `participant-${timestamp}-${index}`,
+            name: split.participantName,
+            amountPaise: split.amountPaise,
+            status: existingParticipant?.status || PaymentStatus.PENDING,
+            phone: existingParticipant?.phone,
+          };
+        }
       );
 
       if (isEditMode && existingBill) {
