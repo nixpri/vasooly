@@ -19,6 +19,7 @@ import {
   ScrollView,
   RefreshControl,
   Pressable,
+  Image,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -141,8 +142,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>Vasooly</Text>
+          <View style={styles.headerContent}>
+            <View style={styles.logoRow}>
+              <Image
+                source={require('../../assets/vasooly-icon.png')}
+                style={styles.headerIcon}
+                resizeMode="contain"
+              />
+              <Image
+                source={require('../../assets/vasooly-text.png')}
+                style={styles.headerText}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.headerSubtitle}>Bills khatam, vasooly shuru!</Text>
           </View>
         </View>
@@ -251,18 +263,23 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.spacing.md,
+  },
+  headerContent: {
+    flex: 1,
+    gap: 4,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerIcon: {
+    width: 32,
+    height: 32,
   },
   headerText: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: tokens.typography.h2.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    fontWeight: tokens.typography.fontWeight.bold,
-    color: tokens.colors.sage[700],
-    marginBottom: 2,
+    width: 120,
+    height: 28,
   },
   headerSubtitle: {
     fontSize: tokens.typography.caption.fontSize,

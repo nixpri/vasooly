@@ -153,11 +153,21 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
               {/* Text Content */}
               <View style={styles.textContainer}>
                 {index === 0 ? (
-                  <Image
-                    source={require('../../assets/Vasooly-logo-icon-slogan.png')}
-                    style={styles.onboardingLogo}
-                    resizeMode="contain"
-                  />
+                  <View style={styles.onboardingLogoContainer}>
+                    <View style={styles.onboardingLogoRow}>
+                      <Image
+                        source={require('../../assets/vasooly-icon.png')}
+                        style={styles.onboardingIcon}
+                        resizeMode="contain"
+                      />
+                      <Image
+                        source={require('../../assets/vasooly-text.png')}
+                        style={styles.onboardingText}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <Text style={styles.onboardingSlogan}>Bills khatam, vasooly shuru!</Text>
+                  </View>
                 ) : (
                   <Text style={styles.title}>{screen.title}</Text>
                 )}
@@ -248,10 +258,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     maxWidth: 320,
   },
-  onboardingLogo: {
-    width: 240,
-    height: 100,
+  onboardingLogoContainer: {
+    alignItems: 'center',
+    gap: tokens.spacing.sm,
     marginBottom: tokens.spacing.md,
+  },
+  onboardingLogoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing.md,
+  },
+  onboardingIcon: {
+    width: 48,
+    height: 48,
+  },
+  onboardingText: {
+    width: 180,
+    height: 42,
+  },
+  onboardingSlogan: {
+    fontSize: 14,
+    fontWeight: tokens.typography.fontWeight.semibold,
+    color: tokens.colors.brand.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   title: {
     fontSize: tokens.typography.h1.fontSize,
