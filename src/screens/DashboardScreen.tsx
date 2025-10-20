@@ -258,6 +258,7 @@ const styles = StyleSheet.create({
   headerLogo: {
     width: 200,
     height: 44,
+    marginLeft: -8,
   },
   scrollView: {
     flex: 1,
