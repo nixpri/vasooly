@@ -355,7 +355,8 @@ const styles = StyleSheet.create({
     gap: tokens.spacing.lg,
   },
   emptyStateTitle: {
-    ...tokens.typography.h2,
+    fontSize: 16,
+    fontWeight: '600',
     color: tokens.colors.text.primary,
     marginBottom: tokens.spacing.sm,
     textAlign: 'center',
