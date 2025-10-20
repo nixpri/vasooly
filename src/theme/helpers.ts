@@ -24,13 +24,13 @@ import { tokens } from './tokens';
  * ```
  */
 export const getTypographyStyle = (
-  variant: keyof typeof tokens.typography,
+  variant: keyof Omit<typeof tokens.typography, 'fontFamily' | 'fontWeight'>,
   overrides?: Partial<TextStyle>
 ): TextStyle => {
   const baseStyle = tokens.typography[variant];
 
-  // Skip fontFamily key from typography object
-  if ('fontFamily' in baseStyle) {
+  // TypeScript guard for type-safe access
+  if (typeof baseStyle === 'string' || !('fontSize' in baseStyle)) {
     return overrides || {};
   }
 
@@ -39,7 +39,7 @@ export const getTypographyStyle = (
     fontSize: baseStyle.fontSize,
     fontWeight: baseStyle.fontWeight,
     lineHeight: baseStyle.lineHeight,
-    letterSpacing: baseStyle.letterSpacing,
+    letterSpacing: 'letterSpacing' in baseStyle ? baseStyle.letterSpacing : 0,
     ...(overrides || {}),
   };
 };

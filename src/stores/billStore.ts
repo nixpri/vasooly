@@ -50,6 +50,7 @@ interface BillState {
   getBillById: (billId: string) => Bill | undefined;
   getPendingBills: () => Bill[];
   getSettledBills: () => Bill[];
+  getNetBalance: () => number;
 }
 
 export const useBillStore = create<BillState>((set, get) => ({
@@ -316,5 +317,26 @@ export const useBillStore = create<BillState>((set, get) => ({
 
   getSettledBills: () => {
     return get().bills.filter((b) => b.status === BillStatus.SETTLED);
+  },
+
+  /**
+   * Get net balance across all active bills
+   * Returns positive value if you are owed money (total PENDING payments)
+   * Note: Current model tracks money owed TO you, not what you owe others
+   */
+  getNetBalance: () => {
+    const activeBills = get().bills.filter((b) => b.status === BillStatus.ACTIVE);
+
+    let totalOwedToPaise = 0; // Money owed to you (PENDING participants)
+
+    activeBills.forEach((bill) => {
+      bill.participants.forEach((participant) => {
+        if (participant.status === PaymentStatus.PENDING) {
+          totalOwedToPaise += participant.amountPaise;
+        }
+      });
+    });
+
+    return totalOwedToPaise;
   },
 }));

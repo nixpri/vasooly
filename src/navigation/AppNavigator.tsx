@@ -132,7 +132,7 @@ export const AppNavigator: React.FC = () => {
           name="BillDetail"
           component={BillDetailScreen}
           options={{
-            cardStyleInterpolator: ({ current, next, layouts }) => ({
+            cardStyleInterpolator: ({ current, layouts }) => ({
               cardStyle: {
                 transform: [
                   {

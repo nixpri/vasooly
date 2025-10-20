@@ -50,6 +50,7 @@ interface HistoryState {
   getActiveBills: () => Bill[];
   getSettledBills: () => Bill[];
   getBillsByStatus: (status: BillStatus) => Bill[];
+  getRecentActivity: (limit?: number) => Bill[];
 }
 
 export const useHistoryStore = create<HistoryState>((set, get) => ({
@@ -216,5 +217,16 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
 
   getBillsByStatus: (status: BillStatus) => {
     return get().bills.filter((b) => b.status === status);
+  },
+
+  /**
+   * Get recent activity (bills sorted by updatedAt descending)
+   * @param limit - Maximum number of bills to return (default: 5)
+   */
+  getRecentActivity: (limit: number = 5) => {
+    return get()
+      .bills.slice() // Create copy to avoid mutating original
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+      .slice(0, limit);
   },
 }));

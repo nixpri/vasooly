@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.h3.fontSize,
     fontFamily: tokens.typography.fontFamily.primary,
     fontWeight: tokens.typography.fontWeight.bold,
-    color: tokens.colors.error,
+    color: tokens.colors.error.main,
     marginBottom: tokens.spacing.md,
   },
   errorMessage: {

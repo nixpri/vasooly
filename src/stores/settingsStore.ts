@@ -13,6 +13,7 @@ interface AppSettings {
   enableHaptics: boolean;
   autoDeleteDays: number;
   reminderEnabled: boolean;
+  onboardingCompleted: boolean;
 }
 
 interface SettingsState extends AppSettings {
@@ -28,6 +29,7 @@ interface SettingsState extends AppSettings {
   setEnableHaptics: (enabled: boolean) => Promise<void>;
   setAutoDeleteDays: (days: number) => Promise<void>;
   setReminderEnabled: (enabled: boolean) => Promise<void>;
+  setOnboardingCompleted: (completed: boolean) => Promise<void>;
 
   // Actions - Persistence
   loadSettings: () => Promise<void>;
@@ -48,6 +50,7 @@ const STORAGE_KEYS = {
   ENABLE_HAPTICS: 'settings_enable_haptics',
   AUTO_DELETE_DAYS: 'settings_auto_delete_days',
   REMINDER_ENABLED: 'settings_reminder_enabled',
+  ONBOARDING_COMPLETED: 'settings_onboarding_completed',
 } as const;
 
 // Default settings
@@ -57,6 +60,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   enableHaptics: true,
   autoDeleteDays: 30,
   reminderEnabled: true,
+  onboardingCompleted: false,
 };
 
 /**
@@ -182,22 +186,39 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   },
 
+  // Set Onboarding Completed
+  setOnboardingCompleted: async (completed: boolean) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      await saveToSecureStore(STORAGE_KEYS.ONBOARDING_COMPLETED, completed.toString());
+      set({ onboardingCompleted: completed, isLoading: false });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to update onboarding status';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
   // Load Settings
   loadSettings: async () => {
     set({ isLoading: true, error: null });
 
     try {
-      const [vpa, name, haptics, deleteDays, reminders] = await Promise.all([
+      const [vpa, name, haptics, deleteDays, reminders, onboarding] = await Promise.all([
         loadFromSecureStore(STORAGE_KEYS.DEFAULT_VPA),
         loadFromSecureStore(STORAGE_KEYS.DEFAULT_UPI_NAME),
         loadFromSecureStore(STORAGE_KEYS.ENABLE_HAPTICS),
         loadFromSecureStore(STORAGE_KEYS.AUTO_DELETE_DAYS),
         loadFromSecureStore(STORAGE_KEYS.REMINDER_ENABLED),
+        loadFromSecureStore(STORAGE_KEYS.ONBOARDING_COMPLETED),
       ]);
 
       // Ensure boolean values are strictly typed (Switch component requires actual booleans)
       const enableHapticsValue = haptics === null ? DEFAULT_SETTINGS.enableHaptics : Boolean(haptics === 'true');
       const reminderEnabledValue = reminders === null ? DEFAULT_SETTINGS.reminderEnabled : Boolean(reminders === 'true');
+      const onboardingCompletedValue = onboarding === null ? DEFAULT_SETTINGS.onboardingCompleted : Boolean(onboarding === 'true');
       const autoDeleteDaysValue = deleteDays ? parseInt(deleteDays, 10) : DEFAULT_SETTINGS.autoDeleteDays;
 
       set({
@@ -206,6 +227,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         enableHaptics: enableHapticsValue,
         autoDeleteDays: autoDeleteDaysValue,
         reminderEnabled: reminderEnabledValue,
+        onboardingCompleted: onboardingCompletedValue,
         isLoading: false,
       });
     } catch (error) {
@@ -232,6 +254,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         deleteFromSecureStore(STORAGE_KEYS.ENABLE_HAPTICS),
         deleteFromSecureStore(STORAGE_KEYS.AUTO_DELETE_DAYS),
         deleteFromSecureStore(STORAGE_KEYS.REMINDER_ENABLED),
+        deleteFromSecureStore(STORAGE_KEYS.ONBOARDING_COMPLETED),
       ]);
 
       set({

@@ -117,6 +117,7 @@ export const colors = {
   border: {
     default: '#E8E4DF',    // neutral 200 - Default borders
     light: '#F5F3F0',      // neutral 100 - Very subtle borders
+    subtle: '#E8E4DF',     // neutral 200 - Subtle borders (alias for default)
     medium: '#D7CCC8',     // neutral 300 - Medium borders
     dark: '#A1887F',       // neutral 400 - Dark borders
     focus: '#CB6843',      // terracotta 500 - Focus rings

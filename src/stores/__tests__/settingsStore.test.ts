@@ -346,7 +346,7 @@ describe('useSettingsStore', () => {
         await result.current.resetSettings();
       });
 
-      expect(mockSecureStore.deleteItemAsync).toHaveBeenCalledTimes(5);
+      expect(mockSecureStore.deleteItemAsync).toHaveBeenCalledTimes(6);
       expect(result.current.defaultVPA).toBeNull();
       expect(result.current.defaultUPIName).toBeNull();
       expect(result.current.enableHaptics).toBe(true);
