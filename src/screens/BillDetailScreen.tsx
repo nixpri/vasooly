@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100, // Extra padding for bottom navigation and safe area
+    paddingBottom: 120, // Extra padding for bottom navigation and safe area
     gap: 20,
   },
   summaryCard: {

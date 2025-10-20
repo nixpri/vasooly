@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: tokens.spacing.xl,
     paddingTop: tokens.spacing.xl,
-    paddingBottom: 100, // Extra padding for bottom tab bar
+    paddingBottom: 120, // Extra padding for bottom tab bar
   },
   balanceCard: {
     marginBottom: tokens.spacing['2xl'],
