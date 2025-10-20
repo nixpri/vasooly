@@ -19,15 +19,17 @@ import {
   ScrollView,
   RefreshControl,
   Pressable,
-  SafeAreaView,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
+import { ChevronRight, ClipboardList } from 'lucide-react-native';
 import { useBillStore } from '../stores/billStore';
-import { useHistoryStore } from '../stores/historyStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { tokens } from '../theme/tokens';
 import { BalanceCard } from '../components/BalanceCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { AnimatedButton } from '../components/AnimatedButton';
+import { PaymentStatus } from '../types';
 
 type RootStackParamList = {
   Dashboard: undefined;
@@ -40,53 +42,94 @@ type DashboardScreenProps = NativeStackScreenProps<RootStackParamList, 'Dashboar
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   // Zustand stores
-  const { loadAllBills, getNetBalance } = useBillStore();
-  const { loadHistory, refreshHistory, getRecentActivity, isRefreshing } = useHistoryStore();
+  const { bills, loadAllBills, isLoading } = useBillStore();
+  const { defaultUPIName } = useSettingsStore();
 
   // Load data on mount
   useEffect(() => {
     loadAllBills();
-    loadHistory();
-  }, []);
+  }, [loadAllBills]);
+
+  // Refresh when screen gains focus (after settling bills, etc.)
+  useFocusEffect(
+    useCallback(() => {
+      // Sync refresh on focus to ensure fresh data
+      loadAllBills().catch((error) => {
+        console.error('Failed to refresh dashboard on focus:', error);
+      });
+    }, [loadAllBills])
+  );
 
   // Pull-to-refresh handler
   const handleRefresh = useCallback(async () => {
     try {
-      await Promise.all([loadAllBills(), refreshHistory()]);
+      await loadAllBills();
     } catch (error) {
       console.error('Failed to refresh dashboard:', error);
     }
-  }, [loadAllBills, refreshHistory]);
+  }, [loadAllBills]);
 
-  // Get balance data
-  const netBalancePaise = getNetBalance();
+  // Get recent bills (most recent 5 by updatedAt)
+  // Using useMemo with proper date handling
+  const recentBills = React.useMemo(() => {
+    if (!bills || bills.length === 0) return [];
 
-  // For now, we'll show simplified balance (total owed to you)
-  // In a full implementation, we'd calculate separate owedTo and owedBy
-  const owedTo = netBalancePaise > 0 ? netBalancePaise : 0;
-  const owedBy = netBalancePaise < 0 ? Math.abs(netBalancePaise) : 0;
-
-  // Get recent bills
-  const recentBills = getRecentActivity(5);
+    return [...bills]
+      .filter(bill => bill && bill.updatedAt) // Ensure valid bills
+      .sort((a, b) => {
+        // Handle date objects properly
+        const dateA = a.updatedAt instanceof Date ? a.updatedAt.getTime() : new Date(a.updatedAt).getTime();
+        const dateB = b.updatedAt instanceof Date ? b.updatedAt.getTime() : new Date(b.updatedAt).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 5);
+  }, [bills]);
   const hasNoBills = recentBills.length === 0;
+
+  // Calculate Vasooly metrics (excluding user's own amounts)
+  // Helper function to check if participant is the current user
+  const isCurrentUser = (participantName: string) => {
+    if (!defaultUPIName) return false;
+    return participantName.toLowerCase() === defaultUPIName.toLowerCase();
+  };
+
+  // Calculate from ALL bills, not just recent 5
+  const vasoolyMetrics = React.useMemo(() => {
+    let totalVasoolyLeft = 0;  // Total pending from others
+    let totalVasooled = 0;      // Total received from others
+    const billsWithPending = new Set<string>();  // Track bills with pending amounts
+
+    bills.forEach((bill) => {
+      bill.participants.forEach((participant) => {
+        // Skip if this is the current user's share
+        if (isCurrentUser(participant.name)) return;
+
+        if (participant.status === PaymentStatus.PAID) {
+          totalVasooled += participant.amountPaise;
+        } else {
+          totalVasoolyLeft += participant.amountPaise;
+          billsWithPending.add(bill.id);  // Track this bill has pending
+        }
+      });
+    });
+
+    return {
+      totalVasoolyLeft,
+      totalVasooled,
+      totalPending: totalVasoolyLeft,  // Same as vasooly left
+      pendingBillCount: billsWithPending.size,  // Bills with pending payments
+      totalBillCount: bills.length,  // Total bills count
+    };
+  }, [bills, defaultUPIName]);
 
   // Navigation handlers
   const handleAddExpense = () => {
     navigation.navigate('BillCreate');
   };
 
-  const handleSettleUp = () => {
-    // TODO: Navigate to settle up screen (Week 13)
-    console.log('Settle up pressed');
-  };
-
-  const handleInviteFriend = () => {
-    // TODO: Open share/invite flow (Week 13)
-    console.log('Invite friend pressed');
-  };
-
   const handleViewAllActivity = () => {
-    navigation.navigate('BillHistory');
+    // Navigate to Activity tab
+    navigation.getParent()?.navigate('Activity');
   };
 
   const handleBillPress = (billId: string) => {
@@ -94,13 +137,23 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerText}>
+            <Text style={styles.headerTitle}>Vasooly</Text>
+            <Text style={styles.headerSubtitle}>Your vasooly companion</Text>
+          </View>
+        </View>
+      </View>
+
       <ScrollView
-        style={styles.container}
+        style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
+            refreshing={isLoading}
             onRefresh={handleRefresh}
             tintColor={tokens.colors.brand.primary}
             colors={[tokens.colors.brand.primary]}
@@ -108,51 +161,39 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Dashboard</Text>
-          <Text style={styles.headerSubtitle}>Your expense overview</Text>
-        </View>
 
         {/* Balance Card */}
         <BalanceCard
-          owedTo={owedTo}
-          owedBy={owedBy}
-          onSettleUp={handleSettleUp}
+          totalExpenses={vasoolyMetrics.totalVasoolyLeft}
+          pendingBillCount={vasoolyMetrics.pendingBillCount}
+          totalBillCount={vasoolyMetrics.totalBillCount}
+          settledAmount={vasoolyMetrics.totalVasooled}
+          pendingAmount={vasoolyMetrics.totalPending}
+          onViewDetails={handleViewAllActivity}
           style={styles.balanceCard}
         />
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Hero CTA */}
         <View style={styles.quickActionsSection}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            {/* Add Expense - Primary CTA */}
-            <AnimatedButton onPress={handleAddExpense} style={styles.primaryActionButton} haptic>
-              <Text style={styles.actionIcon}>+</Text>
-              <Text style={styles.primaryActionLabel}>Add Expense</Text>
-            </AnimatedButton>
-
-            {/* Secondary Actions */}
-            <View style={styles.secondaryActionsRow}>
-              <AnimatedButton
-                onPress={handleSettleUp}
-                style={styles.secondaryActionButton}
-                haptic
-              >
-                <Text style={styles.secondaryActionIcon}>✓</Text>
-                <Text style={styles.secondaryActionLabel}>Settle Up</Text>
-              </AnimatedButton>
-
-              <AnimatedButton
-                onPress={handleInviteFriend}
-                style={styles.secondaryActionButton}
-                haptic
-              >
-                <Text style={styles.secondaryActionIcon}>→</Text>
-                <Text style={styles.secondaryActionLabel}>Invite</Text>
-              </AnimatedButton>
+          <AnimatedButton onPress={handleAddExpense} style={styles.heroActionButton} haptic>
+            <View style={styles.heroActionContent}>
+              <View style={styles.heroIconContainer}>
+                <Text style={styles.heroIcon}>₹</Text>
+              </View>
+              <View style={styles.heroTextContainer}>
+                <Text style={styles.heroActionTitle}>Let's Vasooly!</Text>
+                <Text style={styles.heroActionSubtitle}>Split your next bill</Text>
+              </View>
+              <ChevronRight size={24} color="rgba(255, 255, 255, 0.8)" strokeWidth={2.5} />
             </View>
-          </View>
+          </AnimatedButton>
+
+          {/* Coming soon hint */}
+          {!hasNoBills && (
+            <Text style={styles.comingSoonHint}>
+              Settle up & invite features coming soon 🚀
+            </Text>
+          )}
         </View>
 
         {/* Recent Activity */}
@@ -169,10 +210,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           {/* Empty State */}
           {hasNoBills ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateIcon}>📋</Text>
+              <ClipboardList size={48} color={tokens.colors.text.tertiary} strokeWidth={1.5} />
               <Text style={styles.emptyStateTitle}>No expenses yet</Text>
               <Text style={styles.emptyStateDescription}>
-                Tap "Add Expense" to create your first bill
+                Tap "Let's Vasooly!" to split your first bill
               </Text>
             </View>
           ) : (
@@ -190,34 +231,52 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: tokens.colors.background.base,
   },
-  container: {
+  header: {
+    paddingHorizontal: tokens.spacing.xl,
+    paddingTop: 52,
+    paddingBottom: tokens.spacing.lg,
+    backgroundColor: tokens.colors.background.elevated,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.border.subtle,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.spacing.md,
+  },
+  headerText: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: tokens.typography.h2.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
+    color: tokens.colors.text.primary,
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.sage[600],  // Sage for earthen balance (Phase 3)
+    fontWeight: tokens.typography.fontWeight.medium,
+  },
+  scrollView: {
     flex: 1,
   },
   contentContainer: {
     paddingHorizontal: tokens.spacing.xl,
-    paddingBottom: tokens.spacing['3xl'],
-  },
-  header: {
-    marginTop: tokens.spacing.lg,
-    marginBottom: tokens.spacing['2xl'],
-  },
-  headerTitle: {
-    ...tokens.typography.h1,
-    color: tokens.colors.text.primary,
-    marginBottom: tokens.spacing.xs,
-  },
-  headerSubtitle: {
-    ...tokens.typography.body,
-    color: tokens.colors.text.secondary,
+    paddingTop: tokens.spacing.xl,
+    paddingBottom: 100, // Extra padding for bottom tab bar
   },
   balanceCard: {
     marginBottom: tokens.spacing['2xl'],
@@ -230,54 +289,56 @@ const styles = StyleSheet.create({
     color: tokens.colors.text.primary,
     marginBottom: tokens.spacing.md,
   },
-  quickActionsGrid: {
-    gap: tokens.spacing.md,
-  },
-  primaryActionButton: {
-    backgroundColor: tokens.colors.brand.primary,
+  // Hero CTA styles (Option A)
+  heroActionButton: {
+    backgroundColor: tokens.colors.amber[500],
     borderRadius: tokens.radius.lg,
-    padding: tokens.spacing.lg,
+    padding: tokens.spacing.xl,
+    shadowColor: tokens.colors.amber[500],
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  heroActionContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: tokens.spacing.sm,
-    ...tokens.shadows.md,
-  },
-  actionIcon: {
-    fontSize: 24,
-    color: tokens.colors.text.inverse,
-    fontWeight: '600',
-  },
-  primaryActionLabel: {
-    ...tokens.typography.bodyLarge,
-    color: tokens.colors.text.inverse,
-    fontWeight: '600',
-  },
-  secondaryActionsRow: {
-    flexDirection: 'row',
     gap: tokens.spacing.md,
   },
-  secondaryActionButton: {
-    flex: 1,
-    backgroundColor: tokens.colors.background.elevated,
+  heroIconContainer: {
+    width: 48,
+    height: 48,
     borderRadius: tokens.radius.md,
-    padding: tokens.spacing.lg,
-    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: tokens.spacing.sm,
-    borderWidth: 1,
-    borderColor: tokens.colors.border.default,
   },
-  secondaryActionIcon: {
-    fontSize: 18,
-    color: tokens.colors.brand.primary,
-    fontWeight: '600',
+  heroIcon: {
+    fontSize: 26,
+    color: tokens.colors.text.inverse,
+    fontWeight: '700',
   },
-  secondaryActionLabel: {
-    ...tokens.typography.body,
-    color: tokens.colors.text.primary,
-    fontWeight: '600',
+  heroTextContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  heroActionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: tokens.colors.text.inverse,
+    letterSpacing: 0.3,
+  },
+  heroActionSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '500',
+  },
+  comingSoonHint: {
+    fontSize: 12,
+    color: tokens.colors.text.tertiary,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: tokens.spacing.sm,
   },
   recentActivitySection: {
     marginBottom: tokens.spacing['2xl'],
@@ -290,7 +351,7 @@ const styles = StyleSheet.create({
   },
   viewAllLink: {
     ...tokens.typography.body,
-    color: tokens.colors.brand.primary,
+    color: tokens.colors.amber[600],  // Amber for links (better visibility)
     fontWeight: '600',
   },
   activityList: {
@@ -302,10 +363,7 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     paddingVertical: tokens.spacing['4xl'],
-  },
-  emptyStateIcon: {
-    fontSize: 48,
-    marginBottom: tokens.spacing.lg,
+    gap: tokens.spacing.lg,
   },
   emptyStateTitle: {
     ...tokens.typography.h2,

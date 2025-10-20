@@ -1,41 +1,276 @@
 /**
- * AppNavigator - React Navigation Stack Navigator
+ * AppNavigator - Hybrid Navigation (Bottom Tabs + Stack)
  *
- * Main navigation structure for the app using @react-navigation/native-stack
- * with Reanimated-powered transitions.
+ * Main navigation structure for the app using:
+ * - Bottom tabs for main sections (Home, Activity, Friends, Profile)
+ * - Stack navigators within each tab for screen hierarchy
+ * - Modal presentation for Add Expense
  */
 
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import type { StackScreenProps } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   BillCreateScreen,
   BillHistoryScreen,
   BillDetailScreen,
   SettingsScreen,
   OnboardingScreen,
+  DashboardScreen,
+  FriendsListScreen,
+  ProfileScreen,
 } from '@/screens';
-import type { Bill } from '@/types';
+import { TabBar } from '@/components/TabBar';
 import { useBillStore, useHistoryStore, useSettingsStore } from '@/stores';
 import { tokens } from '@/theme/ThemeProvider';
+import type {
+  RootStackParamList,
+  TabParamList,
+  HomeStackParamList,
+  ActivityStackParamList,
+  FriendsStackParamList,
+  ProfileStackParamList,
+} from './types';
 
-// Navigation types
-export type RootStackParamList = {
-  Onboarding: undefined;
-  BillHistory: undefined;
-  BillCreate: { bill?: Bill } | undefined;
-  BillDetail: { billId: string };
-  Settings: undefined;
+const RootStack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
+const HomeStack = createStackNavigator<HomeStackParamList>();
+const ActivityStack = createStackNavigator<ActivityStackParamList>();
+const FriendsStack = createStackNavigator<FriendsStackParamList>();
+const ProfileStack = createStackNavigator<ProfileStackParamList>();
+
+/**
+ * Home Stack Navigator
+ *
+ * Dashboard → Bill Detail
+ */
+const HomeNavigator: React.FC = () => {
+  return (
+    <HomeStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        cardStyle: { backgroundColor: tokens.colors.background.base },
+      }}
+    >
+      <HomeStack.Screen name="Dashboard" component={DashboardScreen} />
+      <HomeStack.Screen
+        name="BillDetail"
+        component={BillDetailScreen}
+        options={{
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [
+                {
+                  translateX: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [layouts.screen.width, 0],
+                  }),
+                },
+              ],
+            },
+            overlayStyle: {
+              opacity: current.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.3],
+              }),
+            },
+          }),
+          cardOverlayEnabled: true,
+        }}
+      />
+    </HomeStack.Navigator>
+  );
 };
 
-export type OnboardingScreenProps = StackScreenProps<RootStackParamList, 'Onboarding'>;
-export type BillHistoryScreenProps = StackScreenProps<RootStackParamList, 'BillHistory'>;
-export type BillCreateScreenProps = StackScreenProps<RootStackParamList, 'BillCreate'>;
-export type BillDetailScreenProps = StackScreenProps<RootStackParamList, 'BillDetail'>;
-export type SettingsScreenProps = StackScreenProps<RootStackParamList, 'Settings'>;
+/**
+ * Activity Stack Navigator
+ *
+ * Activity Feed → Bill Detail
+ */
+const ActivityNavigator: React.FC = () => {
+  return (
+    <ActivityStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        cardStyle: { backgroundColor: tokens.colors.background.base },
+      }}
+    >
+      <ActivityStack.Screen
+        name="ActivityScreen"
+        component={BillHistoryScreen}
+        options={{
+          cardStyleInterpolator: ({ current }) => ({
+            cardStyle: {
+              opacity: current.progress,
+            },
+          }),
+        }}
+      />
+      <ActivityStack.Screen
+        name="BillDetail"
+        component={BillDetailScreen}
+        options={{
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [
+                {
+                  translateX: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [layouts.screen.width, 0],
+                  }),
+                },
+              ],
+            },
+            overlayStyle: {
+              opacity: current.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.3],
+              }),
+            },
+          }),
+          cardOverlayEnabled: true,
+        }}
+      />
+    </ActivityStack.Navigator>
+  );
+};
 
-const Stack = createStackNavigator<RootStackParamList>();
+/**
+ * Friends Stack Navigator
+ *
+ * Friends List (placeholder for Week 13)
+ */
+const FriendsNavigator: React.FC = () => {
+  return (
+    <FriendsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        cardStyle: { backgroundColor: tokens.colors.background.base },
+      }}
+    >
+      <FriendsStack.Screen name="FriendsList" component={FriendsListScreen} />
+    </FriendsStack.Navigator>
+  );
+};
+
+/**
+ * Profile Stack Navigator
+ *
+ * Profile → Settings
+ */
+const ProfileNavigator: React.FC = () => {
+  return (
+    <ProfileStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        cardStyle: { backgroundColor: tokens.colors.background.base },
+      }}
+    >
+      <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <ProfileStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          presentation: 'modal',
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [
+                {
+                  translateY: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [layouts.screen.height, 0],
+                  }),
+                },
+              ],
+            },
+          }),
+        }}
+      />
+    </ProfileStack.Navigator>
+  );
+};
+
+/**
+ * Main Tab Navigator
+ *
+ * 4 tabs: Home, Activity, Friends, Profile
+ */
+const MainTabNavigator: React.FC = () => {
+  return (
+    <Tab.Navigator
+      tabBar={(props) => <TabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Reset to root screen if already on this tab
+            const state = navigation.getState();
+            const route = state.routes.find((r) => r.name === 'Home');
+            if (route?.state?.index && route.state.index > 0) {
+              e.preventDefault();
+              navigation.navigate('Home', { screen: 'Dashboard' });
+            }
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Activity"
+        component={ActivityNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Reset to root screen if already on this tab
+            const state = navigation.getState();
+            const route = state.routes.find((r) => r.name === 'Activity');
+            if (route?.state?.index && route.state.index > 0) {
+              e.preventDefault();
+              navigation.navigate('Activity', { screen: 'ActivityScreen' });
+            }
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Friends"
+        component={FriendsNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Reset to root screen if already on this tab
+            const state = navigation.getState();
+            const route = state.routes.find((r) => r.name === 'Friends');
+            if (route?.state?.index && route.state.index > 0) {
+              e.preventDefault();
+              navigation.navigate('Friends', { screen: 'FriendsList' });
+            }
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Reset to root screen if already on this tab
+            const state = navigation.getState();
+            const route = state.routes.find((r) => r.name === 'Profile');
+            if (route?.state?.index && route.state.index > 0) {
+              e.preventDefault();
+              navigation.navigate('Profile', { screen: 'ProfileScreen' });
+            }
+          },
+        })}
+      />
+    </Tab.Navigator>
+  );
+};
 
 export const AppNavigator: React.FC = () => {
   const { loadAllBills } = useBillStore();
@@ -92,15 +327,16 @@ export const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-      <Stack.Navigator
-        initialRouteName={onboardingCompleted ? 'BillHistory' : 'Onboarding'}
+      <RootStack.Navigator
+        initialRouteName={onboardingCompleted ? 'MainTabs' : 'Onboarding'}
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
           cardStyle: { backgroundColor: tokens.colors.background.base },
         }}
       >
-        <Stack.Screen
+        {/* Onboarding Screen */}
+        <RootStack.Screen
           name="Onboarding"
           options={{
             cardStyleInterpolator: ({ current }) => ({
@@ -112,22 +348,25 @@ export const AppNavigator: React.FC = () => {
           }}
         >
           {({ navigation }) => (
-            <OnboardingScreen onComplete={() => navigation.replace('BillHistory')} />
+            <OnboardingScreen onComplete={() => navigation.replace('MainTabs')} />
           )}
-        </Stack.Screen>
-        <Stack.Screen
-          name="BillHistory"
-          component={BillHistoryScreen}
+        </RootStack.Screen>
+
+        {/* Main Tab Navigator (4 tabs with stacks) */}
+        <RootStack.Screen
+          name="MainTabs"
+          component={MainTabNavigator}
           options={{
             cardStyleInterpolator: ({ current }) => ({
               cardStyle: {
                 opacity: current.progress,
               },
             }),
-            detachPreviousScreen: false,
           }}
         />
-        <Stack.Screen
+
+        {/* Modal Screens (outside tabs) */}
+        <RootStack.Screen
           name="BillCreate"
           component={BillCreateScreen}
           options={{
@@ -146,53 +385,7 @@ export const AppNavigator: React.FC = () => {
             }),
           }}
         />
-        <Stack.Screen
-          name="BillDetail"
-          component={BillDetailScreen}
-          options={{
-            cardStyleInterpolator: ({ current, layouts }) => ({
-              cardStyle: {
-                transform: [
-                  {
-                    translateX: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.width, 0],
-                    }),
-                  },
-                ],
-              },
-              overlayStyle: {
-                opacity: current.progress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 0.3],
-                }),
-              },
-            }),
-            cardOverlayEnabled: true,
-            cardStyle: { backgroundColor: tokens.colors.background.base },
-            detachPreviousScreen: false,
-          }}
-        />
-        <Stack.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{
-            presentation: 'modal',
-            cardStyleInterpolator: ({ current, layouts }) => ({
-              cardStyle: {
-                transform: [
-                  {
-                    translateY: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.height, 0],
-                    }),
-                  },
-                ],
-              },
-            }),
-          }}
-        />
-      </Stack.Navigator>
+      </RootStack.Navigator>
     </NavigationContainer>
   );
 };

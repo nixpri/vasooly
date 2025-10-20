@@ -1,7 +1,7 @@
 # Vasooly Design Guide
 
 **Purpose**: Single source of truth for design system, color palette, and component styling
-**Last Updated**: 2025-10-20
+**Last Updated**: 2025-10-21
 
 ---
 
@@ -28,8 +28,8 @@ Warmth, trust, stability, grounded
 950: #3E1F13  // Darkest shade
 ```
 
-#### Accent: Sage/Olive Green
-Natural growth, balance, prosperity
+#### Accent 1: Sage/Olive Green
+Natural growth, balance, prosperity, settled states
 
 ```
 50:  #F7F8F5
@@ -37,12 +37,28 @@ Natural growth, balance, prosperity
 200: #DCE1D3
 300: #C5CDBA
 400: #A3AF92
-500: #6B7C4A  // PRIMARY ACCENT (Financial Positive)
+500: #6B7C4A  // Sage (Financial Positive, Settled)
 600: #5A6A3F
 700: #4A5633
 800: #3C452A
 900: #2F3721
 950: #1F2416
+```
+
+#### Accent 2: Warm Amber
+Energy, action, celebration, pending states, CTAs
+
+```
+50:  #FFF9E6  // Lightest - Backgrounds
+100: #FFF0C2  // Very light - Hover states, pending backgrounds
+200: #FFE699  // Light - Subtle highlights
+300: #FFD966  // Medium light - Secondary buttons
+400: #F4C230  // Medium - Accents, glow effects
+500: #E8A637  // BASE AMBER (CTAs, pending, warnings, active states)
+600: #D89020  // Medium dark - Hover states
+700: #B87717  // Dark - Pressed states
+800: #8F5E12  // Darker - Text on light
+900: #66450D  // Darkest - Emphasis
 ```
 
 #### Warm Neutrals
@@ -64,18 +80,25 @@ Natural growth, balance, prosperity
 
 ```typescript
 brand: {
-  primary: '#CB6843',      // Terracotta 500
-  primaryLight: '#F4C9B4', // Terracotta 200
-  primaryDark: '#9A4C32',  // Terracotta 700
+  primary: '#CB6843',        // Terracotta 500 (primary brand)
+  primaryLight: '#F0CDB3',   // Terracotta 200 light
+  primaryDark: '#8F422B',    // Terracotta 800 dark
+  accent: '#E8A637',         // Amber 500 (NEW - accent/CTA color)
+  accentLight: '#FFF0C2',    // Amber 100 light (NEW)
+  accentDark: '#B87717',     // Amber 700 dark (NEW)
+  secondary: '#6B7C4A',      // Sage 500 (secondary brand)
+  secondaryLight: '#CED9C7', // Sage 200 light
+  secondaryDark: '#475029',  // Sage 800 dark
 }
 
 financial: {
   positive: '#6B7C4A',       // Sage 500 (paid, settled)
-  positiveLight: '#EEF0E9',  // Sage 100 (backgrounds)
-  pending: '#E8A637',        // Amber (pending payments)
-  negative: '#C74A45',       // Red (errors, debts)
-  negativeLight: '#FCECEA',  // Red tint (error backgrounds)
-  settled: '#6B7C4A',        // Same as positive (fully settled bills)
+  positiveLight: '#E8EDE5',  // Sage 100 (backgrounds)
+  negative: '#D87B4A',       // Terracotta 400 (owes, negative)
+  negativeLight: '#F9E6D8',  // Terracotta 100 (backgrounds)
+  settled: '#6B7C4A',        // Sage 500 (fully settled bills)
+  pending: '#E8A637',        // Amber 500 (NEW - pending payments)
+  pendingLight: '#FFF0C2',   // Amber 100 (NEW - pending backgrounds)
 }
 
 text: {
@@ -219,9 +242,18 @@ radius: {
 
 ### Buttons
 
-**Primary Button**:
+**Primary CTA Button** (Main actions):
 ```typescript
-backgroundColor: tokens.colors.brand.primary,
+backgroundColor: tokens.colors.amber[500],  // Amber for CTAs
+color: tokens.colors.text.inverse,
+borderRadius: tokens.radius.md,
+padding: { horizontal: 16, vertical: 10 },
+shadowColor: tokens.colors.amber[500],  // Amber glow
+```
+
+**Brand Button** (Brand-specific actions):
+```typescript
+backgroundColor: tokens.colors.brand.primary,  // Terracotta
 color: tokens.colors.text.inverse,
 borderRadius: tokens.radius.md,
 padding: { horizontal: 16, vertical: 10 },
@@ -263,13 +295,18 @@ padding: { horizontal: 8, vertical: 4 },
 
 **Status Badge**:
 ```typescript
-// Paid
-backgroundColor: tokens.colors.financial.positiveLight,
-color: tokens.colors.financial.positive,
+// Paid/Settled
+backgroundColor: tokens.colors.financial.positiveLight,  // Sage 100
+color: tokens.colors.financial.positive,                  // Sage 500
 
 // Pending
-backgroundColor: tokens.colors.financial.negativeLight,
-color: tokens.colors.financial.pending,
+backgroundColor: tokens.colors.financial.pendingLight,  // Amber 100
+color: tokens.colors.amber[800],                        // Amber 800 (darker for readability)
+borderColor: tokens.colors.financial.pending,           // Amber 500
+
+// Negative/Owes
+backgroundColor: tokens.colors.financial.negativeLight,  // Terracotta 100
+color: tokens.colors.financial.negative,                 // Terracotta 400
 ```
 
 ### Progress Bars
@@ -283,8 +320,8 @@ progressBackground: {
 progressFill: {
   height: '100%',
   backgroundColor: isSettled
-    ? tokens.colors.financial.settled
-    : tokens.colors.brand.primary,
+    ? tokens.colors.financial.settled      // Sage for settled
+    : tokens.colors.amber[500],            // Amber for in-progress
   borderRadius: 2,
 }
 ```
@@ -295,24 +332,34 @@ progressFill: {
 
 ### When to Use What
 
-**Brand Primary** (`tokens.colors.brand.primary`):
-- Primary action buttons
-- Active states
-- Progress bars (in-progress bills)
-- Icons for primary actions
-- Links
+**Amber Accent** (`tokens.colors.amber[500]` or `tokens.colors.brand.accent`):
+- Primary CTAs ("Create Bill", "Let's Vasooly!", "Get Started")
+- Active navigation states (tab bar active indicator)
+- Pending payment states and badges
+- In-progress bill progress bars
+- Interactive links and action text
+- Hover states for important actions
+- Calculated stats and highlights
 
-**Financial Positive** (`tokens.colors.financial.positive`):
-- Paid amounts
-- Settled bills
-- Success states
-- Positive financial indicators
+**Brand Primary - Terracotta** (`tokens.colors.brand.primary`):
+- Brand identity elements (logo, headers)
+- Main amounts and totals
+- Back buttons and navigation text
+- Secondary action buttons
+- Brand-specific decorative elements
+
+**Brand Secondary - Sage** (`tokens.colors.brand.secondary` or `tokens.colors.financial.positive`):
+- Paid amounts and settled states
+- Success badges and indicators
 - Fully settled progress bars
+- Positive financial indicators
+- Success states
 
 **Financial Pending** (`tokens.colors.financial.pending`):
-- Pending payments
-- Warning states
-- Amounts due
+- Pending payment badges
+- Pending state backgrounds
+- Warning states (amber semantics)
+- Amounts awaiting settlement
 
 **Text Hierarchy**:
 - `text.primary`: Main content, headers, important text

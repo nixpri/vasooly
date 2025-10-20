@@ -68,9 +68,9 @@ const getStatusInfo = (status: BillStatus) => {
   }
   return {
     label: 'Pending',
-    backgroundColor: tokens.colors.financial.negativeLight,
-    textColor: tokens.colors.financial.pending,
-    borderColor: tokens.colors.financial.pending,
+    backgroundColor: tokens.colors.financial.pendingLight,  // Amber background
+    textColor: tokens.colors.amber[800],  // Darker amber text for readability
+    borderColor: tokens.colors.financial.pending,  // Amber border
   };
 };
 
@@ -103,7 +103,14 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ bill, onPress,
       accessibilityRole="button"
     >
       <Animated.View style={animatedStyle}>
-        <GlassCard borderRadius={tokens.radius.md}>
+        <GlassCard
+          borderRadius={tokens.radius.md}
+          style={
+            bill.status === BillStatus.SETTLED
+              ? styles.settledCardAccent
+              : styles.pendingCardAccent
+          }
+        >
           <View style={styles.container}>
             {/* Header: Title and Time */}
             <View style={styles.header}>
@@ -203,5 +210,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  pendingCardAccent: {
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.colors.amber[500],  // Amber left border for pending bills
+  },
+  settledCardAccent: {
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.colors.sage[500],  // Sage/green left border for settled bills
   },
 });

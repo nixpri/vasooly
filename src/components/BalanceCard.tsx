@@ -1,29 +1,34 @@
 /**
  * BalanceCard - Dashboard balance overview component
  *
- * Displays user's financial balance overview with:
- * - Total owed to you (positive)
- * - Total you owe (negative)
- * - Net balance calculation
- * - Settle up action button
+ * Displays simplified expense overview:
+ * - Total expenses across all bills
+ * - Number of bills
+ * - View details action
  *
  * Uses glass-morphism design with earthen color tokens
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { ChevronRight } from 'lucide-react-native';
 import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
-import { AnimatedButton } from './AnimatedButton';
 
 interface BalanceCardProps {
-  /** Total amount user is owed (in paise) */
-  owedTo: number;
-  /** Total amount user owes (in paise) */
-  owedBy: number;
-  /** Callback when settle up pressed */
-  onSettleUp: () => void;
+  /** Total expenses across all bills (in paise) */
+  totalExpenses: number;
+  /** Number of bills with pending payments */
+  pendingBillCount: number;
+  /** Total number of all bills */
+  totalBillCount: number;
+  /** Amount settled/paid (in paise) */
+  settledAmount: number;
+  /** Amount still pending (in paise) */
+  pendingAmount: number;
+  /** Callback when view details pressed */
+  onViewDetails: () => void;
   /** Optional style override */
   style?: ViewStyle;
   /** Loading state */
@@ -39,16 +44,15 @@ const formatCurrency = (paise: number): string => {
 };
 
 export const BalanceCard: React.FC<BalanceCardProps> = ({
-  owedTo,
-  owedBy,
-  onSettleUp,
+  totalExpenses,
+  pendingBillCount,
+  totalBillCount,
+  settledAmount,
+  pendingAmount,
+  onViewDetails,
   style,
   loading: _loading = false,
 }) => {
-  // Calculate net balance (positive = owed to you, negative = you owe)
-  const netBalance = owedTo - owedBy;
-  const isPositive = netBalance >= 0;
-
   return (
     <Animated.View
       entering={FadeInDown.springify().damping(15).stiffness(150)}
@@ -57,54 +61,51 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
       <GlassCard borderRadius={tokens.radius.lg}>
         <View style={styles.container}>
           {/* Title */}
-          <Text style={styles.title}>YOUR BALANCE</Text>
+          <Text style={styles.title}>TOTAL VASOOLY LEFT</Text>
 
-          {/* Balance Rows */}
-          <View style={styles.balanceSection}>
-            {/* You're owed */}
-            <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>You're owed</Text>
-              <View style={styles.amountContainer}>
-                <Text style={[styles.amountValue, styles.amountPositive]}>
-                  {formatCurrency(owedTo)}
-                </Text>
-                <Text style={styles.arrow}>↑</Text>
-              </View>
-            </View>
-
-            {/* You owe */}
-            <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>You owe</Text>
-              <View style={styles.amountContainer}>
-                <Text style={styles.amountValue}>{formatCurrency(owedBy)}</Text>
-                <Text style={styles.arrow}>↓</Text>
-              </View>
-            </View>
+          {/* Main Amount Display */}
+          <View style={styles.amountSection}>
+            <Text style={styles.amountValue}>
+              {formatCurrency(totalExpenses)}
+            </Text>
+            <Text style={styles.amountLabel}>
+              to collect across {pendingBillCount} {pendingBillCount === 1 ? 'bill' : 'bills'}
+            </Text>
           </View>
 
-          {/* Separator */}
-          <View style={styles.separator} />
+          {/* Stats Row - Financial Breakdown */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItemSmall}>
+              <Text style={styles.statValue}>{totalBillCount}</Text>
+              <Text style={styles.statLabel}>Bills</Text>
+            </View>
 
-          {/* Net Balance */}
-          <View style={styles.netBalanceRow}>
-            <Text style={styles.netBalanceLabel}>Net Balance</Text>
-            <View style={styles.amountContainer}>
-              <Text
-                style={[
-                  styles.netBalanceValue,
-                  isPositive ? styles.netBalancePositive : styles.netBalanceNegative,
-                ]}
-              >
-                {formatCurrency(Math.abs(netBalance))}
+            <View style={styles.statDivider} />
+
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, styles.statValueSage]}>
+                {formatCurrency(settledAmount)}
               </Text>
-              <Text style={styles.arrow}>{isPositive ? '↑' : '↓'}</Text>
+              <Text style={styles.statLabel}>Vasooled</Text>
+            </View>
+
+            <View style={styles.statDivider} />
+
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, styles.statValueAmber]}>
+                {formatCurrency(pendingAmount)}
+              </Text>
+              <Text style={styles.statLabel}>Pending</Text>
             </View>
           </View>
 
-          {/* Settle Up Button */}
-          <AnimatedButton onPress={onSettleUp} style={styles.settleButton} haptic>
-            <Text style={styles.settleButtonText}>Settle Up</Text>
-          </AnimatedButton>
+          {/* View Details Link */}
+          <Pressable onPress={onViewDetails} style={styles.viewDetailsButton} hitSlop={8}>
+            <View style={styles.viewDetailsContent}>
+              <Text style={styles.viewDetailsText}>View All Bills</Text>
+              <ChevronRight size={18} color={tokens.colors.sage[600]} strokeWidth={2.5} />
+            </View>
+          </Pressable>
         </View>
       </GlassCard>
     </Animated.View>
@@ -116,78 +117,88 @@ const styles = StyleSheet.create({
     padding: tokens.spacing['2xl'],
   },
   title: {
-    ...tokens.typography.h3,
-    color: tokens.colors.text.secondary,
+    ...tokens.typography.caption,
+    color: tokens.colors.text.tertiary,
     marginBottom: tokens.spacing.lg,
-    letterSpacing: 0.5,
+    letterSpacing: 1.2,
+    fontWeight: tokens.typography.fontWeight.semibold,
   },
-  balanceSection: {
-    marginBottom: tokens.spacing.md,
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  amountSection: {
+    marginBottom: tokens.spacing['2xl'],
     alignItems: 'center',
-    marginBottom: tokens.spacing.md,
   },
-  balanceLabel: {
+  amountValue: {
+    fontSize: 48,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
+    color: tokens.colors.brand.primary,  // Keep terracotta for main amount
+    marginBottom: tokens.spacing.xs,
+    // Subtle amber glow for visual interest
+    textShadowColor: tokens.colors.amber[200],
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  amountLabel: {
     ...tokens.typography.body,
     color: tokens.colors.text.secondary,
   },
-  amountContainer: {
+  statsRow: {
     flexDirection: 'row',
+    paddingVertical: tokens.spacing.lg,
+    marginBottom: tokens.spacing.md,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: tokens.colors.border.subtle,
+  },
+  statItem: {
+    flex: 1.2,
     alignItems: 'center',
-    gap: tokens.spacing.xs,
   },
-  amountValue: {
-    ...tokens.typography.h2,
-    color: tokens.colors.text.primary,
-    fontWeight: '600',
+  statItemSmall: {
+    flex: 0.6,
+    alignItems: 'center',
   },
-  amountPositive: {
-    color: tokens.colors.financial.positive,
-  },
-  arrow: {
-    ...tokens.typography.h2,
-    color: tokens.colors.text.tertiary,
-  },
-  separator: {
-    height: 1,
+  statDivider: {
+    width: 1,
     backgroundColor: tokens.colors.border.subtle,
-    marginVertical: tokens.spacing.lg,
+    marginHorizontal: tokens.spacing.md,
   },
-  netBalanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: tokens.spacing.lg,
-  },
-  netBalanceLabel: {
-    ...tokens.typography.h3,
+  statValue: {
+    fontSize: tokens.typography.h3.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
     color: tokens.colors.text.primary,
-    fontWeight: '600',
+    marginBottom: tokens.spacing.xs,
   },
-  netBalanceValue: {
-    ...tokens.typography.h1,
-    fontWeight: '700',
+  statValueSage: {
+    color: tokens.colors.sage[600],  // Sage for settled amounts
   },
-  netBalancePositive: {
-    color: tokens.colors.financial.positive,
+  statValueAmber: {
+    color: tokens.colors.amber[600],  // Amber for pending amounts
   },
-  netBalanceNegative: {
-    color: tokens.colors.financial.negative,
+  statLabel: {
+    ...tokens.typography.caption,
+    color: tokens.colors.text.secondary,
   },
-  settleButton: {
-    backgroundColor: tokens.colors.brand.primary,
-    borderRadius: tokens.radius.md,
+  viewDetailsButton: {
+    marginTop: tokens.spacing.xs,
     paddingVertical: tokens.spacing.md,
     paddingHorizontal: tokens.spacing.lg,
+    backgroundColor: tokens.colors.sage[50],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.colors.sage[200],
+  },
+  viewDetailsContent: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: tokens.spacing.xs,
   },
-  settleButtonText: {
-    ...tokens.typography.bodyLarge,
-    color: tokens.colors.text.inverse,
-    fontWeight: '600',
+  viewDetailsText: {
+    fontSize: 15,
+    color: tokens.colors.sage[700],
+    fontWeight: tokens.typography.fontWeight.bold,
+    letterSpacing: 0.2,
   },
 });

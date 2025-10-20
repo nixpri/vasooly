@@ -15,6 +15,7 @@ import {
   updateBillStatus as dbUpdateBillStatus,
   updateParticipantStatus as dbUpdateParticipantStatus,
 } from '../lib/data/billRepository';
+import { determineBillStatus } from '../lib/business/statusManager';
 
 interface BillState {
   // State
@@ -222,30 +223,51 @@ export const useBillStore = create<BillState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await dbUpdateParticipantStatus(participantId, PaymentStatus.PAID);
-      set((state) => ({
-        bills: state.bills.map((b) =>
-          b.id === billId
-            ? {
-                ...b,
-                participants: b.participants.map((p) =>
-                  p.id === participantId ? { ...p, status: PaymentStatus.PAID } : p
-                ),
-                updatedAt: new Date(),
-              }
-            : b
-        ),
-        currentBill:
-          state.currentBill?.id === billId
-            ? {
-                ...state.currentBill,
-                participants: state.currentBill.participants.map((p) =>
-                  p.id === participantId ? { ...p, status: PaymentStatus.PAID } : p
-                ),
-                updatedAt: new Date(),
-              }
-            : state.currentBill,
-        isLoading: false,
-      }));
+
+      // Update participant status in memory
+      const updatedBillsWithParticipant = get().bills.map((b) =>
+        b.id === billId
+          ? {
+              ...b,
+              participants: b.participants.map((p) =>
+                p.id === participantId ? { ...p, status: PaymentStatus.PAID } : p
+              ),
+              updatedAt: new Date(),
+            }
+          : b
+      );
+
+      // Find the updated bill and determine its new status
+      const updatedBill = updatedBillsWithParticipant.find((b) => b.id === billId);
+      if (updatedBill) {
+        const newBillStatus = determineBillStatus(updatedBill);
+
+        // If bill status changed, update it in database
+        if (newBillStatus !== updatedBill.status) {
+          await dbUpdateBillStatus(billId, newBillStatus);
+        }
+
+        // Update state with both participant and bill status
+        set((state) => ({
+          bills: updatedBillsWithParticipant.map((b) =>
+            b.id === billId ? { ...b, status: newBillStatus } : b
+          ),
+          currentBill:
+            state.currentBill?.id === billId
+              ? {
+                  ...state.currentBill,
+                  participants: state.currentBill.participants.map((p) =>
+                    p.id === participantId ? { ...p, status: PaymentStatus.PAID } : p
+                  ),
+                  status: newBillStatus,
+                  updatedAt: new Date(),
+                }
+              : state.currentBill,
+          isLoading: false,
+        }));
+      } else {
+        set({ isLoading: false });
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to mark participant paid';
@@ -259,30 +281,51 @@ export const useBillStore = create<BillState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await dbUpdateParticipantStatus(participantId, PaymentStatus.PENDING);
-      set((state) => ({
-        bills: state.bills.map((b) =>
-          b.id === billId
-            ? {
-                ...b,
-                participants: b.participants.map((p) =>
-                  p.id === participantId ? { ...p, status: PaymentStatus.PENDING } : p
-                ),
-                updatedAt: new Date(),
-              }
-            : b
-        ),
-        currentBill:
-          state.currentBill?.id === billId
-            ? {
-                ...state.currentBill,
-                participants: state.currentBill.participants.map((p) =>
-                  p.id === participantId ? { ...p, status: PaymentStatus.PENDING } : p
-                ),
-                updatedAt: new Date(),
-              }
-            : state.currentBill,
-        isLoading: false,
-      }));
+
+      // Update participant status in memory
+      const updatedBillsWithParticipant = get().bills.map((b) =>
+        b.id === billId
+          ? {
+              ...b,
+              participants: b.participants.map((p) =>
+                p.id === participantId ? { ...p, status: PaymentStatus.PENDING } : p
+              ),
+              updatedAt: new Date(),
+            }
+          : b
+      );
+
+      // Find the updated bill and determine its new status
+      const updatedBill = updatedBillsWithParticipant.find((b) => b.id === billId);
+      if (updatedBill) {
+        const newBillStatus = determineBillStatus(updatedBill);
+
+        // If bill status changed, update it in database
+        if (newBillStatus !== updatedBill.status) {
+          await dbUpdateBillStatus(billId, newBillStatus);
+        }
+
+        // Update state with both participant and bill status
+        set((state) => ({
+          bills: updatedBillsWithParticipant.map((b) =>
+            b.id === billId ? { ...b, status: newBillStatus } : b
+          ),
+          currentBill:
+            state.currentBill?.id === billId
+              ? {
+                  ...state.currentBill,
+                  participants: state.currentBill.participants.map((p) =>
+                    p.id === participantId ? { ...p, status: PaymentStatus.PENDING } : p
+                  ),
+                  status: newBillStatus,
+                  updatedAt: new Date(),
+                }
+              : state.currentBill,
+          isLoading: false,
+        }));
+      } else {
+        set({ isLoading: false });
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to mark participant pending';

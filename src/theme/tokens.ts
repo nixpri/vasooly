@@ -5,10 +5,10 @@
  * Based on VASOOLY_DESIGN_SYSTEM.md specifications.
  *
  * **Theme**: Light Mode (White UI)
- * **Color Scheme**: Earthen Terracotta + Olive Green
+ * **Color Scheme**: Earthen Terracotta + Sage Green + Warm Amber
  *
- * @version 3.0
- * @date 2025-10-20
+ * @version 3.1
+ * @date 2025-10-21
  */
 
 /**
@@ -46,6 +46,20 @@ export const colors = {
     900: '#252A15',  // Darkest - Emphasis
   },
 
+  // Amber Accent Scale (Warm Gold/Honey - Third Brand Color)
+  amber: {
+    50: '#FFF9E6',   // Lightest - Backgrounds
+    100: '#FFF0C2',  // Very light - Hover states, pending backgrounds
+    200: '#FFE699',  // Light - Subtle highlights
+    300: '#FFD966',  // Medium light - Secondary buttons
+    400: '#F4C230',  // Medium - Accents, glow effects
+    500: '#E8A637',  // Base amber - ACCENT COLOR (CTAs, pending, warnings)
+    600: '#D89020',  // Medium dark - Hover states
+    700: '#B87717',  // Dark - Pressed states
+    800: '#8F5E12',  // Darker - Text on light
+    900: '#66450D',  // Darkest - Emphasis
+  },
+
   // Warm Neutrals (Earthen Grays - NOT cool blue-grays!)
   neutral: {
     50: '#FAF9F7',   // Lightest cream - Page background
@@ -67,20 +81,21 @@ export const colors = {
     negative: '#D87B4A',      // Terracotta 400 - Money you owe
     negativeLight: '#F9E6D8', // Terracotta 100 - Negative backgrounds
     settled: '#6B7C4A',       // Sage 500 - Fully paid
-    pending: '#D87B4A',       // Terracotta 400 - Awaiting payment
+    pending: '#E8A637',       // Amber 500 - Awaiting payment (NEW: clearer than terracotta)
+    pendingLight: '#FFF0C2',  // Amber 100 - Pending backgrounds
   },
 
   // Feedback Colors (Earthen-adjusted)
   success: {
-    light: '#D1E7DD',  // Light green background
-    main: '#4A7C59',   // Earthen green (not bright emerald)
-    dark: '#2D5D42',   // Dark green for text
+    light: '#E8EDE5',  // Sage 100 - Earthen green tint
+    main: '#6B7C4A',   // Sage 500 - Earthen green (matches settled state)
+    dark: '#475029',   // Sage 700 - Darker earthen green
   },
 
   warning: {
-    light: '#F9E6D8',  // Terracotta 100
-    main: '#D87B4A',   // Terracotta 400
-    dark: '#B65538',   // Terracotta 600
+    light: '#FFF0C2',  // Amber 100 - Warm warning background
+    main: '#E8A637',   // Amber 500 - Clear warning (distinct from brand)
+    dark: '#B87717',   // Amber 700 - Dark warning text
   },
 
   error: {
@@ -93,6 +108,13 @@ export const colors = {
     light: '#E8EDE5',  // Sage 100
     main: '#6B7C4A',   // Sage 500
     dark: '#475029',   // Sage 700
+  },
+
+  // Celebration Colors (for success animations, confetti)
+  celebration: {
+    light: '#FFF0C2',  // Amber 100 - Warm celebratory glow
+    main: '#E8A637',   // Amber 500 - Golden celebration
+    glow: '#F4C230',   // Amber 400 - Brighter glow for effects
   },
 
   // Backgrounds (Warm Sand/Cream - NOT pure white)
@@ -126,9 +148,12 @@ export const colors = {
 
   // Brand shortcuts (for backward compatibility)
   brand: {
-    primary: '#CB6843',    // terracotta 500
+    primary: '#CB6843',      // terracotta 500
     primaryLight: '#F0CDB3', // terracotta 200
     primaryDark: '#8F422B',  // terracotta 700
+    accent: '#E8A637',       // amber 500 - NEW accent color
+    accentLight: '#FFF0C2',  // amber 100 - NEW accent light
+    accentDark: '#B87717',   // amber 700 - NEW accent dark
     secondary: '#6B7C4A',    // sage 500
     secondaryLight: '#CED9C7', // sage 200
     secondaryDark: '#475029',  // sage 700
@@ -520,11 +545,33 @@ export const gradients = {
     end: { x: 1, y: 1 },
   },
 
-  // Add Button Gradient
+  // Add Button Gradient (Legacy - kept for compatibility)
   addButton: {
     colors: ['#D8814A', '#C2662D'],
     start: { x: 0, y: 0 },
     end: { x: 0, y: 1 },
+  },
+
+  // Primary CTA Gradient (Amber → Terracotta) - NEW
+  primaryCTA: {
+    colors: [colors.amber[500], colors.brand.primary],  // Amber to Terracotta
+    start: { x: 0, y: 0 },
+    end: { x: 1, y: 1 },
+    angle: 135,  // Diagonal gradient
+  },
+
+  // Celebration Gradient (for success states) - NEW
+  celebration: {
+    colors: [colors.amber[400], colors.amber[500]],  // Light amber to base
+    start: { x: 0, y: 0 },
+    end: { x: 1, y: 0 },
+  },
+
+  // Tab Bar Glass Background - NEW
+  tabBarGlass: {
+    colors: ['rgba(232, 166, 55, 0.03)', 'rgba(107, 124, 74, 0.03)'],  // Subtle amber → sage
+    start: { x: 0, y: 0 },
+    end: { x: 1, y: 0 },
   },
 
   // Subtle Card Gradient

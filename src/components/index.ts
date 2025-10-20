@@ -16,3 +16,4 @@ export {
 } from './OnboardingIllustrations';
 export { BalanceCard } from './BalanceCard';
 export { TransactionCard } from './TransactionCard';
+export { TabBar } from './TabBar';

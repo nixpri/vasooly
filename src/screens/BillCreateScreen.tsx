@@ -10,6 +10,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
 } from 'react-native';
+import { ChevronLeft, FileText } from 'lucide-react-native';
 import { AnimatedButton, LoadingSpinner } from '@/components';
 import { BillAmountInput } from '@/components/BillAmountInput';
 import { ParticipantList } from '@/components/ParticipantList';
@@ -20,10 +21,10 @@ import {
   SplitValidationError,
 } from '@/lib/business/splitEngine';
 import type { DetailedSplitResult } from '@/lib/business/splitEngine';
-import { useBillStore } from '@/stores';
+import { useBillStore, useSettingsStore } from '@/stores';
 import { BillStatus, PaymentStatus } from '@/types';
 import type { Bill, Participant } from '@/types';
-import type { BillCreateScreenProps } from '@/navigation/AppNavigator';
+import type { BillCreateScreenProps } from '@/navigation/types';
 import { useHaptics } from '@/hooks';
 import { tokens } from '@/theme/ThemeProvider';
 
@@ -40,7 +41,14 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
   const existingBill = route.params?.bill;
   const isEditMode = !!existingBill;
   const { createBill: createBillInStore, updateBill: updateBillInStore } = useBillStore();
+  const { defaultUPIName } = useSettingsStore();
   const haptics = useHaptics();
+
+  // Helper function to check if participant is the current user (bill creator)
+  const isCurrentUser = (participantName: string): boolean => {
+    if (!defaultUPIName) return false;
+    return participantName.toLowerCase() === defaultUPIName.toLowerCase();
+  };
 
   // Initialize state from existingBill if in edit mode
   const [billTitle, setBillTitle] = useState(existingBill?.title ?? '');
@@ -48,7 +56,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
   const [participants, setParticipants] = useState<ParticipantInput[]>(
     existingBill
       ? existingBill.participants.map((p) => ({ id: p.id, name: p.name }))
-      : [{ id: 'default-1', name: 'You' }]
+      : [{ id: 'default-1', name: defaultUPIName || 'You' }]
   );
   const [splitResult, setSplitResult] = useState<DetailedSplitResult | null>(
     null
@@ -144,6 +152,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
 
       // Map split result to Participant objects
       // In edit mode, preserve payment status for existing participants
+      // Bill creator is always marked as PAID
       const participantData: Participant[] = splitResult.splits.map(
         (split, index) => {
           // Find existing participant by name to preserve payment status
@@ -151,11 +160,21 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
             ? existingBill.participants.find((p) => p.name === split.participantName)
             : undefined;
 
+          // Determine payment status
+          let paymentStatus: PaymentStatus;
+          if (isCurrentUser(split.participantName)) {
+            // Bill creator is always PAID
+            paymentStatus = PaymentStatus.PAID;
+          } else {
+            // Others: preserve existing status in edit mode, or PENDING for new bills
+            paymentStatus = existingParticipant?.status || PaymentStatus.PENDING;
+          }
+
           return {
             id: existingParticipant?.id || `participant-${timestamp}-${index}`,
             name: split.participantName,
             amountPaise: split.amountPaise,
-            status: existingParticipant?.status || PaymentStatus.PENDING,
+            status: paymentStatus,
             phone: existingParticipant?.phone,
           };
         }
@@ -219,7 +238,10 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
       {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
-            <Text style={styles.backButtonText}>← {isEditMode ? 'Cancel' : 'Back'}</Text>
+            <View style={styles.backButtonContent}>
+              <ChevronLeft size={16} color={tokens.colors.brand.primary} strokeWidth={2.5} />
+              <Text style={styles.backButtonText}>{isEditMode ? 'Cancel' : 'Back'}</Text>
+            </View>
           </TouchableOpacity>
           <View style={styles.headerTop}>
             <View style={styles.headerText}>
@@ -248,7 +270,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Bill Title</Text>
               <View style={styles.titleInputContainer}>
-                <Text style={styles.titleIcon}>📝</Text>
+                <FileText size={18} color={tokens.colors.text.secondary} strokeWidth={2} />
                 <TextInput
                   style={styles.titleInput}
                   value={billTitle}
@@ -331,6 +353,11 @@ const styles = StyleSheet.create({
   backButton: {
     marginBottom: 8,
   },
+  backButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   backButtonText: {
     fontSize: 13,
     color: tokens.colors.brand.primary,
@@ -358,7 +385,7 @@ const styles = StyleSheet.create({
   viewHistoryButton: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    backgroundColor: tokens.colors.brand.primary,
+    backgroundColor: tokens.colors.amber[500],  // Amber for CTA
     borderRadius: 6,
   },
   viewHistoryButtonText: {
@@ -385,16 +412,13 @@ const styles = StyleSheet.create({
   titleInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     backgroundColor: tokens.colors.background.input,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: tokens.colors.border.default,
     paddingHorizontal: 14,
     paddingVertical: 10,
-  },
-  titleIcon: {
-    fontSize: 18,
-    marginRight: 8,
   },
   titleInput: {
     flex: 1,
@@ -412,11 +436,11 @@ const styles = StyleSheet.create({
     borderTopColor: tokens.colors.border.light,
   },
   createButton: {
-    backgroundColor: tokens.colors.brand.primary,
+    backgroundColor: tokens.colors.amber[500],  // Amber for primary CTA
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
-    shadowColor: tokens.colors.brand.primary,
+    shadowColor: tokens.colors.amber[500],  // Amber glow
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

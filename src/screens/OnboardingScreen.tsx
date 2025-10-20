@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     height: tokens.components.button.height.lg,
-    backgroundColor: tokens.colors.brand.primary,
+    backgroundColor: tokens.colors.amber[500],  // Amber for primary CTA
     borderRadius: tokens.components.button.borderRadius,
     alignItems: 'center',
     justifyContent: 'center',

@@ -26,7 +26,7 @@ import { formatPaise } from '@/lib/business/splitEngine';
 import { PaymentStatus } from '@/types';
 import type { Bill } from '@/types';
 import { useHistoryStore } from '@/stores';
-import type { BillHistoryScreenProps } from '@/navigation/AppNavigator';
+import type { BillHistoryScreenProps } from '@/navigation/types';
 import { tokens } from '@/theme/ThemeProvider';
 
 export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation }) => {
@@ -66,10 +66,6 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
     navigation.navigate('BillCreate');
   }, [navigation]);
 
-  const handleSettingsPress = useCallback(() => {
-    navigation.navigate('Settings');
-  }, [navigation]);
-
   const calculateBillProgress = (bill: Bill): number => {
     if (bill.participants.length === 0) return 0;
     const paidCount = bill.participants.filter((p) => p.status === PaymentStatus.PAID).length;
@@ -101,7 +97,10 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
           activeOpacity={0.7}
           style={styles.billCardWrapper}
         >
-          <GlassCard style={styles.billCard} borderRadius={16}>
+          <GlassCard
+            style={isSettled ? styles.settledCard : styles.pendingCard}
+            borderRadius={16}
+          >
             <View style={styles.billCardContent}>
               {/* Header */}
               <View style={styles.billHeader}>
@@ -127,7 +126,7 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
                         styles.progressFill,
                         {
                           width: `${progress}%`,
-                          backgroundColor: isSettled ? tokens.colors.financial.settled : tokens.colors.brand.primary,
+                          backgroundColor: isSettled ? tokens.colors.financial.settled : tokens.colors.amber[500],
                         },
                       ]}
                     />
@@ -184,22 +183,13 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
               {filteredBills.length} {filteredBills.length === 1 ? 'bill' : 'bills'}
             </Text>
           </View>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity
-              onPress={handleSettingsPress}
-              style={styles.settingsButton}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.settingsButtonText}>⚙️</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleCreatePress}
-              style={styles.createHeaderButton}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.createHeaderButtonText}>+ Create</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={handleCreatePress}
+            style={styles.createHeaderButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.createHeaderButtonText}>+ Create</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -247,8 +237,8 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
               <RefreshControl
                 refreshing={isLoading}
                 onRefresh={handleRefresh}
-                tintColor={tokens.colors.brand.primary}
-                colors={[tokens.colors.brand.primary]}
+                tintColor={tokens.colors.sage[500]}  // Sage for neutral refresh action (balance fix)
+                colors={[tokens.colors.sage[500]]}
               />
             }
           />
@@ -310,7 +300,7 @@ const styles = StyleSheet.create({
   createHeaderButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: tokens.colors.brand.primary,
+    backgroundColor: tokens.colors.amber[500],  // Amber for create action
     borderRadius: tokens.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -366,6 +356,16 @@ const styles = StyleSheet.create({
   },
   billCard: {
     width: '100%',
+  },
+  pendingCard: {
+    width: '100%',
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.colors.amber[500],  // Amber left border for pending bills
+  },
+  settledCard: {
+    width: '100%',
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.colors.sage[500],  // Sage/green left border for settled bills
   },
   billCardContent: {
     padding: 14,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     marginTop: tokens.spacing.md,
     paddingHorizontal: tokens.components.button.padding.horizontal,
     paddingVertical: tokens.components.button.padding.vertical,
-    backgroundColor: tokens.colors.brand.primary,
+    backgroundColor: tokens.colors.amber[500],  // Amber for create action
     borderRadius: tokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',

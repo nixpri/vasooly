@@ -24,7 +24,7 @@ import {
 import Slider from '@react-native-community/slider';
 import { GlassCard } from '@/components/GlassCard';
 import { useSettingsStore } from '@/stores';
-import type { SettingsScreenProps } from '@/navigation/AppNavigator';
+import type { SettingsScreenProps } from '@/navigation/types';
 import { tokens } from '@/theme/ThemeProvider';
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
