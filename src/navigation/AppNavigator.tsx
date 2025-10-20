@@ -105,6 +105,7 @@ export const AppNavigator: React.FC = () => {
                 opacity: current.progress,
               },
             }),
+            detachPreviousScreen: false,
           }}
         />
         <Stack.Screen
@@ -130,7 +131,7 @@ export const AppNavigator: React.FC = () => {
           name="BillDetail"
           component={BillDetailScreen}
           options={{
-            cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyleInterpolator: ({ current, next, layouts }) => ({
               cardStyle: {
                 transform: [
                   {
@@ -141,7 +142,16 @@ export const AppNavigator: React.FC = () => {
                   },
                 ],
               },
+              overlayStyle: {
+                opacity: current.progress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 0.3],
+                }),
+              },
             }),
+            cardOverlayEnabled: true,
+            cardStyle: { backgroundColor: '#0A0A0F' },
+            detachPreviousScreen: false,
           }}
         />
         <Stack.Screen
