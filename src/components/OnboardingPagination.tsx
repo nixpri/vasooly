@@ -9,8 +9,6 @@ import { View, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withSpring,
-  interpolate,
-  Extrapolate,
 } from 'react-native-reanimated';
 import { tokens } from '@/theme/tokens';
 

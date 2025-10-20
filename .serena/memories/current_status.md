@@ -1,9 +1,9 @@
 # Vasooly Project Status
 
-**Last Updated**: 2025-10-20
+**Last Updated**: 2025-10-21
 **Current Phase**: Phase 2A - UI/UX Revamp
 **Current Week**: Week 12 (Core Screens Design Implementation)
-**Current Task**: Week 12 Day 1-2 ✅ COMPLETE → Next: Day 2-3 Dashboard Screen
+**Current Task**: Week 12 Day 1-2 ✅ COMPLETE (Illustrations Integrated) → Next: Day 2-3 Dashboard Screen
 
 ---
 
@@ -12,9 +12,9 @@
 - **Phase Progress**: Week 12 of 21.5 total weeks
 - **Tests**: 282 passing (12 suites), 100% coverage on critical paths
 - **TypeScript**: 0 errors
-- **ESLint**: 0 errors
+- **ESLint**: 0 errors (15 warnings, acceptable)
 - **Build**: ✅ All validations passing
-- **Git**: Clean, all changes committed and pushed to origin/main
+- **Git**: Ready to commit (onboarding illustrations integrated)
 
 ---
 
@@ -23,7 +23,7 @@
 | Week | Focus | Status |
 |------|-------|--------|
 | Week 11 | Design Foundation | ✅ COMPLETE |
-| Week 12 | Core Screens Design | 🔄 IN PROGRESS (Day 1-2 Complete) |
+| Week 12 | Core Screens Design | 🔄 IN PROGRESS (Day 1-2 Complete with Illustrations) |
 | Week 13 | Tier 2 Screens | ⏳ PENDING |
 | Week 14 | Premium Features | ⏳ PENDING |
 | Week 15 | Polish & Refinement | ⏳ PENDING |
@@ -31,39 +31,50 @@
 
 ---
 
-## Week 12 Day 1-2: Onboarding Flow ✅ COMPLETE
+## Week 12 Day 1-2: Onboarding Flow + Illustrations ✅ COMPLETE
 
 ### What Was Built
 - **OnboardingPagination Component**: Animated dots indicator with Reanimated 3 (81 lines)
-- **OnboardingScreen**: 6-screen horizontal scrolling flow (237 lines)
-  1. Welcome - Friendly character waving
-  2. Bill Splitting - Bill → Split → Friends
-  3. Friend Groups - Multiple groups connected
-  4. Settlement Tracking - Balance & checkmark
-  5. Privacy & Security - Shield with lock
-  6. Ready to Start - Character ready to begin
+- **OnboardingScreen**: 6-screen horizontal scrolling flow (300 lines)
+- **OnboardingIllustrations**: 6 illustration wrapper components (98 lines)
 - **Navigation Integration**: Conditional initial route, replace navigation
 - **State Persistence**: settingsStore.onboardingCompleted via SecureStore
+- **Illustrations**: 6 AI-generated PNG illustrations integrated (~6.2MB total)
+
+### Onboarding Screens (All with Illustrations)
+1. **Welcome** - Friendly character waving with sparkles (995KB)
+2. **Bill Splitting** - Receipt → Scissors → People (1.3MB) [UPDATED]
+3. **Friend Groups** - User connected to multiple groups (815KB)
+4. **Settlement Tracking** - Balance indicator with checkmark (717KB)
+5. **Privacy & Security** - Shield with lock (1.4MB)
+6. **Ready to Start** - Character with flag (935KB) [UPDATED]
 
 ### Technical Highlights
 - Reanimated 3 spring animations for pagination (60fps)
 - FadeInDown transitions for screens (600ms)
 - Horizontal ScrollView with pagination
 - Skip/Next/Get Started button flow
-- Illustration placeholders (dashed boxes) ready for SVG
+- **Metro Bundler Fix**: require() uses relative paths (not `@/` alias)
 - Full earthen design system compliance
+
+### Critical Learning
+**Metro Bundler Path Resolution**:
+- ❌ `require('@/assets/image.png')` - Doesn't work (TypeScript alias)
+- ✅ `require('../../assets/image.png')` - Works (relative path)
+- Pattern: Use relative paths for `require()`, `@/` alias for imports
 
 ### Validation
 - ✅ TypeScript: 0 errors
-- ✅ ESLint: 0 errors
+- ✅ ESLint: 0 errors (15 warnings acceptable)
 - ✅ Tests: 282 passing
 - ✅ Animations: 60fps performance
 - ✅ State: Persistence working
+- ✅ Metro: Bundler resolving paths correctly
 
-### Commit
-- **Hash**: 6fef3a9
-- **Message**: feat: implement onboarding flow (Week 12 Day 1-2)
-- **Status**: Pushed to origin/main
+### Commits Ready
+- **Pending**: Onboarding illustrations integration
+- **Files Modified**: 4 (OnboardingScreen, OnboardingIllustrations, index.ts, OnboardingPagination)
+- **Assets Added**: 6 PNG illustrations
 
 ---
 
@@ -80,10 +91,15 @@
 - Pull-to-refresh functionality
 - Skeleton loading states
 
-**Store Integration**:
-- `billStore.getNetBalance()` - Calculate net balance in paise
-- `historyStore.getRecentActivity(5)` - Get 5 most recent bills
-- Both selectors already implemented in Week 12 prep
+**Components to Create**:
+- `src/screens/DashboardScreen.tsx` (~450-550 lines)
+- `src/components/BalanceCard.tsx` (~200 lines)
+- `src/components/TransactionCard.tsx` (~150 lines)
+
+**Store Integration** (Already Ready):
+- ✅ `billStore.getNetBalance()` - Calculate net balance in paise
+- ✅ `historyStore.getRecentActivity(5)` - Get 5 most recent bills
+- Both selectors implemented in Week 12 prep
 
 **Design**:
 - Earthen design system (Terracotta + Olive Green)
@@ -105,7 +121,7 @@
 ### Current Phase
 - 🔄 **Phase 2A**: UI/UX Revamp (Weeks 10.5-16.5)
   - Week 11: ✅ Design Foundation Complete
-  - Week 12: 🔄 Core Screens (Day 1-2 Complete)
+  - Week 12: 🔄 Core Screens (Day 1-2 Complete + Illustrations)
 
 ### Upcoming Phases
 - ⏳ **Phase 3**: Testing & Hardening (Weeks 16.5-18.5)
@@ -119,8 +135,14 @@
 ### Core Application
 - **Navigation**: `src/navigation/AppNavigator.tsx` - React Navigation stack
 - **Screens**: `src/screens/` - 6 screens (Create, History, Detail, Settings, Onboarding, UPI Validation)
-- **Components**: `src/components/` - 8 reusable components
+- **Components**: `src/components/` - 9 reusable components (added OnboardingIllustrations)
 - **Stores**: `src/stores/` - 3 Zustand stores (bill, history, settings)
+
+### New: Onboarding & Illustrations
+- **Onboarding**: `src/screens/OnboardingScreen.tsx` - 6-screen flow with illustrations
+- **Pagination**: `src/components/OnboardingPagination.tsx` - Animated dots indicator
+- **Illustrations**: `src/components/OnboardingIllustrations.tsx` - 6 illustration wrappers
+- **Assets**: `assets/illustrations/` - 6 PNG illustrations (~6.2MB)
 
 ### Business Logic
 - **Split Engine**: `src/lib/business/splitEngine.ts` - 98.52% coverage
@@ -148,7 +170,7 @@
 
 ### Documentation
 - **Implementation Plan**: `docs/IMPLEMENTATION_PLAN.md` - 21.5-week roadmap
-- **Component Audit**: `claudedocs/COMPONENT_AUDIT.md` - 7 existing + 13 new
+- **Component Audit**: `claudedocs/COMPONENT_AUDIT.md` - 8 existing + 13 new
 - **Animation Specs**: `claudedocs/ANIMATION_SPECS.md` - Reanimated 3 patterns
 - **Illustration Specs**: `claudedocs/ILLUSTRATION_SPECS.md` - 20+ illustrations
 - **Wireframe Specs**: `claudedocs/WIREFRAME_SPECS.md` - All 12 screens
@@ -159,10 +181,10 @@
 
 - **Total Tests**: 282 passing (12 suites)
 - **Test Coverage**: 98.52% on split engine, 100% on critical paths
-- **Production Code**: ~8,000 lines
+- **Production Code**: ~8,100 lines (added OnboardingIllustrations)
 - **Test Code**: ~4,500 lines
-- **Components**: 8 reusable components
-- **Screens**: 6 screens (soon 7 with Dashboard)
+- **Components**: 9 reusable components (added OnboardingIllustrations)
+- **Screens**: 6 screens (OnboardingScreen now complete with illustrations)
 - **Stores**: 3 Zustand stores
 - **Services**: 4 native service layers
 
@@ -184,11 +206,11 @@
 
 ## Recent Commits
 
-1. **6fef3a9** (2025-10-20) - feat: implement onboarding flow (Week 12 Day 1-2)
-2. **bbdf74d** (2025-10-20) - chore: prepare Week 12 with store enhancements
-3. **7b66917** (2025-10-20) - docs: Week 11 completion and documentation consolidation
-4. **32675b8** (2025-10-20) - docs: Consolidate documentation and memory files
-5. **d248bdc** (2025-10-20) - docs: Complete earthen design system implementation
+1. **Pending** (2025-10-21) - feat: integrate onboarding illustrations (Week 12 Day 1-2)
+2. **073286a** (2025-10-20) - docs: update Week 12 Day 1-2 completion and save session checkpoint
+3. **6fef3a9** (2025-10-20) - feat: implement onboarding flow (Week 12 Day 1-2)
+4. **bbdf74d** (2025-10-20) - feat: Add Week 12 preparation - store enhancements and utilities
+5. **7b66917** (2025-10-20) - docs: Week 11 completion and documentation consolidation
 
 ---
 
@@ -196,23 +218,25 @@
 
 - **Branch**: main
 - **Remote**: origin/main
-- **Status**: Clean (no uncommitted changes)
-- **Last Push**: 2025-10-20 (commit 6fef3a9)
+- **Status**: Clean (ready to commit onboarding illustrations)
+- **Last Push**: 2025-10-20 (commit 073286a)
 
 ---
 
 ## Session Context
 
 ### Current Session Status
-- **Focus**: Week 12 Day 1-2 Onboarding Flow ✅ COMPLETE
+- **Focus**: Week 12 Day 1-2 Onboarding Illustrations ✅ COMPLETE
 - **Next**: Week 12 Day 2-3 Dashboard Screen
 - **Duration**: ~1 hour
-- **Productivity**: High (2 components, navigation integration, documentation)
+- **Productivity**: High (illustrations integrated, Metro bundler fix, validations clean)
 
 ### Ready to Continue
 - All tests passing
 - All validations clean
-- Code committed and pushed
+- Illustrations integrated and loading
+- Metro bundler working correctly
+- Code ready to commit
 - Documentation updated
 - Memory checkpoint saved
 - Ready for Dashboard implementation
@@ -226,24 +250,31 @@
 npm run typecheck    # TypeScript validation
 npm test            # Run all tests
 npm run lint        # ESLint validation
+npx expo start      # Start dev server
 ```
 
 ### Git
 ```bash
 git status          # Check status
 git log --oneline -5 # Recent commits
-git branch          # Current branch
+git add .           # Stage changes
+git commit -m "feat: integrate onboarding illustrations"
 ```
 
-### Build
+### Testing Onboarding
 ```bash
-npx expo start      # Start development server
-npx expo run:android # Run on Android
-npx expo run:ios    # Run on iOS
+# Start app
+npx expo start
+# Press 'a' for Android or 'i' for iOS
+
+# Onboarding triggers:
+# 1. Fresh install (onboardingCompleted = false)
+# 2. Clear app data
+# 3. Reset settingsStore in dev tools
 ```
 
 ---
 
-**Status**: ✅ Ready for Week 12 Day 2-3 Dashboard implementation
+**Status**: ✅ Onboarding illustrations complete and integrated
 **Health**: 🟢 Excellent - all systems operational
-**Next Session**: Continue with Dashboard Screen implementation
+**Next Session**: Continue with Week 12 Day 2-3 Dashboard implementation

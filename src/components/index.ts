@@ -6,3 +6,11 @@ export { GlassCard, AnimatedGlassCard } from './GlassCard';
 export { AnimatedButton } from './AnimatedButton';
 export { LoadingSpinner } from './LoadingSpinner';
 export { OnboardingPagination } from './OnboardingPagination';
+export {
+  WelcomeIllustration,
+  BillSplittingIllustration,
+  FriendGroupsIllustration,
+  SettlementTrackingIllustration,
+  PrivacySecurityIllustration,
+  ReadyToStartIllustration,
+} from './OnboardingIllustrations';

@@ -16,7 +16,15 @@ import {
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSettingsStore } from '@/stores';
-import { OnboardingPagination } from '@/components/OnboardingPagination';
+import {
+  OnboardingPagination,
+  WelcomeIllustration,
+  BillSplittingIllustration,
+  FriendGroupsIllustration,
+  SettlementTrackingIllustration,
+  PrivacySecurityIllustration,
+  ReadyToStartIllustration,
+} from '@/components';
 import { tokens } from '@/theme/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -29,7 +37,7 @@ interface ScreenData {
   id: number;
   title: string;
   description: string;
-  illustrationPlaceholder: string;
+  Illustration: React.FC;
 }
 
 const ONBOARDING_SCREENS: ScreenData[] = [
@@ -37,37 +45,37 @@ const ONBOARDING_SCREENS: ScreenData[] = [
     id: 0,
     title: 'Welcome to Vasooly',
     description: 'Split bills fairly, settle up easily',
-    illustrationPlaceholder: 'Welcome Illustration\n(Friendly character waving)',
+    Illustration: WelcomeIllustration,
   },
   {
     id: 1,
     title: 'Split any expense',
     description: 'Meals, trips, rent, or utilities - divide costs fairly',
-    illustrationPlaceholder: 'Bill Splitting Illustration\n(Bill → Split → Friends)',
+    Illustration: BillSplittingIllustration,
   },
   {
     id: 2,
     title: 'Organize by groups',
     description: 'Create groups for roommates, trips, or regular hangouts',
-    illustrationPlaceholder: 'Friend Groups Illustration\n(Multiple groups connected)',
+    Illustration: FriendGroupsIllustration,
   },
   {
     id: 3,
     title: 'Track balances easily',
     description: 'See who owes what, settle up with a tap',
-    illustrationPlaceholder: 'Settlement Tracking Illustration\n(Balance & checkmark)',
+    Illustration: SettlementTrackingIllustration,
   },
   {
     id: 4,
     title: 'Your data is private',
     description: 'End-to-end encryption keeps your expenses secure',
-    illustrationPlaceholder: 'Privacy & Security Illustration\n(Shield with lock)',
+    Illustration: PrivacySecurityIllustration,
   },
   {
     id: 5,
     title: "You're all set!",
     description: 'Start splitting expenses with friends',
-    illustrationPlaceholder: 'Ready to Start Illustration\n(Character ready to begin)',
+    Illustration: ReadyToStartIllustration,
   },
 ];
 
@@ -136,13 +144,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
               entering={FadeInDown.delay(index * 100).duration(600)}
               style={styles.contentContainer}
             >
-              {/* Illustration Placeholder */}
+              {/* Illustration */}
               <View style={styles.illustrationContainer}>
-                <View style={styles.illustrationPlaceholder}>
-                  <Text style={styles.illustrationText}>
-                    {screen.illustrationPlaceholder}
-                  </Text>
-                </View>
+                <screen.Illustration />
               </View>
 
               {/* Text Content */}
@@ -230,24 +234,6 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing['3xl'],
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  illustrationPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: tokens.colors.background.subtle,
-    borderRadius: tokens.radius.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: tokens.colors.border.default,
-    borderStyle: 'dashed',
-  },
-  illustrationText: {
-    fontSize: tokens.typography.caption.fontSize,
-    fontWeight: tokens.typography.fontWeight.medium,
-    color: tokens.colors.text.tertiary,
-    textAlign: 'center',
-    paddingHorizontal: tokens.spacing.lg,
   },
   textContainer: {
     alignItems: 'center',
