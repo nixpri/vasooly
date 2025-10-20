@@ -59,20 +59,20 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       {/* Skia Canvas for Glass Effect */}
       {dimensions.width > 0 && dimensions.height > 0 && (
         <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-          {/* Background blur effect */}
+          {/* Background blur effect - Earthen Light Mode */}
           <RoundedRect
             x={0}
             y={0}
             width={dimensions.width}
             height={dimensions.height}
             r={borderRadius}
-            color="rgba(255, 255, 255, 0.08)"
+            color="rgba(245, 243, 240, 0.98)"
           >
-            <BlurMask blur={20} style="normal" />
-            <Shadow dx={0} dy={8} blur={24} color="rgba(0, 0, 0, 0.4)" />
+            <BlurMask blur={8} style="normal" />
+            <Shadow dx={0} dy={2} blur={6} color="rgba(62, 39, 35, 0.06)" />
           </RoundedRect>
 
-          {/* Glass gradient overlay */}
+          {/* Subtle warm gradient overlay */}
           <RoundedRect
             x={0}
             y={0}
@@ -84,13 +84,13 @@ export const GlassCard: React.FC<GlassCardProps> = ({
               start={vec(0, 0)}
               end={vec(0, dimensions.height)}
               colors={[
-                'rgba(255, 255, 255, 0.15)',
-                'rgba(255, 255, 255, 0.05)',
+                'rgba(78, 52, 46, 0.015)',
+                'rgba(78, 52, 46, 0.008)',
               ]}
             />
           </RoundedRect>
 
-          {/* Border glow */}
+          {/* Warm border */}
           <RoundedRect
             x={1}
             y={1}
@@ -98,11 +98,9 @@ export const GlassCard: React.FC<GlassCardProps> = ({
             height={dimensions.height - 2}
             r={borderRadius - 1}
             style="stroke"
-            strokeWidth={1.5}
-            color="rgba(255, 255, 255, 0.2)"
-          >
-            <BlurMask blur={3} style="solid" />
-          </RoundedRect>
+            strokeWidth={1}
+            color="rgba(232, 228, 223, 0.9)"
+          />
         </Canvas>
       )}
 
@@ -148,20 +146,20 @@ export const AnimatedGlassCard: React.FC<GlassCardProps> = ({
         {/* Skia Canvas for Glass Effect */}
         {dimensions.width > 0 && dimensions.height > 0 && (
           <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-            {/* Background blur effect */}
+            {/* Background blur effect - Earthen Light Mode */}
             <RoundedRect
               x={0}
               y={0}
               width={dimensions.width}
               height={dimensions.height}
               r={borderRadius}
-              color="rgba(255, 255, 255, 0.08)"
+              color="rgba(245, 243, 240, 0.98)"
             >
-              <BlurMask blur={20} style="normal" />
-              <Shadow dx={0} dy={8} blur={24} color="rgba(0, 0, 0, 0.4)" />
+              <BlurMask blur={8} style="normal" />
+              <Shadow dx={0} dy={2} blur={6} color="rgba(62, 39, 35, 0.06)" />
             </RoundedRect>
 
-            {/* Glass gradient overlay */}
+            {/* Subtle warm gradient overlay */}
             <RoundedRect
               x={0}
               y={0}
@@ -173,13 +171,13 @@ export const AnimatedGlassCard: React.FC<GlassCardProps> = ({
                 start={vec(0, 0)}
                 end={vec(0, dimensions.height)}
                 colors={[
-                  'rgba(255, 255, 255, 0.15)',
-                  'rgba(255, 255, 255, 0.05)',
+                  'rgba(78, 52, 46, 0.015)',
+                  'rgba(78, 52, 46, 0.008)',
                 ]}
               />
             </RoundedRect>
 
-            {/* Border glow */}
+            {/* Warm border */}
             <RoundedRect
               x={1}
               y={1}
@@ -187,11 +185,9 @@ export const AnimatedGlassCard: React.FC<GlassCardProps> = ({
               height={dimensions.height - 2}
               r={borderRadius - 1}
               style="stroke"
-              strokeWidth={1.5}
-              color="rgba(255, 255, 255, 0.2)"
-            >
-              <BlurMask blur={3} style="solid" />
-            </RoundedRect>
+              strokeWidth={1}
+              color="rgba(232, 228, 223, 0.9)"
+            />
           </Canvas>
         )}
 
@@ -206,7 +202,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: 'rgba(20, 20, 30, 0.6)',
+    backgroundColor: 'rgba(250, 249, 247, 0.85)', // Earthen warm cream background (neutral 50)
   },
   content: {
     padding: 0,

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { formatPaise } from '@/lib/business/splitEngine';
 import type { DetailedSplitResult } from '@/lib/business/splitEngine';
 import { GlassCard } from './GlassCard';
+import { tokens } from '@/theme/ThemeProvider';
 
 interface SplitResultDisplayProps {
   splitResult: DetailedSplitResult | null;
@@ -119,15 +120,15 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: tokens.colors.background.elevated,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: tokens.colors.border.light,
     borderStyle: 'dashed',
   },
   emptyText: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: tokens.colors.text.tertiary,
     textAlign: 'center',
     fontStyle: 'italic',
   },
@@ -138,16 +139,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: tokens.colors.border.default,
   },
   headerLabel: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
     fontWeight: '600',
   },
   headerTotal: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     fontWeight: '700',
   },
   splitsContainer: {
@@ -173,19 +174,19 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(99, 102, 241, 0.3)',
+    backgroundColor: tokens.colors.brand.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   avatarText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.brand.primary,
     fontWeight: '600',
   },
   participantName: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     fontWeight: '500',
   },
   amountContainer: {
@@ -195,20 +196,20 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 16,
-    color: '#4ADE80',
+    color: tokens.colors.financial.positive,
     fontWeight: '700',
   },
   remainderHint: {
     fontSize: 9,
-    color: 'rgba(74, 222, 128, 0.7)',
+    color: tokens.colors.financial.positive,
     fontWeight: '600',
-    backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    backgroundColor: tokens.colors.financial.positiveLight,
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 3,
   },
   footer: {
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    backgroundColor: tokens.colors.brand.primaryLight,
     borderRadius: 6,
     padding: 10,
     marginTop: 6,
@@ -216,13 +217,13 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
     textAlign: 'center',
     lineHeight: 16,
   },
   successText: {
     fontSize: 11,
-    color: '#4ADE80',
+    color: tokens.colors.financial.positive,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -240,12 +241,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
     fontWeight: '400',
   },
   summaryValue: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     fontWeight: '600',
   },
 });

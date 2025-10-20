@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { tokens } from '@/theme/ThemeProvider';
 
 interface ParticipantInput {
   id: string;
@@ -94,7 +95,7 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
                   handleUpdateParticipantName(participant.id, text)
                 }
                 placeholder={`Person ${index + 1}`}
-                placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                placeholderTextColor={tokens.colors.text.tertiary}
               />
             </View>
 
@@ -120,7 +121,7 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
           value={newParticipantName}
           onChangeText={setNewParticipantName}
           placeholder="Add participant name..."
-          placeholderTextColor="rgba(255, 255, 255, 0.3)"
+          placeholderTextColor={tokens.colors.text.tertiary}
           returnKeyType="done"
           onSubmitEditing={handleAddParticipant}
         />
@@ -159,12 +160,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
     fontWeight: '500',
   },
   count: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: tokens.colors.text.tertiary,
     fontWeight: '400',
   },
   listContainer: {
@@ -175,10 +176,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: tokens.colors.background.input,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: tokens.colors.border.default,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 6,
@@ -192,20 +193,20 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: tokens.colors.brand.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   avatarText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.brand.primary,
     fontWeight: '600',
   },
   participantNameInput: {
     flex: 1,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     fontWeight: '400',
     padding: 0,
   },
@@ -213,14 +214,14 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(255, 107, 107, 0.2)',
+    backgroundColor: tokens.colors.error.light,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 10,
   },
   removeButtonText: {
     fontSize: 16,
-    color: '#FF6B6B',
+    color: tokens.colors.error.main,
     fontWeight: '600',
   },
   addParticipantContainer: {
@@ -230,17 +231,17 @@ const styles = StyleSheet.create({
   },
   addInput: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: tokens.colors.background.input,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: tokens.colors.border.default,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
   },
   addButton: {
-    backgroundColor: 'rgba(99, 102, 241, 0.8)',
+    backgroundColor: tokens.colors.brand.primary,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -248,22 +249,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addButtonDisabled: {
-    backgroundColor: 'rgba(99, 102, 241, 0.3)',
+    backgroundColor: tokens.colors.border.medium,
   },
   addButtonText: {
     fontSize: 13,
-    color: '#FFFFFF',
+    color: tokens.colors.text.inverse,
     fontWeight: '600',
   },
   errorText: {
     fontSize: 12,
-    color: '#FF6B6B',
+    color: tokens.colors.error.main,
     marginTop: 4,
     marginLeft: 4,
   },
   hintText: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: tokens.colors.text.tertiary,
     marginTop: 6,
     marginLeft: 4,
     fontStyle: 'italic',

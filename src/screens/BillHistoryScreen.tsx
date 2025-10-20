@@ -27,6 +27,7 @@ import { PaymentStatus } from '@/types';
 import type { Bill } from '@/types';
 import { useHistoryStore } from '@/stores';
 import type { BillHistoryScreenProps } from '@/navigation/AppNavigator';
+import { tokens } from '@/theme/ThemeProvider';
 
 export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation }) => {
   const {
@@ -79,6 +80,7 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
     const paidCount = bill.participants.filter((p) => p.status === PaymentStatus.PAID).length;
     const totalCount = bill.participants.length;
 
+    if (totalCount === 0) return 'No participants';
     if (paidCount === 0) return 'No payments yet';
     if (paidCount === totalCount) return 'Fully settled';
     return `${paidCount}/${totalCount} paid`;
@@ -88,7 +90,10 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
     ({ item: bill }: { item: Bill }) => {
       const progress = calculateBillProgress(bill);
       const statusText = getPaymentStatusText(bill);
-      const isSettled = progress === 100;
+      // Check both progress percentage and actual payment status for settled state
+      const paidCount = bill.participants.filter((p) => p.status === PaymentStatus.PAID).length;
+      const totalCount = bill.participants.length;
+      const isSettled = totalCount > 0 && paidCount === totalCount;
 
       return (
         <TouchableOpacity
@@ -122,7 +127,7 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
                         styles.progressFill,
                         {
                           width: `${progress}%`,
-                          backgroundColor: isSettled ? '#10B981' : '#C2662D',
+                          backgroundColor: isSettled ? tokens.colors.financial.settled : tokens.colors.brand.primary,
                         },
                       ]}
                     />
@@ -211,7 +216,7 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search bills..."
-                placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                placeholderTextColor={tokens.colors.text.tertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCapitalize="none"
@@ -242,8 +247,8 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
               <RefreshControl
                 refreshing={isLoading}
                 onRefresh={handleRefresh}
-                tintColor="#C2662D"
-                colors={['#C2662D']}
+                tintColor={tokens.colors.brand.primary}
+                colors={[tokens.colors.brand.primary]}
               />
             }
           />
@@ -256,44 +261,46 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F',
+    backgroundColor: tokens.colors.background.base,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: tokens.spacing.xl,
     paddingTop: 52,
-    paddingBottom: 16,
-    backgroundColor: 'rgba(20, 20, 30, 0.8)',
+    paddingBottom: tokens.spacing.lg,
+    backgroundColor: tokens.colors.background.elevated,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: tokens.colors.border.subtle,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: tokens.spacing.md,
   },
   headerText: {
     flex: 1,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: tokens.typography.h2.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
+    color: tokens.colors.text.primary,
     marginBottom: 2,
   },
   headerSubtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.text.secondary,
   },
   headerButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: tokens.spacing.sm,
   },
   settingsButton: {
     width: 36,
     height: 36,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: tokens.radius.sm,
+    backgroundColor: tokens.colors.border.default,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -301,19 +308,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   createHeaderButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    backgroundColor: '#C2662D',
-    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: tokens.colors.brand.primary,
+    borderRadius: tokens.radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 36,
   },
   createHeaderButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.semibold,
+    color: tokens.colors.text.inverse,
+    textAlign: 'center',
   },
   searchContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: tokens.spacing.xl,
+    paddingVertical: tokens.spacing.md,
   },
   searchCard: {
     width: '100%',
@@ -330,23 +342,24 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
-    color: '#FFFFFF',
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.text.primary,
     padding: 0,
   },
   clearButton: {
-    padding: 4,
+    padding: tokens.spacing.xs,
   },
   clearButtonText: {
     fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: tokens.colors.text.tertiary,
   },
   listContainer: {
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: tokens.spacing.xl,
+    paddingBottom: tokens.spacing.xl,
   },
   billCardWrapper: {
     marginBottom: 10,
@@ -366,27 +379,30 @@ const styles = StyleSheet.create({
   },
   billTitle: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: tokens.typography.bodyLarge.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.semibold,
+    color: tokens.colors.text.primary,
   },
   settledBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-    borderRadius: 5,
+    paddingHorizontal: tokens.components.badge.padding.horizontal,
+    paddingVertical: tokens.components.badge.padding.vertical,
+    backgroundColor: tokens.colors.financial.positiveLight,
+    borderRadius: tokens.components.badge.borderRadius,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: tokens.colors.financial.positive,
   },
   settledBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#10B981',
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.semibold,
+    color: tokens.colors.financial.positive,
   },
   billAmount: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: tokens.typography.h2.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
+    color: tokens.colors.text.primary,
   },
   progressContainer: {
     gap: 6,
@@ -399,7 +415,7 @@ const styles = StyleSheet.create({
   progressBackground: {
     flex: 1,
     height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: tokens.colors.border.default,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -409,14 +425,16 @@ const styles = StyleSheet.create({
   },
   progressPercentage: {
     fontSize: 11,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.7)',
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.semibold,
+    color: tokens.colors.text.secondary,
     minWidth: 28,
   },
   progressText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.medium,
+    color: tokens.colors.text.secondary,
   },
   billFooter: {
     flexDirection: 'row',
@@ -424,46 +442,54 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   participantCount: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.text.secondary,
   },
   billDate: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.text.secondary,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: tokens.spacing['3xl'],
     paddingTop: 60,
-    gap: 12,
+    gap: tokens.spacing.md,
   },
   emptyIcon: {
     fontSize: 48,
     marginBottom: 6,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: tokens.typography.h3.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
+    color: tokens.colors.text.primary,
   },
   emptyText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
   },
   createButton: {
-    marginTop: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#C2662D',
-    borderRadius: 10,
+    marginTop: tokens.spacing.md,
+    paddingHorizontal: tokens.components.button.padding.horizontal,
+    paddingVertical: tokens.components.button.padding.vertical,
+    backgroundColor: tokens.colors.brand.primary,
+    borderRadius: tokens.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   createButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.semibold,
+    color: tokens.colors.text.inverse,
+    textAlign: 'center',
   },
 });

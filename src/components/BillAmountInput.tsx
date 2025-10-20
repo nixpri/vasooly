@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { rupeesToPaise } from '@/lib/business/splitEngine';
+import { tokens } from '@/theme/ThemeProvider';
 
 interface BillAmountInputProps {
   amount: number; // in paise
@@ -74,7 +75,7 @@ export const BillAmountInput: React.FC<BillAmountInputProps> = ({
           value={displayValue}
           onChangeText={handleAmountChange}
           placeholder="0.00"
-          placeholderTextColor="rgba(255, 255, 255, 0.3)"
+          placeholderTextColor={tokens.colors.text.tertiary}
           keyboardType="decimal-pad"
         />
       </View>
@@ -104,39 +105,39 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
     marginBottom: 8,
     fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: tokens.colors.background.input,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: tokens.colors.border.default,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   currencySymbol: {
     fontSize: 24,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: tokens.colors.brand.primary,
     fontWeight: '600',
     marginRight: 6,
   },
   input: {
     flex: 1,
     fontSize: 24,
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     fontWeight: '600',
     padding: 0,
   },
   inputError: {
-    color: '#FF6B6B',
+    color: tokens.colors.error.main,
   },
   errorText: {
     fontSize: 12,
-    color: '#FF6B6B',
+    color: tokens.colors.error.main,
     marginTop: 6,
     marginLeft: 4,
   },
@@ -148,16 +149,16 @@ const styles = StyleSheet.create({
   },
   quickButton: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: tokens.colors.background.elevated,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: tokens.colors.border.default,
     paddingVertical: 9,
     alignItems: 'center',
   },
   quickButtonText: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: tokens.colors.text.secondary,
     fontWeight: '500',
   },
 });

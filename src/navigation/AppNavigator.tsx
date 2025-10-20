@@ -17,6 +17,7 @@ import {
 } from '@/screens';
 import type { Bill } from '@/types';
 import { useBillStore, useHistoryStore, useSettingsStore } from '@/stores';
+import { tokens } from '@/theme/ThemeProvider';
 
 // Navigation types
 export type RootStackParamList = {
@@ -55,16 +56,16 @@ export const AppNavigator: React.FC = () => {
     initializeStores();
   }, [loadAllBills, loadBills, loadSettings]);
 
-  // Dark theme to prevent white flash during navigation
+  // Earthen theme for navigation
   const navigationTheme = {
-    dark: true,
+    dark: false,
     colors: {
-      primary: '#C2662D',
-      background: '#0A0A0F',
-      card: '#0A0A0F',
-      text: '#FFFFFF',
-      border: 'rgba(255, 255, 255, 0.1)',
-      notification: '#C2662D',
+      primary: tokens.colors.brand.primary,
+      background: tokens.colors.background.base,
+      card: tokens.colors.background.base,
+      text: tokens.colors.text.primary,
+      border: tokens.colors.border.subtle,
+      notification: tokens.colors.brand.primary,
     },
     fonts: {
       regular: {
@@ -93,7 +94,7 @@ export const AppNavigator: React.FC = () => {
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
-          cardStyle: { backgroundColor: '#0A0A0F' },
+          cardStyle: { backgroundColor: tokens.colors.background.base },
         }}
       >
         <Stack.Screen
@@ -150,7 +151,7 @@ export const AppNavigator: React.FC = () => {
               },
             }),
             cardOverlayEnabled: true,
-            cardStyle: { backgroundColor: '#0A0A0F' },
+            cardStyle: { backgroundColor: tokens.colors.background.base },
             detachPreviousScreen: false,
           }}
         />

@@ -20,6 +20,7 @@ import { useBillStore, useSettingsStore } from '@/stores';
 import type { BillDetailScreenProps } from '@/navigation/AppNavigator';
 import { useHaptics } from '@/hooks';
 import { springConfigs } from '@/utils/animations';
+import { tokens } from '@/theme/ThemeProvider';
 
 export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navigation }) => {
   const { billId } = route.params;
@@ -172,7 +173,7 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
   // Animated styles for progress bar
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
-    backgroundColor: isFullySettled ? '#10B981' : '#C2662D',
+    backgroundColor: isFullySettled ? tokens.colors.financial.settled : tokens.colors.brand.primary,
   }));
 
   // Animated styles for celebration
@@ -369,22 +370,22 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F',
+    backgroundColor: tokens.colors.background.base,
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 52,
     paddingBottom: 16,
-    backgroundColor: 'rgba(20, 20, 30, 0.8)',
+    backgroundColor: tokens.colors.background.elevated,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: tokens.colors.border.light,
   },
   backButton: {
     marginBottom: 8,
   },
   backButtonText: {
     fontSize: 13,
-    color: '#C2662D',
+    color: tokens.colors.brand.primary,
     fontWeight: '600',
   },
   headerContent: {
@@ -393,11 +394,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
   },
   headerDate: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: tokens.colors.text.secondary,
   },
   scrollView: {
     flex: 1,
@@ -421,12 +422,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
   },
   summaryAmount: {
     fontSize: 26,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
   },
   progressContainer: {
     gap: 6,
@@ -438,16 +439,16 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
   },
   progressPercentage: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
   },
   progressBackground: {
     height: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: tokens.colors.border.default,
     borderRadius: 2.5,
     overflow: 'hidden',
   },
@@ -458,7 +459,7 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 12,
     fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
   },
   summaryStats: {
     flexDirection: 'row',
@@ -471,41 +472,41 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: tokens.colors.text.secondary,
   },
   statValue: {
     fontSize: 18,
     fontWeight: '700',
   },
   statPaid: {
-    color: '#10B981',
+    color: tokens.colors.financial.positive,
   },
   statPending: {
-    color: '#F59E0B',
+    color: tokens.colors.financial.pending,
   },
   statDivider: {
     width: 1,
     height: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: tokens.colors.border.light,
   },
   settledBanner: {
     paddingVertical: 10,
     paddingHorizontal: 14,
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: tokens.colors.financial.positiveLight,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: tokens.colors.financial.positive,
   },
   settledBannerText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#10B981',
+    color: tokens.colors.financial.positive,
     textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     marginBottom: 12,
   },
   participantsList: {
@@ -527,16 +528,16 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(194, 102, 45, 0.2)',
+    backgroundColor: tokens.colors.brand.primaryLight,
     borderWidth: 2,
-    borderColor: 'rgba(194, 102, 45, 0.4)',
+    borderColor: tokens.colors.brand.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   participantAvatarText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#C2662D',
+    color: tokens.colors.brand.primary,
   },
   participantDetails: {
     flex: 1,
@@ -545,12 +546,12 @@ const styles = StyleSheet.create({
   participantName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
   },
   participantAmount: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -559,20 +560,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statusPending: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: tokens.colors.financial.negativeLight,
+    borderColor: tokens.colors.financial.pending,
   },
   statusPaid: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    backgroundColor: tokens.colors.financial.positiveLight,
+    borderColor: tokens.colors.financial.positive,
   },
   statusText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#F59E0B',
+    color: tokens.colors.financial.pending,
   },
   statusTextPaid: {
-    color: '#10B981',
+    color: tokens.colors.financial.positive,
   },
   upiActions: {
     flexDirection: 'row',
@@ -587,22 +588,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   upiButtonPrimary: {
-    backgroundColor: '#C2662D',
+    backgroundColor: tokens.colors.brand.primary,
   },
   upiButtonSecondary: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: tokens.colors.background.subtle,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: tokens.colors.border.default,
   },
   upiButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokens.colors.text.inverse,
   },
   upiButtonTextSecondary: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: tokens.colors.text.primary,
   },
   actionsContainer: {
     flexDirection: 'row',
@@ -618,23 +619,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionButtonSecondary: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: tokens.colors.background.subtle,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: tokens.colors.border.default,
   },
   actionButtonDanger: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: tokens.colors.error.light,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: tokens.colors.error.main,
   },
   actionButtonTextSecondary: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: tokens.colors.text.primary,
   },
   actionButtonTextDanger: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#EF4444',
+    color: tokens.colors.error.main,
   },
 });

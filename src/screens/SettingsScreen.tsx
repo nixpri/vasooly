@@ -25,6 +25,7 @@ import Slider from '@react-native-community/slider';
 import { GlassCard } from '@/components/GlassCard';
 import { useSettingsStore } from '@/stores';
 import type { SettingsScreenProps } from '@/navigation/AppNavigator';
+import { tokens } from '@/theme/ThemeProvider';
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   const {
@@ -51,6 +52,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
   const [nameInput, setNameInput] = useState('');
   const [isEditingVPA, setIsEditingVPA] = useState(false);
 
+  // Local state for toggles to prevent jitter
+  const [localHaptics, setLocalHaptics] = useState(enableHaptics);
+  const [localReminders, setLocalReminders] = useState(reminderEnabled);
+  const [isResetting, setIsResetting] = useState(false);
+
   // Load settings on mount
   useEffect(() => {
     loadSettings();
@@ -61,6 +67,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
     if (defaultVPA) setVpaInput(defaultVPA);
     if (defaultUPIName) setNameInput(defaultUPIName);
   }, [defaultVPA, defaultUPIName]);
+
+  // Sync local toggle states with store
+  useEffect(() => {
+    setLocalHaptics(enableHaptics);
+  }, [enableHaptics]);
+
+  useEffect(() => {
+    setLocalReminders(reminderEnabled);
+  }, [reminderEnabled]);
 
   // Clear error after 3 seconds
   useEffect(() => {
@@ -121,14 +136,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           text: 'Reset',
           style: 'destructive',
           onPress: async () => {
+            setIsResetting(true);
             try {
               await resetSettings();
               setVpaInput('');
               setNameInput('');
               setIsEditingVPA(false);
+              setLocalHaptics(true); // Reset to defaults
+              setLocalReminders(false);
               Alert.alert('Success', 'All settings have been reset to defaults');
             } catch (err) {
               console.error('Failed to reset settings:', err);
+            } finally {
+              setIsResetting(false);
             }
           },
         },
@@ -136,20 +156,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
     );
   };
 
-  const handleHapticsToggle = async (value: boolean) => {
-    try {
-      await setEnableHaptics(value);
-    } catch (err) {
+  const handleHapticsToggle = (value: boolean) => {
+    // Update local state immediately for smooth UI
+    setLocalHaptics(value);
+    // Update store asynchronously
+    setEnableHaptics(value).catch((err) => {
       console.error('Failed to update haptics setting:', err);
-    }
+      // Revert on error
+      setLocalHaptics(!value);
+    });
   };
 
-  const handleReminderToggle = async (value: boolean) => {
-    try {
-      await setReminderEnabled(value);
-    } catch (err) {
+  const handleReminderToggle = (value: boolean) => {
+    // Update local state immediately for smooth UI
+    setLocalReminders(value);
+    // Update store asynchronously
+    setReminderEnabled(value).catch((err) => {
       console.error('Failed to update reminder setting:', err);
-    }
+      // Revert on error
+      setLocalReminders(!value);
+    });
   };
 
   const handleAutoDeleteDaysChange = async (value: number) => {
@@ -198,7 +224,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                   <TextInput
                     style={styles.input}
                     placeholder="yourname@paytm"
-                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                    placeholderTextColor={tokens.colors.text.tertiary}
                     value={vpaInput}
                     onChangeText={setVpaInput}
                     autoCapitalize="none"
@@ -215,7 +241,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                   <TextInput
                     style={styles.input}
                     placeholder="Your Name"
-                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                    placeholderTextColor={tokens.colors.text.tertiary}
                     value={nameInput}
                     onChangeText={setNameInput}
                     autoCapitalize="words"
@@ -230,7 +256,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                     disabled={isLoading}
                   >
                     {isLoading ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <ActivityIndicator size="small" color={tokens.colors.text.inverse} />
                     ) : (
                       <Text style={styles.buttonTextPrimary}>Save</Text>
                     )}
@@ -297,10 +323,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                 </Text>
               </View>
               <Switch
-                value={enableHaptics}
+                value={localHaptics}
                 onValueChange={handleHapticsToggle}
-                trackColor={{ false: '#3e3e3e', true: '#C2662D' }}
-                thumbColor={enableHaptics ? '#FFFFFF' : '#f4f3f4'}
+                trackColor={{ false: tokens.colors.border.medium, true: tokens.colors.brand.primary }}
+                thumbColor={localHaptics ? tokens.colors.text.inverse : tokens.colors.background.elevated}
               />
             </View>
           </GlassCard>
@@ -315,10 +341,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                 </Text>
               </View>
               <Switch
-                value={reminderEnabled}
+                value={localReminders}
                 onValueChange={handleReminderToggle}
-                trackColor={{ false: '#3e3e3e', true: '#C2662D' }}
-                thumbColor={reminderEnabled ? '#FFFFFF' : '#f4f3f4'}
+                trackColor={{ false: tokens.colors.border.medium, true: tokens.colors.brand.primary }}
+                thumbColor={localReminders ? tokens.colors.text.inverse : tokens.colors.background.elevated}
               />
             </View>
           </GlassCard>
@@ -339,9 +365,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                 step={1}
                 value={autoDeleteDays}
                 onSlidingComplete={handleAutoDeleteDaysChange}
-                minimumTrackTintColor="#C2662D"
-                maximumTrackTintColor="rgba(255, 255, 255, 0.2)"
-                thumbTintColor="#FFFFFF"
+                minimumTrackTintColor={tokens.colors.brand.primary}
+                maximumTrackTintColor={tokens.colors.border.default}
+                thumbTintColor={tokens.colors.text.primary}
               />
               <View style={styles.sliderLabels}>
                 <Text style={styles.sliderLabel}>1 day</Text>
@@ -370,10 +396,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                 onPress={handleResetSettings}
                 style={[styles.button, styles.buttonDanger, { marginTop: 12 }]}
                 activeOpacity={0.8}
-                disabled={isLoading}
+                disabled={isResetting}
               >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#EF4444" />
+                {isResetting ? (
+                  <ActivityIndicator size="small" color={tokens.colors.error.main} />
                 ) : (
                   <Text style={styles.buttonTextDanger}>Reset Settings</Text>
                 )}
@@ -395,50 +421,53 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F',
+    backgroundColor: tokens.colors.background.base,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: tokens.spacing.xl,
     paddingTop: 52,
-    paddingBottom: 16,
-    backgroundColor: 'rgba(20, 20, 30, 0.8)',
+    paddingBottom: tokens.spacing.lg,
+    backgroundColor: tokens.colors.background.elevated,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: tokens.colors.border.subtle,
   },
   backButton: {
-    marginBottom: 8,
+    marginBottom: tokens.spacing.sm,
   },
   backButtonText: {
-    fontSize: 13,
-    color: '#C2662D',
-    fontWeight: '600',
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.brand.primary,
+    fontWeight: tokens.typography.fontWeight.semibold,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: tokens.typography.h2.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
+    color: tokens.colors.text.primary,
     marginBottom: 2,
   },
   headerSubtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.text.secondary,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    padding: tokens.spacing.xl,
     paddingBottom: 40,
   },
   errorCard: {
     marginBottom: 16,
     padding: 12,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: tokens.colors.error.light,
+    borderColor: tokens.colors.error.main,
     borderWidth: 1,
   },
   errorText: {
-    color: '#EF4444',
+    color: tokens.colors.error.main,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -448,23 +477,23 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: tokens.colors.text.secondary,
     marginBottom: 12,
   },
   dangerTitle: {
-    color: '#EF4444',
+    color: tokens.colors.error.main,
   },
   card: {
     marginBottom: 10,
   },
   dangerCard: {
     marginBottom: 10,
-    borderColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: tokens.colors.error.dark,
     borderWidth: 1,
   },
   cardContent: {
@@ -476,22 +505,22 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: tokens.colors.text.primary,
     marginBottom: 8,
   },
   input: {
     height: 44,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: tokens.colors.background.input,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: tokens.colors.border.default,
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
   },
   inputHint: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: tokens.colors.text.tertiary,
     marginTop: 6,
   },
   vpaDisplay: {
@@ -506,25 +535,25 @@ const styles = StyleSheet.create({
   vpaName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     marginBottom: 4,
   },
   vpaId: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
   },
   vpaBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: tokens.colors.financial.positiveLight,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: tokens.colors.financial.positive,
   },
   vpaBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#10B981',
+    color: tokens.colors.financial.positive,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -540,32 +569,32 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   buttonPrimary: {
-    backgroundColor: '#C2662D',
+    backgroundColor: tokens.colors.brand.primary,
   },
   buttonSecondary: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: tokens.colors.background.subtle,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: tokens.colors.border.default,
   },
   buttonDanger: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: tokens.colors.error.light,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: tokens.colors.error.main,
   },
   buttonTextPrimary: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokens.colors.text.inverse,
   },
   buttonTextSecondary: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: tokens.colors.text.primary,
   },
   buttonTextDanger: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#EF4444',
+    color: tokens.colors.error.main,
   },
   settingRow: {
     flexDirection: 'row',
@@ -580,15 +609,15 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     marginBottom: 4,
   },
   settingDescription: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: tokens.colors.text.secondary,
   },
   dangerText: {
-    color: '#EF4444',
+    color: tokens.colors.error.main,
   },
   slider: {
     width: '100%',
@@ -602,12 +631,12 @@ const styles = StyleSheet.create({
   },
   sliderLabel: {
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: tokens.colors.text.tertiary,
   },
   sliderValue: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#C2662D',
+    color: tokens.colors.brand.primary,
   },
   appInfo: {
     alignItems: 'center',
@@ -616,6 +645,6 @@ const styles = StyleSheet.create({
   },
   appInfoText: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.3)',
+    color: tokens.colors.text.tertiary,
   },
 });

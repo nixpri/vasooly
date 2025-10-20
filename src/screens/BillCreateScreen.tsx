@@ -25,6 +25,7 @@ import { BillStatus, PaymentStatus } from '@/types';
 import type { Bill, Participant } from '@/types';
 import type { BillCreateScreenProps } from '@/navigation/AppNavigator';
 import { useHaptics } from '@/hooks';
+import { tokens } from '@/theme/ThemeProvider';
 
 interface ParticipantInput {
   id: string;
@@ -214,7 +215,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
+      <StatusBar barStyle="dark-content" backgroundColor={tokens.colors.background.base} />
       {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
@@ -253,7 +254,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
                   value={billTitle}
                   onChangeText={setBillTitle}
                   placeholder="e.g., Dinner at Taj, Movie tickets..."
-                  placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                  placeholderTextColor={tokens.colors.text.tertiary}
                 />
               </View>
             </View>
@@ -297,7 +298,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
               hapticIntensity="medium"
             >
               <View style={styles.createButtonContent}>
-                {isSaving && <LoadingSpinner size={18} color="#FFFFFF" />}
+                {isSaving && <LoadingSpinner size={18} color={tokens.colors.text.inverse} />}
                 <Text style={styles.createButtonText}>
                   {isSaving
                     ? isEditMode
@@ -317,22 +318,22 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F',
+    backgroundColor: tokens.colors.background.base,
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 52,
     paddingBottom: 16,
-    backgroundColor: 'rgba(20, 20, 30, 0.8)',
+    backgroundColor: tokens.colors.background.elevated,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: tokens.colors.border.light,
   },
   backButton: {
     marginBottom: 8,
   },
   backButtonText: {
     fontSize: 13,
-    color: '#C2662D',
+    color: tokens.colors.brand.primary,
     fontWeight: '600',
   },
   headerTop: {
@@ -347,23 +348,23 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: tokens.colors.text.secondary,
   },
   viewHistoryButton: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    backgroundColor: '#C2662D',
+    backgroundColor: tokens.colors.brand.primary,
     borderRadius: 6,
   },
   viewHistoryButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokens.colors.text.inverse,
   },
   scrollView: {
     flex: 1,
@@ -377,17 +378,17 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: tokens.colors.text.secondary,
     marginBottom: 8,
     fontWeight: '500',
   },
   titleInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: tokens.colors.background.input,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: tokens.colors.border.default,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
@@ -398,7 +399,7 @@ const styles = StyleSheet.create({
   titleInput: {
     flex: 1,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.text.primary,
     fontWeight: '500',
     padding: 0,
   },
@@ -406,23 +407,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 16,
-    backgroundColor: 'rgba(20, 20, 30, 0.95)',
+    backgroundColor: tokens.colors.background.elevated,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: tokens.colors.border.light,
   },
   createButton: {
-    backgroundColor: '#C2662D',
+    backgroundColor: tokens.colors.brand.primary,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
-    shadowColor: '#C2662D',
+    shadowColor: tokens.colors.brand.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 5,
   },
   createButtonDisabled: {
-    backgroundColor: 'rgba(194, 102, 45, 0.3)',
+    backgroundColor: tokens.colors.border.medium,
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokens.colors.text.inverse,
     fontWeight: '700',
   },
 });

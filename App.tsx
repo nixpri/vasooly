@@ -5,6 +5,7 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { initializeDatabase } from './src/lib/data/database';
+import { ThemeProvider, tokens } from './src/theme/ThemeProvider';
 
 export default function App() {
   const [isDbReady, setIsDbReady] = useState(false);
@@ -25,10 +26,12 @@ export default function App() {
   if (dbError) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Database Error</Text>
-          <Text style={styles.errorMessage}>{dbError}</Text>
-        </View>
+        <ThemeProvider>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Database Error</Text>
+            <Text style={styles.errorMessage}>{dbError}</Text>
+          </View>
+        </ThemeProvider>
       </GestureHandlerRootView>
     );
   }
@@ -36,17 +39,21 @@ export default function App() {
   if (!isDbReady) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#C2662D" />
-          <Text style={styles.loadingText}>Initializing...</Text>
-        </View>
+        <ThemeProvider>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={tokens.colors.brand.primary} />
+            <Text style={styles.loadingText}>Initializing...</Text>
+          </View>
+        </ThemeProvider>
       </GestureHandlerRootView>
     );
   }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppNavigator />
+      <ThemeProvider>
+        <AppNavigator />
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
@@ -56,29 +63,34 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0A0A0F',
+    backgroundColor: tokens.colors.background.base,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
+    marginTop: tokens.spacing.lg,
+    fontSize: tokens.typography.bodyLarge.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.regular,
+    color: tokens.colors.text.primary,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0A0A0F',
-    padding: 24,
+    backgroundColor: tokens.colors.background.base,
+    padding: tokens.spacing['2xl'],
   },
   errorText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FF6B6B',
-    marginBottom: 12,
+    fontSize: tokens.typography.h3.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
+    color: tokens.colors.error,
+    marginBottom: tokens.spacing.md,
   },
   errorMessage: {
-    fontSize: 14,
-    color: '#FFFFFF',
+    fontSize: tokens.typography.body.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.regular,
+    color: tokens.colors.text.primary,
     textAlign: 'center',
   },
 });
