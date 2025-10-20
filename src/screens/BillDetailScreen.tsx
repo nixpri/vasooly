@@ -316,7 +316,7 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
             <View style={styles.shareAllButtonContent}>
               <Share2 size={18} color={tokens.colors.text.inverse} strokeWidth={2.5} />
               <Text style={styles.shareAllButtonText}>
-                Share Links with All Pending ({pendingCount})
+                Send Vasoolis to All Pending ({pendingCount})
               </Text>
             </View>
           </AnimatedButton>
