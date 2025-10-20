@@ -19,7 +19,6 @@ import {
   ScrollView,
   RefreshControl,
   Pressable,
-  Image,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -142,11 +141,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Image
-            source={require('../../assets/Vasooly-logo-icon-slogan.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <View style={styles.headerText}>
+            <Text style={styles.headerTitle}>Vasooly</Text>
+            <Text style={styles.headerSubtitle}>Bills khatam, vasooly shuru!</Text>
+          </View>
         </View>
       </View>
 
@@ -253,11 +251,26 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.spacing.md,
   },
-  logo: {
-    width: 200,
-    height: 80,
+  headerText: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: tokens.typography.h2.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
+    color: tokens.colors.sage[700],
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: tokens.typography.caption.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    color: tokens.colors.brand.primary,
+    fontWeight: tokens.typography.fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   scrollView: {
     flex: 1,
