@@ -19,6 +19,7 @@ import {
   ScrollView,
   RefreshControl,
   Pressable,
+  Image,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -141,10 +142,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>Vasooly</Text>
-            <Text style={styles.headerSubtitle}>Your vasooly companion</Text>
-          </View>
+          <Image
+            source={require('../../assets/Vasooly-logo-icon-slogan.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
       </View>
 
@@ -251,24 +253,11 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.spacing.md,
+    justifyContent: 'center',
   },
-  headerText: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: tokens.typography.h2.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    fontWeight: tokens.typography.fontWeight.bold,
-    color: tokens.colors.text.primary,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: tokens.typography.caption.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    color: tokens.colors.sage[600],  // Sage for earthen balance (Phase 3)
-    fontWeight: tokens.typography.fontWeight.medium,
+  logo: {
+    width: 200,
+    height: 80,
   },
   scrollView: {
     flex: 1,

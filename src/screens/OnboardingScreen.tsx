@@ -13,6 +13,7 @@ import {
   Dimensions,
   Text,
   Pressable,
+  Image,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSettingsStore } from '@/stores';
@@ -151,7 +152,15 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
 
               {/* Text Content */}
               <View style={styles.textContainer}>
-                <Text style={styles.title}>{screen.title}</Text>
+                {index === 0 ? (
+                  <Image
+                    source={require('../../assets/Vasooly-logo-icon-slogan.png')}
+                    style={styles.onboardingLogo}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <Text style={styles.title}>{screen.title}</Text>
+                )}
                 <Text style={styles.description}>{screen.description}</Text>
               </View>
             </Animated.View>
@@ -238,6 +247,11 @@ const styles = StyleSheet.create({
   textContainer: {
     alignItems: 'center',
     maxWidth: 320,
+  },
+  onboardingLogo: {
+    width: 240,
+    height: 100,
+    marginBottom: tokens.spacing.md,
   },
   title: {
     fontSize: tokens.typography.h1.fontSize,
