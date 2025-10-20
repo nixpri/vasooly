@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   onboardingLogoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 2,
     marginBottom: tokens.spacing.md,
   },
   onboardingIcon: {

@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 1,
   },
   headerIcon: {
     width: 44,
