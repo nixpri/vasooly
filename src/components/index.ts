@@ -14,3 +14,5 @@ export {
   PrivacySecurityIllustration,
   ReadyToStartIllustration,
 } from './OnboardingIllustrations';
+export { BalanceCard } from './BalanceCard';
+export { TransactionCard } from './TransactionCard';
