@@ -1,273 +1,409 @@
 # Codebase Structure
 
+**Last Updated**: 2025-10-20 | **Week**: 10 | **Files**: 70+ | **Tests**: 314 passing
+
 ## Project Root
 
 ```
 vasooly/
 ├── .expo/                  # Expo build artifacts (gitignored)
-├── .github/                # GitHub workflows (CI/CD)
-│   └── workflows/
-│       └── ci.yml         # CI/CD pipeline (5 jobs)
+├── .github/workflows/      # CI/CD (5 jobs)
 ├── .serena/               # Serena MCP memory files (gitignored)
 ├── claudedocs/            # Session documentation (gitignored)
+│   └── archive/           # Archived docs (DATABASE_SETUP, UPI_INTEGRATION, TESTING)
 ├── docs/                  # Project documentation
-│   ├── ANDROIDMANIFEST_QUERIES.md
-│   ├── DATABASE_SETUP.md
-│   ├── IMPLEMENTATION_PLAN.md
-│   ├── SOFT_DELETE_GUIDE.md
-│   ├── SYSTEM_DESIGN.md
-│   ├── TESTING.md
-│   └── UPI_INTEGRATION.md
-├── e2e/                   # Detox E2E tests
-│   └── firstTest.test.js
+│   ├── DESIGN_GUIDE.md        # Design principles (keep)
+│   ├── IMPLEMENTATION_PLAN.md # 18-week roadmap (keep)
+│   ├── VASOOLY_DESIGN_SYSTEM.md # Complete design system
+│   ├── SYSTEM_DESIGN.md       # Architecture overview
+│   └── UPI_REFERENCE.md       # UPI quick reference
+├── e2e/                   # Detox E2E tests (configured)
 ├── node_modules/          # npm dependencies (gitignored)
-├── src/                   # Source code (see detailed structure below)
-├── .detoxrc.js           # Detox E2E configuration
-├── .eslintrc.json        # ESLint v9 configuration
-├── .gitignore            # Git ignore rules
-├── App.tsx               # App entry point (displays BillCreateScreen)
+├── src/                   # Source code (see below)
+├── App.tsx               # App entry point
 ├── app.json              # Expo configuration
-├── babel.config.js       # Babel with Reanimated plugin
-├── jest.config.js        # Jest testing configuration
-├── package-lock.json     # npm lock file
-├── package.json          # Dependencies and scripts
-├── PROJECT_STATUS.md     # Current project status
+├── babel.config.js       # Babel + Reanimated
+├── jest.config.js        # Jest testing
+├── package.json          # Dependencies
 ├── README.md             # Project overview
-└── tsconfig.json         # TypeScript configuration (strict mode)
+└── tsconfig.json         # TypeScript (strict)
 ```
 
-## Source Code Structure (`src/`)
+## Source Code (`src/`)
 
 ```
 src/
-├── components/           # Reusable UI components ✅
-│   ├── BillAmountInput.tsx        # Amount entry with quick buttons (~180 lines)
-│   ├── GlassCard.tsx              # Glass-morphism card component
-│   ├── ParticipantList.tsx        # Participant management (~280 lines)
-│   ├── SplitResultDisplay.tsx     # Split breakdown display (~220 lines)
-│   └── index.ts                   # Component exports
+├── components/           # Reusable UI (7 components)
+│   ├── AnimatedButton.tsx        # Press animations + haptics
+│   ├── AnimatedGlassCard.tsx     # Glass card with animations
+│   ├── BillAmountInput.tsx       # Currency input
+│   ├── GlassCard.tsx             # Glass-morphism container
+│   ├── LoadingSpinner.tsx        # Rotating spinner
+│   ├── ParticipantList.tsx       # Participant management
+│   ├── SplitResultDisplay.tsx    # Split visualization
+│   └── index.ts                  # Component exports
 │
-├── screens/              # UI screens ✅
-│   ├── BillCreateScreen.tsx       # Bill creation workflow (~355 lines)
-│   ├── PerformancePOC.tsx         # Performance testing screen
-│   ├── UPIValidationScreen.tsx    # UPI validation testing
-│   └── index.ts                   # Screen exports
+├── screens/              # UI Screens (5 screens)
+│   ├── BillCreateScreen.tsx      # Create/edit bills (~460 lines)
+│   ├── BillDetailScreen.tsx      # Bill details + payments (~420 lines)
+│   ├── BillHistoryScreen.tsx     # Bill list with search (~390 lines)
+│   ├── SettingsScreen.tsx        # App preferences (~460 lines)
+│   ├── UPIValidationScreen.tsx   # Testing tool
+│   ├── PerformancePOC.tsx        # Performance testing
+│   └── index.ts                  # Screen exports
 │
-├── lib/                  # Business logic and services
-│   ├── business/        # Business logic (Pure TypeScript) ✅
-│   │   ├── qrCodeGenerator.ts     # QR code generation
-│   │   ├── splitEngine.ts         # Split calculation engine (enhanced)
-│   │   ├── upiGenerator.ts        # UPI link generation
-│   │   └── __tests__/
-│   │       ├── qrCodeGenerator.test.ts
-│   │       ├── splitEngine.test.ts (32 tests, 98.52% coverage)
-│   │       └── upiGenerator.test.ts
+├── navigation/           # Navigation configuration
+│   ├── AppNavigator.tsx          # Stack Navigator with custom transitions
+│   └── index.ts                  # Navigation exports
+│
+├── lib/                  # Business logic and data
+│   ├── business/        # Pure TypeScript business logic
+│   │   ├── qrCodeGenerator.ts    # QR code generation (100% coverage)
+│   │   ├── splitEngine.ts        # Split calculations (98.52% coverage)
+│   │   ├── statusManager.ts      # Payment status (100% coverage)
+│   │   ├── upiGenerator.ts       # UPI links (100% coverage)
+│   │   └── __tests__/            # Business logic tests
 │   │
-│   ├── data/            # Database layer (SQLite + SQLCipher) ✅
-│   │   ├── billRepository.ts      # Bill CRUD operations
-│   │   ├── database.ts            # SQLite initialization
-│   │   ├── encryption.ts          # Key management
-│   │   ├── index.ts               # Data layer exports
-│   │   ├── migrations.ts          # Schema versioning
-│   │   └── __tests__/
-│   │       ├── billRepository.test.ts
-│   │       └── encryption.test.ts
+│   ├── data/            # Database layer (SQLite + SQLCipher)
+│   │   ├── billRepository.ts     # Bill CRUD (100% coverage)
+│   │   ├── database.ts           # SQLite initialization
+│   │   ├── encryption.ts         # Key management (100% coverage)
+│   │   ├── migrations.ts         # Schema versioning
+│   │   ├── index.ts              # Data layer exports
+│   │   └── __tests__/            # Data layer tests
 │   │
-│   └── platform/        # Native modules (Expo) ✅
-│       ├── upiValidation.ts       # UPI validation framework
-│       └── __tests__/
-│           └── upiValidation.test.ts
+│   └── platform/        # Platform utilities
+│       ├── upiValidation.ts      # UPI device validation
+│       └── __tests__/            # Platform tests
 │
-├── stores/              # Zustand state management (planned)
-│   └── (empty - Week 5 implementation)
+├── services/            # Native service integrations (4 services)
+│   ├── contactsService.ts        # Contact picker (~240 lines, 100% coverage)
+│   ├── filePickerService.ts      # Image/PDF picker (~350 lines, 100% coverage)
+│   ├── qrCodeService.ts          # QR generation (~290 lines, 100% coverage)
+│   ├── shareService.ts           # WhatsApp/SMS (~400 lines, 100% coverage)
+│   ├── index.ts                  # Service exports
+│   └── __tests__/                # Service tests
 │
-├── types/               # TypeScript type definitions ✅
-│   └── index.ts         # Core domain types (Bill, Participant, etc.)
+├── stores/              # Zustand state management (3 stores)
+│   ├── billStore.ts              # Bill state + CRUD (~380 lines)
+│   ├── historyStore.ts           # Bill history + caching (~250 lines)
+│   ├── settingsStore.ts          # App preferences (~220 lines)
+│   ├── index.ts                  # Store exports
+│   └── __tests__/                # Store tests (100% coverage)
 │
-├── utils/               # Utility functions (planned)
-│   └── (empty - to be added as needed)
+├── hooks/               # Custom React hooks (2 hooks)
+│   ├── useButtonAnimation.ts     # Button animation logic
+│   ├── useHaptics.ts             # Settings-aware haptics
+│   └── index.ts                  # Hook exports
 │
-└── __tests__/           # Additional test files
-    └── (test utilities and helpers)
+├── types/               # TypeScript type definitions
+│   └── index.ts         # Core domain types
+│
+├── utils/               # Utility functions
+│   ├── animations.ts             # Animation configs + worklets
+│   └── index.ts                  # Utility exports
+│
+└── __tests__/           # Additional test utilities
+    └── (test helpers)
 ```
 
 ## Component Architecture
 
-### UI Components (4 components)
+### UI Components (7 components)
 
-**BillAmountInput** (`src/components/BillAmountInput.tsx`)
-- Purpose: Rupee input with paise conversion
-- Features: Quick amount buttons, inline validation
+**AnimatedButton** (`components/AnimatedButton.tsx`)
+- Press animations (scale 0.95, opacity 0.7)
+- Settings-aware haptic feedback
+- Reanimated worklets on UI thread
+- Props: `onPress`, `variant`, `disabled`, `loading`
+
+**AnimatedGlassCard** (`components/AnimatedGlassCard.tsx`)
+- Glass-morphism with Skia
+- Layout animations with Moti
+- Responsive dimensions via `onLayout`
+- Props: `children`, `style`, `animateLayout`
+
+**GlassCard** (`components/GlassCard.tsx`)
+- Frosted glass effect
+- Skia-based blur (60fps)
+- Configurable opacity and blur
+- Props: `children`, `style`
+
+**LoadingSpinner** (`components/LoadingSpinner.tsx`)
+- Smooth rotation (Reanimated)
+- Configurable size and color
+- Props: `size`, `color`
+
+**BillAmountInput** (`components/BillAmountInput.tsx`)
+- Rupee input with validation
+- Quick amount buttons
+- Inline error display
 - Props: `amount`, `onAmountChange`, `error`
-- Lines: ~180
 
-**ParticipantList** (`src/components/ParticipantList.tsx`)
-- Purpose: Add/remove/edit participants
-- Features: Avatar UI, duplicate detection, minimum enforcement
-- Props: `participants`, `onParticipantsChange`, `minParticipants`, `error`
-- Lines: ~280
+**ParticipantList** (`components/ParticipantList.tsx`)
+- Add/remove/edit participants
+- Duplicate detection
+- Minimum enforcement
+- Props: `participants`, `onParticipantsChange`, `error`
 
-**SplitResultDisplay** (`src/components/SplitResultDisplay.tsx`)
-- Purpose: Display split breakdown
-- Features: Per-participant amounts, remainder indicators, summary stats
+**SplitResultDisplay** (`components/SplitResultDisplay.tsx`)
+- Visual split breakdown
+- Per-participant amounts
+- Remainder indicators
 - Props: `splitResult`
-- Lines: ~220
 
-**GlassCard** (`src/components/GlassCard.tsx`)
-- Purpose: Glass-morphism design system component
-- Features: Skia glass effects, Moti animations
-- Variants: GlassCard, AnimatedGlassCard
-- Lines: ~180
+### Screens (5 screens)
 
-### Screens (3 screens)
+**BillHistoryScreen** (`screens/BillHistoryScreen.tsx`)
+- FlashList for performance
+- historyStore integration
+- Pull-to-refresh
+- Search functionality
+- Filter by status
+- Navigate to detail/create
 
-**BillCreateScreen** (`src/screens/BillCreateScreen.tsx`)
-- Purpose: Complete bill creation workflow
-- Features: Title input, amount entry, participant management, real-time split calculation, database integration
-- Integrations: BillAmountInput, ParticipantList, SplitResultDisplay, splitEngine, billRepository
-- Lines: ~355
+**BillCreateScreen** (`screens/BillCreateScreen.tsx`)
+- Bill title + amount input
+- Participant management
+- Real-time split calculation
+- Edit mode support
+- billStore integration (Week 10)
+- Loading states + validation
 
-**UPIValidationScreen** (`src/screens/UPIValidationScreen.tsx`)
-- Purpose: Device testing for UPI validation
-- Features: UPI app detection, link testing, QR code generation
-- Status: Testing tool (not production)
-- Lines: ~500
+**BillDetailScreen** (`screens/BillDetailScreen.tsx`)
+- billStore + settingsStore integration
+- Animated progress bar
+- Payment status toggles
+- UPI payment links
+- Share functionality
+- Edit/Delete actions
 
-**PerformancePOC** (`src/screens/PerformancePOC.tsx`)
-- Purpose: Performance testing for 60fps animations
-- Features: GlassCard showcase, animation testing
-- Status: Testing tool (not production)
-- Lines: ~200
+**SettingsScreen** (`screens/SettingsScreen.tsx`)
+- settingsStore integration
+- Default VPA management
+- Haptic feedback toggle
+- Auto-delete days slider
+- Payment reminders
+- Reset settings
+
+**UPIValidationScreen** (Testing tool)
+- Device UPI validation
+- App detection
+- Link testing
+- Not for production
 
 ## Business Logic Modules
 
-### Split Engine (`src/lib/business/splitEngine.ts`)
+### Split Engine (`lib/business/splitEngine.ts`)
 
-**Core Functions**:
-- `calculateDetailedSplit()` - Primary MVP function for participant-aware splitting
-- `validateSplitInputs()` - Comprehensive input validation
+**Functions** (8):
+- `calculateDetailedSplit()` - Primary MVP split function
+- `validateSplitInputs()` - Input validation
 - `verifySplitIntegrity()` - Post-calculation verification
-- `formatSplitResult()` - UI-ready formatted output
-- `splitEqual()` - Basic equal split algorithm
-- `calculateSplit()` - Legacy split function
+- `formatSplitResult()` - UI-ready output
+- `splitEqual()` - Basic equal split
 - `formatPaise()` - Currency formatting
-- `rupeesToPaise()` - Unit conversion
+- `rupeesToPaise()` / `paiseToRupees()` - Conversions
 
-**Types**:
-- `ParticipantSplit` - Per-participant split result
-- `DetailedSplitResult` - Complete split metadata
-- `SplitResult` - Legacy split result
-- `SplitValidationError` - Custom error class
+**Coverage**: 98.52% (32 tests)
 
-**Test Coverage**: 32 tests, 98.52% coverage
+### Status Manager (`lib/business/statusManager.ts`)
 
-### UPI Generator (`src/lib/business/upiGenerator.ts`)
+**Functions** (8):
+- `isParticipantPaid()`, `isBillSettled()`
+- `getSettlementProgress()`, `getPendingParticipants()`
+- `markParticipantPaid()`, `markParticipantPending()`
+- `markAllPaid()`, `calculatePaymentSummary()`
 
-**Core Functions**:
-- `generateUPILink()` - Standard UPI deep link generation
+**Coverage**: 100% (49 tests)
+
+### UPI Generator (`lib/business/upiGenerator.ts`)
+
+**Functions** (6):
+- `generateUPILink()` - Standard UPI deep links
 - `validateVPA()` - VPA format validation
-- `generateTransactionRef()` - Unique transaction references
-- `rupeesToPaise()` / `paiseToRupees()` - Amount conversion
+- `generateTransactionRef()` - Unique references
+- `rupeesToPaise()` / `paiseToRupees()`
+- App-specific fallback URIs
 
-**Test Coverage**: 100%
+**Coverage**: 100% (39 tests)
 
-### QR Code Generator (`src/lib/business/qrCodeGenerator.ts`)
+### QR Code Generator (`lib/business/qrCodeGenerator.ts`)
 
-**Core Functions**:
+**Functions** (3):
 - `generateQRCode()` - Scannable QR codes
-- `generateBrandedQRCode()` - Vasooly-branded QR codes
-- `isQRCodeDataValid()` - QR capacity validation
+- `generateBrandedQRCode()` - Vasooly branding
+- `isQRCodeDataValid()` - Capacity validation
 
-**Test Coverage**: 100%
+**Coverage**: 100% (34 tests)
 
-## Database Layer
+## Data Layer
 
-### Bill Repository (`src/lib/data/billRepository.ts`)
+### Bill Repository (`lib/data/billRepository.ts`)
 
-**CRUD Operations**:
-- `createBill(bill: Bill): Promise<void>`
-- `getBills(): Promise<Bill[]>`
-- `getBillById(id: string): Promise<Bill | null>`
-- `updateBill(bill: Bill): Promise<void>`
-- `deleteBill(id: string): Promise<void>` (soft delete)
-- `restoreBill(id: string): Promise<void>`
-- `getDeletedBills(): Promise<Bill[]>`
-- `cleanupOldDeletedBills(days: number): Promise<void>`
+**CRUD Operations** (14):
+- `createBill()`, `getBills()`, `getBillById()`
+- `updateBill()`, `deleteBill()` (soft delete)
+- `restoreBill()`, `getDeletedBills()`
+- `searchBills()`, `duplicateBill()`
+- `updateBillStatus()`, `updateParticipantStatus()`
+- `getBillStatistics()`, `cleanupOldDeletedBills()`
 
-**Features**:
-- Transaction-safe operations
-- Soft delete with restore
-- Foreign key constraints
-- Bill + Participants atomic creation
+**Coverage**: 100% (comprehensive tests)
 
-**Test Coverage**: 100%
-
-### Database (`src/lib/data/database.ts`)
+### Database (`lib/data/database.ts`)
 
 **Features**:
 - SQLite with SQLCipher encryption
-- 256-bit AES encryption keys
-- OS Keychain integration (expo-secure-store)
+- 256-bit AES keys (expo-secure-store)
 - Migration system with rollback
 - Transaction support
 
 **Schema**:
 ```sql
 bills (id, title, total_amount_paise, created_at, updated_at, status, deleted_at)
-participants (id, bill_id, name, phone, amount_paise, status)
+participants (id, bill_id, name, phone, amount_paise, status, paid_at)
 ```
 
-## Type System (`src/types/index.ts`)
+## State Management (Zustand)
+
+### Bill Store (`stores/billStore.ts`)
+
+**State**:
+- `bills`: Bill[]
+- `currentBill`: Bill | null
+- `loading`, `error`
+
+**Actions**:
+- `createBill()`, `updateBill()`, `deleteBill()`
+- `getBillById()`, `loadBills()`
+- `markParticipantPaid()`, `markParticipantPending()`
+
+**Persistence**: SQLite via billRepository
+
+### History Store (`stores/historyStore.ts`)
+
+**State**:
+- `bills`: Bill[]
+- `searchQuery`, `filterStatus`
+- `loading`, `error`
+
+**Actions**:
+- `loadBills()`, `refreshBills()`
+- `setSearchQuery()`, `setFilterStatus()`
+- `getFilteredBills()`
+
+**Features**: Search + filter with caching
+
+### Settings Store (`stores/settingsStore.ts`)
+
+**State**:
+- `defaultVPA`, `enableHaptics`
+- `enableReminders`, `autoDeleteDays`
+- `initialized`, `loading`
+
+**Actions**:
+- `updateSettings()`, `resetSettings()`
+- `loadSettings()`, `saveSettings()`
+
+**Persistence**: SecureStore for VPA, regular storage for others
+
+## Native Services
+
+### Contact Service (`services/contactsService.ts`)
+
+**Functions**:
+- `getContactsPermission()` - Permission flow
+- `selectContact()`, `selectMultipleContacts()`
+- `searchContacts()`
+
+**Coverage**: 100% utilities
+
+### Share Service (`services/shareService.ts`)
+
+**Functions**:
+- `shareViaWhatsApp()`, `shareViaSMS()`
+- `shareGeneric()`
+- Message templates (payment, reminder, summary)
+
+**Coverage**: 100% message generation
+
+### QR Code Service (`services/qrCodeService.ts`)
+
+**Functions**:
+- `generateUPIQRCode()` - UPI payment QR
+- `generateBrandedQRCode()` - With Vasooly branding
+- `generateBatchQRCodes()` - For all participants
+- File export with sanitization
+
+**Coverage**: 100% utilities
+
+### File Picker Service (`services/filePickerService.ts`)
+
+**Functions**:
+- `pickImage()` - JPEG/PNG selection
+- `pickDocument()` - PDF selection
+- `pickMultipleImages()`
+- File validation (size, type, extension)
+
+**Coverage**: 100% utilities
+
+## Custom Hooks
+
+### useHaptics (`hooks/useHaptics.ts`)
+
+**Features**:
+- Settings-aware (respects `enableHaptics`)
+- 7 types: light, medium, heavy, success, warning, error, selection
+- Graceful degradation on unsupported devices
+
+### useButtonAnimation (`hooks/useButtonAnimation.ts`)
+
+**Features**:
+- Reusable button press animation
+- Scale + opacity transition
+- Spring animation config
+
+## Utilities
+
+### Animations (`utils/animations.ts`)
+
+**Spring Configs**:
+- `gentle`, `bouncy`, `snappy`, `smooth`
+
+**Timing Configs**:
+- `quick`, `standard`, `slow`, `linear`
+
+**Worklets**:
+- `buttonPressAnimation`, `statusChangeAnimation`
+- `progressAnimation`, `fadeAnimation`
+- `slideAnimation`, `celebrationAnimation`
+
+## Type System (`types/index.ts`)
 
 **Core Types**:
 ```typescript
-interface Bill {
-  id: string;
-  title: string;
-  totalAmountPaise: number;
-  createdAt: Date;
-  updatedAt: Date;
-  participants: Participant[];
-  status: BillStatus;
-}
-
-interface Participant {
-  id: string;
-  name: string;
-  phone?: string;
-  amountPaise: number;
-  status: PaymentStatus;
-}
-
-enum BillStatus {
-  ACTIVE = 'ACTIVE',
-  SETTLED = 'SETTLED',
-  DELETED = 'DELETED',
-}
-
-enum PaymentStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-}
+Bill, Participant, BillStatus, PaymentStatus
+SplitResult, DetailedSplitResult, ParticipantSplit
+UPIPaymentParams, UPILinkResult
+QRCodeOptions, QRCodeResult
+Settings, BillStatistics
 ```
 
 ## Testing Structure
 
-**Test Suites** (7 suites, 130+ tests):
-1. Split Engine Tests (32 tests) - 98.52% coverage
-2. UPI Generator Tests - 100% coverage
-3. QR Code Generator Tests - 100% coverage
-4. Bill Repository Tests - 100% coverage
-5. Database Encryption Tests - 100% coverage
-6. UPI Validation Tests - 100% coverage
-7. Integration Tests
+**Test Suites** (314 tests):
+- Business logic: 98.52-100% coverage
+- Data layer: 100% coverage
+- Services: 100% utilities coverage
+- Stores: 100% coverage
+- Total: 314 passing tests
 
 **Test Commands**:
 ```bash
 npm test                # Run all tests
-npm run test:coverage   # With coverage report
+npm run test:coverage   # With coverage
 npm run test:watch      # Watch mode
-npm run test:ci         # CI mode
 ```
 
 ## Configuration Files
@@ -275,141 +411,66 @@ npm run test:ci         # CI mode
 **TypeScript** (`tsconfig.json`):
 - Strict mode enabled
 - Path aliases: `@/*` → `src/*`
-- Target: ESNext
-- Module: ES modules
 
 **ESLint** (`eslint.config.mjs`):
-- ESLint v9 with TypeScript support
-- Expo config as base
-- TypeScript rules enabled
-- No unused vars enforcement
+- ESLint v9 + TypeScript
+- 0 errors, 14 acceptable warnings
 
 **Jest** (`jest.config.js`):
 - jest-expo preset
-- TypeScript transformation
 - Coverage thresholds (90%+)
-- Test match patterns
 
 **Babel** (`babel.config.js`):
-- babel-preset-expo
-- Reanimated plugin enabled
-- Module resolver for path aliases
-
-## Documentation
-
-**Core Docs** (7 documents):
-1. `PROJECT_STATUS.md` - Current progress and status
-2. `README.md` - Project overview and quick start
-3. `docs/SYSTEM_DESIGN.md` - Architecture and design decisions
-4. `docs/IMPLEMENTATION_PLAN.md` - 18-week roadmap
-5. `docs/DATABASE_SETUP.md` - SQLCipher encryption guide
-6. `docs/UPI_INTEGRATION.md` - UPI implementation details
-7. `docs/TESTING.md` - Testing strategy and guides
-
-**Additional Docs**:
-- `docs/SOFT_DELETE_GUIDE.md` - Soft delete implementation
-- `docs/ANDROIDMANIFEST_QUERIES.md` - Android package visibility
+- Reanimated plugin
+- Module resolver for aliases
 
 ## Dependencies
 
-**Core** (52 packages):
-- react-native 0.81.4
+**Core** (48 packages):
+- react-native 0.76.1
 - expo SDK 54
 - typescript 5.9.2
-- zustand 5.0.8 (not yet used)
-- date-fns 4.1.0
+- zustand 5.0.8
 
 **Animations**:
 - react-native-reanimated 4.1.3
 - moti 0.30.0
 - @shopify/react-native-skia 2.3.0
-- react-native-gesture-handler 2.28.0
 
 **Database**:
 - expo-sqlite 16.0.8 (SQLCipher)
 - expo-secure-store 15.0.7
 
-**Native Modules**:
-- expo-contacts 15.0.9 (not yet used)
-- expo-sharing 14.0.7 (not yet used)
-- expo-document-picker 14.0.7 (not yet used)
-- expo-haptics 15.0.7 (not yet used)
-- react-native-qrcode-svg 6.3.15
-- react-native-svg 15.14.0
-- expo-device 8.0.9
+**Navigation**:
+- @react-navigation/native 7.0.14
+- @react-navigation/stack 7.1.5
+
+**Performance**:
+- @shopify/flash-list 2.1.0
 
 **Testing**:
 - jest 30.2.0
 - @testing-library/react-native 13.3.3
-- detox (configured, not yet used)
 
 ## Code Metrics
 
-**Lines of Code**: ~8,235 total
-- Production code: ~6,500 lines
-- Test code: ~1,200 lines
-- Configuration: ~535 lines
+**Lines of Code**: ~13,000+ total
+- Production: ~8,000 lines
+- Tests: ~3,500 lines
+- Config: ~800 lines
 
-**Files Created**: 52 files
-- Source files: 20
-- Test files: 10
-- Component files: 4
-- Screen files: 3
-- Config files: 8
-- Documentation: 7
+**Files**: 70+ files
+- Source: 35
+- Tests: 20
+- Config: 10
+- Documentation: 5+
 
-**Test Coverage**:
-- Split engine: 98.52%
-- Data layer: 100%
-- UPI integration: 100%
-- Overall: ~95%
+**Quality**:
+- TypeScript: 0 errors
+- ESLint: 0 errors
+- Tests: 314 passing
+- Coverage: 100% on critical paths
 
-## Architecture Patterns
+---
 
-**Clean Architecture**:
-```
-Presentation (React Native) → State (Zustand) → Business Logic → Data Access → Platform Services
-```
-
-**Separation of Concerns**:
-- UI components (presentation only)
-- Business logic (pure TypeScript, framework-agnostic)
-- Data layer (database abstraction)
-- Platform services (native module wrappers)
-
-**Type Safety**:
-- Strict TypeScript mode
-- Interface-driven design
-- Type guards for validation
-- No `any` types (except in tests)
-
-**Testing Strategy**:
-- Unit tests for business logic (90%+ coverage)
-- Integration tests for database layer (100% coverage)
-- Component tests (planned for Week 4)
-- E2E tests with Detox (configured, not yet implemented)
-
-## What's Ready for Week 4
-
-**Ready Components**:
-- ✅ BillCreateScreen (fully functional)
-- ✅ Split engine (enhanced, tested)
-- ✅ Database layer (CRUD complete)
-- ✅ UPI generator (tested on 1 device)
-- ✅ QR code generator (functional)
-- ✅ Glass-morphism design system
-
-**Can Build Next**:
-- Bill History screen (list all bills)
-- Bill Detail screen (show one bill with UPI links)
-- Edit/Delete bill functionality
-- Duplicate bill feature
-- Search and filter
-
-**Dependencies Available**:
-- ✅ billRepository (getBills, getBillById, etc.)
-- ✅ Split engine (calculateDetailedSplit)
-- ✅ UPI generator (generateUPILink)
-- ✅ QR generator (generateQRCode)
-- ✅ Types (Bill, Participant, BillStatus)
-- ✅ Design components (GlassCard, theme)
+**Last Updated**: 2025-10-20 | **Week**: 10 | **Status**: Phase 2 IN PROGRESS
