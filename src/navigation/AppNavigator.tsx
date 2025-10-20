@@ -14,6 +14,7 @@ import {
   BillHistoryScreen,
   BillDetailScreen,
   SettingsScreen,
+  OnboardingScreen,
 } from '@/screens';
 import type { Bill } from '@/types';
 import { useBillStore, useHistoryStore, useSettingsStore } from '@/stores';
@@ -21,12 +22,14 @@ import { tokens } from '@/theme/ThemeProvider';
 
 // Navigation types
 export type RootStackParamList = {
+  Onboarding: undefined;
   BillHistory: undefined;
   BillCreate: { bill?: Bill } | undefined;
   BillDetail: { billId: string };
   Settings: undefined;
 };
 
+export type OnboardingScreenProps = StackScreenProps<RootStackParamList, 'Onboarding'>;
 export type BillHistoryScreenProps = StackScreenProps<RootStackParamList, 'BillHistory'>;
 export type BillCreateScreenProps = StackScreenProps<RootStackParamList, 'BillCreate'>;
 export type BillDetailScreenProps = StackScreenProps<RootStackParamList, 'BillDetail'>;
@@ -37,7 +40,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 export const AppNavigator: React.FC = () => {
   const { loadAllBills } = useBillStore();
   const { loadBills } = useHistoryStore();
-  const { loadSettings } = useSettingsStore();
+  const { loadSettings, onboardingCompleted } = useSettingsStore();
 
   // Load initial data on mount
   useEffect(() => {
@@ -90,13 +93,28 @@ export const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
-        initialRouteName="BillHistory"
+        initialRouteName={onboardingCompleted ? 'BillHistory' : 'Onboarding'}
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
           cardStyle: { backgroundColor: tokens.colors.background.base },
         }}
       >
+        <Stack.Screen
+          name="Onboarding"
+          options={{
+            cardStyleInterpolator: ({ current }) => ({
+              cardStyle: {
+                opacity: current.progress,
+              },
+            }),
+            gestureEnabled: false,
+          }}
+        >
+          {({ navigation }) => (
+            <OnboardingScreen onComplete={() => navigation.replace('BillHistory')} />
+          )}
+        </Stack.Screen>
         <Stack.Screen
           name="BillHistory"
           component={BillHistoryScreen}
