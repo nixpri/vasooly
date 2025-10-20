@@ -10,6 +10,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
 } from 'react-native';
+import { AnimatedButton, LoadingSpinner } from '@/components';
 import { BillAmountInput } from '@/components/BillAmountInput';
 import { ParticipantList } from '@/components/ParticipantList';
 import { SplitResultDisplay } from '@/components/SplitResultDisplay';
@@ -23,6 +24,7 @@ import { useBillStore } from '@/stores';
 import { BillStatus, PaymentStatus } from '@/types';
 import type { Bill, Participant } from '@/types';
 import type { BillCreateScreenProps } from '@/navigation/AppNavigator';
+import { useHaptics } from '@/hooks';
 
 interface ParticipantInput {
   id: string;
@@ -37,6 +39,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
   const existingBill = route.params?.bill;
   const isEditMode = !!existingBill;
   const { createBill: createBillInStore, updateBill: updateBillInStore } = useBillStore();
+  const haptics = useHaptics();
 
   // Initialize state from existingBill if in edit mode
   const [billTitle, setBillTitle] = useState(existingBill?.title ?? '');
@@ -99,16 +102,19 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
   const handleSaveBill = async () => {
     // Validation
     if (!billTitle.trim()) {
+      haptics.warning();
       Alert.alert('Missing Title', 'Please enter a bill title');
       return;
     }
 
     if (amountPaise === 0) {
+      haptics.warning();
       Alert.alert('Invalid Amount', 'Please enter a bill amount');
       return;
     }
 
     if (!splitResult) {
+      haptics.warning();
       Alert.alert(
         'Invalid Split',
         'Please ensure amount and participants are valid'
@@ -120,6 +126,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
     const validParticipants = participants.filter((p) => p.name.trim() !== '');
 
     if (validParticipants.length < 2) {
+      haptics.warning();
       Alert.alert(
         'Not Enough Participants',
         'Please add at least 2 participants'
@@ -127,6 +134,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
       return;
     }
 
+    haptics.medium(); // Haptic feedback for starting save
     setIsSaving(true);
 
     try {
@@ -158,6 +166,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
 
         await updateBillInStore(updatedBill); // Use updateBill for edit mode
 
+        haptics.success(); // Success haptic
         // Success - navigate back
         navigation.goBack();
       } else {
@@ -176,10 +185,12 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
 
         await createBillInStore(newBill); // Use createBill for new bills
 
+        haptics.success(); // Success haptic
         // Success - navigate back to history
         navigation.goBack();
       }
     } catch (error) {
+      haptics.error(); // Error haptic
       Alert.alert(
         'Error',
         error instanceof Error ? error.message : `Failed to ${isEditMode ? 'update' : 'create'} bill`
@@ -269,25 +280,29 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
 
         {/* Create Bill Button - Outside KeyboardAvoidingView */}
         <View style={styles.footer}>
-            <TouchableOpacity
+            <AnimatedButton
               style={[
                 styles.createButton,
                 !canCreateBill && styles.createButtonDisabled,
               ]}
               onPress={handleSaveBill}
               disabled={!canCreateBill}
-              activeOpacity={0.8}
+              haptic
+              hapticIntensity="medium"
             >
-              <Text style={styles.createButtonText}>
-                {isSaving
-                  ? isEditMode
-                    ? 'Updating...'
-                    : 'Creating...'
-                  : isEditMode
-                    ? 'Update Bill'
-                    : 'Create Bill'}
-              </Text>
-            </TouchableOpacity>
+              <View style={styles.createButtonContent}>
+                {isSaving && <LoadingSpinner size={18} color="#FFFFFF" />}
+                <Text style={styles.createButtonText}>
+                  {isSaving
+                    ? isEditMode
+                      ? 'Updating...'
+                      : 'Creating...'
+                    : isEditMode
+                      ? 'Update Bill'
+                      : 'Create Bill'}
+                </Text>
+              </View>
+            </AnimatedButton>
           </View>
     </View>
   );
@@ -404,6 +419,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(108, 92, 231, 0.3)',
     shadowOpacity: 0,
     elevation: 0,
+  },
+  createButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   createButtonText: {
     fontSize: 14,

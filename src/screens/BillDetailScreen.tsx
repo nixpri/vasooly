@@ -10,20 +10,29 @@ import {
   Share as RNShare,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { GlassCard, AnimatedGlassCard } from '@/components/GlassCard';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
+import { GlassCard, AnimatedGlassCard, AnimatedButton } from '@/components';
 import { formatPaise } from '@/lib/business/splitEngine';
 import { generateUPILink } from '@/lib/business/upiGenerator';
 import { PaymentStatus } from '@/types';
 import type { Participant } from '@/types';
 import { useBillStore, useSettingsStore } from '@/stores';
 import type { BillDetailScreenProps } from '@/navigation/AppNavigator';
+import { useHaptics } from '@/hooks';
+import { springConfigs } from '@/utils/animations';
 
 export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navigation }) => {
   const { billId } = route.params;
   const { getBillById, markParticipantPaid, markParticipantPending, deleteBill } = useBillStore();
   const { defaultVPA } = useSettingsStore();
+  const haptics = useHaptics();
 
   const [bill, setBill] = useState(getBillById(billId));
+
+  // Animated values for progress bar and celebration
+  const progressWidth = useSharedValue(0);
+  const celebrationScale = useSharedValue(1);
+  const celebrationRotation = useSharedValue(0);
 
   // Update local state when store changes (initial load)
   useEffect(() => {
@@ -50,16 +59,40 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
 
   const handleTogglePaymentStatus = async (participant: Participant) => {
     try {
-      if (participant.status === PaymentStatus.PAID) {
+      const wasPaid = participant.status === PaymentStatus.PAID;
+
+      if (wasPaid) {
+        haptics.medium(); // Medium haptic for toggle
         await markParticipantPending(billId, participant.id);
       } else {
+        haptics.success(); // Success haptic for payment marked
         await markParticipantPaid(billId, participant.id);
       }
+
       // Immediately update local state to reflect the change
       const updatedBill = getBillById(billId);
       setBill(updatedBill);
+
+      // Check if bill is now fully settled for celebration
+      if (!wasPaid && updatedBill) {
+        const allPaid = updatedBill.participants.every((p) => p.status === PaymentStatus.PAID);
+        if (allPaid) {
+          // Trigger celebration animation
+          celebrationScale.value = withSequence(
+            withSpring(1.15, springConfigs.bouncy),
+            withSpring(1, springConfigs.smooth)
+          );
+          celebrationRotation.value = withSequence(
+            withSpring(10, springConfigs.bouncy),
+            withSpring(-10, springConfigs.bouncy),
+            withSpring(0, springConfigs.smooth)
+          );
+          haptics.success(); // Additional celebration haptic
+        }
+      }
     } catch (error) {
       console.error('Failed to update payment status:', error);
+      haptics.error(); // Error haptic
       Alert.alert('Error', 'Failed to update payment status. Please try again.');
     }
   };
@@ -131,6 +164,25 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
   const progressText = getProgressText();
   const { paid, pending } = getPaymentSummary();
 
+  // Animate progress bar when progress changes
+  useEffect(() => {
+    progressWidth.value = withSpring(progress, springConfigs.smooth);
+  }, [progress, progressWidth]);
+
+  // Animated styles for progress bar
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+    backgroundColor: isFullySettled ? '#10B981' : '#6C5CE7',
+  }));
+
+  // Animated styles for celebration
+  const celebrationStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: celebrationScale.value },
+      { rotate: `${celebrationRotation.value}deg` },
+    ],
+  }));
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -169,15 +221,7 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
                 <Text style={styles.progressPercentage}>{Math.round(progress)}%</Text>
               </View>
               <View style={styles.progressBackground}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width: `${progress}%`,
-                      backgroundColor: isFullySettled ? '#10B981' : '#6C5CE7',
-                    },
-                  ]}
-                />
+                <Animated.View style={[styles.progressFill, progressBarStyle]} />
               </View>
               <Text style={styles.progressText}>{progressText}</Text>
             </View>
@@ -195,9 +239,9 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
             </View>
 
             {isFullySettled && (
-              <View style={styles.settledBanner}>
-                <Text style={styles.settledBannerText}>✓ All payments received!</Text>
-              </View>
+              <Animated.View style={[styles.settledBanner, celebrationStyle]}>
+                <Text style={styles.settledBannerText}>🎉 All payments received!</Text>
+              </Animated.View>
             )}
           </View>
         </AnimatedGlassCard>
@@ -227,33 +271,42 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
                   </View>
 
                   {/* Status Badge */}
-                  <TouchableOpacity
+                  <AnimatedButton
                     onPress={() => handleTogglePaymentStatus(participant)}
-                    activeOpacity={0.7}
                     style={[styles.statusBadge, isPaid ? styles.statusPaid : styles.statusPending]}
+                    haptic
+                    hapticIntensity="medium"
                   >
                     <Text style={[styles.statusText, isPaid && styles.statusTextPaid]}>
                       {isPaid ? '✓ Paid' : 'Pending'}
                     </Text>
-                  </TouchableOpacity>
+                  </AnimatedButton>
 
                   {/* UPI Actions (only show for pending) */}
                   {!isPaid && (
                     <View style={styles.upiActions}>
-                      <TouchableOpacity
-                        onPress={() => handleOpenUPILink(participant)}
+                      <AnimatedButton
+                        onPress={() => {
+                          haptics.light();
+                          handleOpenUPILink(participant);
+                        }}
                         style={[styles.upiButton, styles.upiButtonPrimary]}
-                        activeOpacity={0.8}
+                        haptic
+                        hapticIntensity="light"
                       >
                         <Text style={styles.upiButtonText}>Pay Now</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleShareUPILink(participant)}
+                      </AnimatedButton>
+                      <AnimatedButton
+                        onPress={() => {
+                          haptics.light();
+                          handleShareUPILink(participant);
+                        }}
                         style={[styles.upiButton, styles.upiButtonSecondary]}
-                        activeOpacity={0.8}
+                        haptic
+                        hapticIntensity="light"
                       >
                         <Text style={styles.upiButtonTextSecondary}>Share Link</Text>
-                      </TouchableOpacity>
+                      </AnimatedButton>
                     </View>
                   )}
                 </View>
@@ -264,15 +317,20 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('BillCreate', { bill })}
+          <AnimatedButton
+            onPress={() => {
+              haptics.light();
+              navigation.navigate('BillCreate', { bill });
+            }}
             style={[styles.actionButton, styles.actionButtonSecondary]}
-            activeOpacity={0.8}
+            haptic
+            hapticIntensity="light"
           >
             <Text style={styles.actionButtonTextSecondary}>✏️ Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </AnimatedButton>
+          <AnimatedButton
             onPress={async () => {
+              haptics.warning();
               Alert.alert(
                 'Delete Bill',
                 `Are you sure you want to delete "${bill.title}"?`,
@@ -283,10 +341,12 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
                     style: 'destructive',
                     onPress: async () => {
                       try {
+                        haptics.heavy();
                         await deleteBill(billId);
                         navigation.goBack();
                       } catch (error) {
                         console.error('Failed to delete bill:', error);
+                        haptics.error();
                         Alert.alert('Error', 'Failed to delete bill. Please try again.');
                       }
                     },
@@ -295,10 +355,11 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navig
               );
             }}
             style={[styles.actionButton, styles.actionButtonDanger]}
-            activeOpacity={0.8}
+            haptic
+            hapticIntensity="medium"
           >
             <Text style={styles.actionButtonTextDanger}>🗑️ Delete</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       </ScrollView>
     </View>
