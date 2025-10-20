@@ -26,7 +26,7 @@ This document provides the complete 21.5-week implementation roadmap, combining:
 | **Phase 0: Foundation** | Weeks 1-2 | Security, encryption, POCs | End of Week 2 | ✅ COMPLETE |
 | **Phase 1: Core Development** | Weeks 3-6 | Features, business logic, basic UI | End of Week 6 | ✅ COMPLETE |
 | **Phase 2: Integration & Polish** | Weeks 7-10 | Native modules, animations, UX | End of Week 10 | ✅ COMPLETE |
-| **Phase 2A: UI/UX Revamp** | Weeks 10.5-16.5 | World-class design, brand identity, premium UX | End of Week 16.5 | 🔄 IN PROGRESS (Week 11 Day 1-2 Complete) |
+| **Phase 2A: UI/UX Revamp** | Weeks 10.5-16.5 | World-class design, brand identity, premium UX | End of Week 16.5 | 🔄 IN PROGRESS (Week 11 Complete) |
 | **Phase 3: Testing & Hardening** | Weeks 16.5-18.5 | Unit, E2E, manual testing | End of Week 18.5 | ⏳ PENDING |
 | **Phase 4: Beta Testing** | Weeks 18.5-19.5 | User testing, bug fixes | End of Week 19.5 | ⏳ PENDING |
 | **Phase 5: Production Launch** | Weeks 19.5-21.5 | Final polish, app stores | Launch | ⏳ PENDING |
@@ -945,9 +945,10 @@ Transform Vasooly from a functional MVP into a launchable product with:
 **Status**: ✅ COMPLETE (2025-10-20)
 **Deliverables**: design_guide.md, all components using design tokens, zero hardcoded colors
 
-#### Day 3: Figma Mockups (High-Fidelity)
-- [ ] Create Figma project structure
-- [ ] Design all 12 screens in high-fidelity:
+#### Day 3: Low-Fi Wireframes & Component Planning (Efficient Approach)
+**Rationale**: Skip high-fidelity Figma mockups since we have complete design system (DESIGN_GUIDE.md) and all components already using design tokens. Direct implementation is more efficient.
+
+- [ ] Create text-based wireframe specs for all 12 screens:
   1. Onboarding screens (4-6 screens)
   2. Dashboard/Home
   3. Add Expense Modal
@@ -960,40 +961,52 @@ Transform Vasooly from a functional MVP into a launchable product with:
   10. Profile
   11. Settings (enhanced)
   12. Notifications
-- [ ] Design component library in Figma
-- [ ] Create responsive variants (different screen sizes)
-- [ ] Export design specs
+- [ ] Document component composition per screen (which existing components to use)
+- [ ] Define screen layout hierarchies and user flows
+- [ ] Create simple Mermaid diagrams for complex screens (optional)
+- [ ] Map design tokens to each screen (colors, typography, spacing)
 
-#### Day 4: Illustrations & Empty States
-- [ ] Create or source illustration system:
+**Time Saved**: 1-2 days by skipping Figma and leveraging existing design system
+
+#### Day 4: Illustrations & Empty States ✅ COMPLETE
+- [x] Create or source illustration system:
   - Onboarding illustrations (friendly, approachable)
   - Empty state illustrations (encouraging, helpful)
   - Error state illustrations
   - Success/celebration illustrations
-- [ ] Choose illustration style (line art, minimal color, friendly)
-- [ ] Create empty states for:
+- [x] Choose illustration style (line art, minimal color, friendly)
+- [x] Create empty states for:
   - No bills yet
   - No friends yet
   - No activity
   - Search no results
   - Offline state
-- [ ] Design celebration states (all settled, first bill)
+- [x] Design celebration states (all settled, first bill)
 
-#### Day 5: Component Library Audit
-- [ ] Audit existing components against new design system
-- [ ] Create component migration plan
-- [ ] Document component API changes
-- [ ] Prepare animation specifications
-- [ ] Review and finalize Week 11 deliverables
+**Status**: ✅ COMPLETE (2025-10-20)
+**Deliverable**: `claudedocs/ILLUSTRATION_SPECS.md` (20+ illustrations specified)
+
+#### Day 5: Component Library Audit ✅ COMPLETE
+- [x] Audit existing components against new design system
+- [x] Create component migration plan
+- [x] Document component API changes
+- [x] Prepare animation specifications
+- [x] Review and finalize Week 11 deliverables
+
+**Status**: ✅ COMPLETE (2025-10-20)
+**Deliverables**:
+- `claudedocs/COMPONENT_AUDIT.md` (7 existing + 13 new component specs)
+- `claudedocs/ANIMATION_SPECS.md` (Reanimated 3 animation patterns)
 
 ### Week 11 Success Criteria
 ✅ Earthen color system (Terracotta + Olive Green) implemented
 ✅ Inter typography system with 7-level scale
 ✅ Spacing and icon systems defined
-✅ Figma mockups for all 12 screens complete
+✅ Wireframe specs for all 12 screens documented
+✅ Component composition plans created
 ✅ Illustration system selected/created
 ✅ Empty states designed for all scenarios
-✅ Component migration plan documented
+✅ Screen-to-component mapping complete
 
 ---
 
@@ -1377,7 +1390,7 @@ Transform Vasooly from a functional MVP into a launchable product with:
 ✅ Earthen color system (Terracotta #C2662D + Olive Green #6B7C4A) implemented
 ✅ Inter typography system with 7-level scale
 ✅ Complete spacing and icon systems
-✅ Figma mockups for all 12 screens
+✅ Wireframe specs and component plans for all 12 screens
 ✅ Illustration and empty state system
 
 **Screen Implementation**:
