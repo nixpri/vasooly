@@ -142,18 +142,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View style={styles.logoRow}>
-            <Image
-              source={require('../../assets/vasooly-icon.png')}
-              style={styles.headerIcon}
-              resizeMode="contain"
-            />
-            <Image
-              source={require('../../assets/vasooly-text.png')}
-              style={styles.headerText}
-              resizeMode="contain"
-            />
-          </View>
+          <Image
+            source={require('../../assets/vasooly-logo.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
         </View>
       </View>
 
@@ -261,18 +254,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 1,
-  },
-  headerIcon: {
-    width: 44,
+  headerLogo: {
+    width: 200,
     height: 44,
-  },
-  headerText: {
-    width: 160,
-    height: 38,
   },
   scrollView: {
     flex: 1,

@@ -153,18 +153,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
               {/* Text Content */}
               <View style={styles.textContainer}>
                 {index === 0 ? (
-                  <View style={styles.onboardingLogoRow}>
-                    <Image
-                      source={require('../../assets/vasooly-icon.png')}
-                      style={styles.onboardingIcon}
-                      resizeMode="contain"
-                    />
-                    <Image
-                      source={require('../../assets/vasooly-text.png')}
-                      style={styles.onboardingText}
-                      resizeMode="contain"
-                    />
-                  </View>
+                  <Image
+                    source={require('../../assets/vasooly-logo.png')}
+                    style={styles.onboardingLogo}
+                    resizeMode="contain"
+                  />
                 ) : (
                   <Text style={styles.title}>{screen.title}</Text>
                 )}
@@ -255,19 +248,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     maxWidth: 320,
   },
-  onboardingLogoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    marginBottom: tokens.spacing.md,
-  },
-  onboardingIcon: {
-    width: 64,
+  onboardingLogo: {
+    width: 300,
     height: 64,
-  },
-  onboardingText: {
-    width: 240,
-    height: 56,
+    marginBottom: tokens.spacing.md,
   },
   title: {
     fontSize: tokens.typography.h1.fontSize,
