@@ -14,7 +14,6 @@
  */
 
 import * as DocumentPicker from 'expo-document-picker';
-import type { DocumentPickerResult } from 'expo-document-picker';
 
 export interface FilePickerResult {
   success: boolean;

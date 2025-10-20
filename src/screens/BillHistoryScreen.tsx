@@ -1,89 +1,73 @@
-import React, { useEffect, useState, useCallback } from 'react';
+/**
+ * Bill History Screen - List all bills with search and filter
+ *
+ * Features:
+ * - FlashList for optimized rendering
+ * - Search with database integration
+ * - Pull-to-refresh
+ * - Integration with historyStore
+ * - React Navigation integration
+ */
+
+import React, { useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   RefreshControl,
   KeyboardAvoidingView,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
+import { useFocusEffect } from '@react-navigation/native';
 import { GlassCard } from '@/components/GlassCard';
-import { getAllBills, searchBills } from '@/lib/data/billRepository';
 import { formatPaise } from '@/lib/business/splitEngine';
 import { PaymentStatus } from '@/types';
 import type { Bill } from '@/types';
+import { useHistoryStore } from '@/stores';
+import type { BillHistoryScreenProps } from '@/navigation/AppNavigator';
 
-interface BillHistoryScreenProps {
-  onBillPress?: (bill: Bill) => void;
-  onCreatePress?: () => void;
-}
-
-export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({
-  onBillPress,
-  onCreatePress,
-}) => {
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [filteredBills, setFilteredBills] = useState<Bill[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({ navigation }) => {
+  const {
+    filteredBills,
+    searchQuery,
+    isLoading,
+    loadBills,
+    refreshBills,
+    setSearchQuery,
+  } = useHistoryStore();
 
   // Load bills on mount
   useEffect(() => {
     loadBills();
-  }, []);
+  }, [loadBills]);
 
-  // Filter bills when search query changes
-  useEffect(() => {
-    filterBills();
-  }, [searchQuery, bills]);
-
-  const loadBills = async () => {
-    try {
-      const allBills = await getAllBills();
-      setBills(allBills);
-    } catch (error) {
-      console.error('Failed to load bills:', error);
-      Alert.alert(
-        'Error',
-        'Failed to load bills. Please try again.',
-        [{ text: 'OK' }]
-      );
-    }
-  };
+  // Auto-refresh bills when screen gains focus (e.g., after creating/editing/deleting a bill)
+  useFocusEffect(
+    useCallback(() => {
+      refreshBills();
+    }, [refreshBills])
+  );
 
   const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      await loadBills();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  const filterBills = async () => {
-    if (!searchQuery.trim()) {
-      setFilteredBills(bills);
-      return;
-    }
-
-    try {
-      const results = await searchBills(searchQuery);
-      setFilteredBills(results);
-    } catch (error) {
-      console.error('Search failed:', error);
-      setFilteredBills(bills);
-    }
+    await refreshBills();
   };
 
   const handleBillPress = useCallback(
     (bill: Bill) => {
-      onBillPress?.(bill);
+      navigation.navigate('BillDetail', { billId: bill.id });
     },
-    [onBillPress]
+    [navigation]
   );
+
+  const handleCreatePress = useCallback(() => {
+    navigation.navigate('BillCreate');
+  }, [navigation]);
+
+  const handleSettingsPress = useCallback(() => {
+    navigation.navigate('Settings');
+  }, [navigation]);
 
   const calculateBillProgress = (bill: Bill): number => {
     if (bill.participants.length === 0) return 0;
@@ -176,8 +160,8 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({
       <Text style={styles.emptyText}>
         {searchQuery ? 'No bills match your search' : 'Create your first bill to get started'}
       </Text>
-      {!searchQuery && onCreatePress && (
-        <TouchableOpacity style={styles.createButton} onPress={onCreatePress} activeOpacity={0.8}>
+      {!searchQuery && (
+        <TouchableOpacity style={styles.createButton} onPress={handleCreatePress} activeOpacity={0.8}>
           <Text style={styles.createButtonText}>Create Bill</Text>
         </TouchableOpacity>
       )}
@@ -195,15 +179,22 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({
               {filteredBills.length} {filteredBills.length === 1 ? 'bill' : 'bills'}
             </Text>
           </View>
-          {onCreatePress && (
+          <View style={styles.headerButtons}>
             <TouchableOpacity
-              onPress={onCreatePress}
+              onPress={handleSettingsPress}
+              style={styles.settingsButton}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.settingsButtonText}>⚙️</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleCreatePress}
               style={styles.createHeaderButton}
               activeOpacity={0.8}
             >
               <Text style={styles.createHeaderButtonText}>+ Create</Text>
             </TouchableOpacity>
-          )}
+          </View>
         </View>
       </View>
 
@@ -249,7 +240,7 @@ export const BillHistoryScreen: React.FC<BillHistoryScreenProps> = ({
             ListEmptyComponent={renderEmpty}
             refreshControl={
               <RefreshControl
-                refreshing={isRefreshing}
+                refreshing={isLoading}
                 onRefresh={handleRefresh}
                 tintColor="#6C5CE7"
                 colors={['#6C5CE7']}
@@ -293,6 +284,21 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.5)',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  settingsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsButtonText: {
+    fontSize: 18,
   },
   createHeaderButton: {
     paddingHorizontal: 14,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,52 +9,55 @@ import {
   Linking,
   Share as RNShare,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { GlassCard, AnimatedGlassCard } from '@/components/GlassCard';
 import { formatPaise } from '@/lib/business/splitEngine';
 import { generateUPILink } from '@/lib/business/upiGenerator';
-import { updateParticipantStatus } from '@/lib/data/billRepository';
 import { PaymentStatus } from '@/types';
-import type { Bill, Participant } from '@/types';
+import type { Participant } from '@/types';
+import { useBillStore, useSettingsStore } from '@/stores';
+import type { BillDetailScreenProps } from '@/navigation/AppNavigator';
 
-interface BillDetailScreenProps {
-  bill: Bill;
-  onBack?: () => void;
-  onEdit?: (bill: Bill) => void;
-  onDelete?: (bill: Bill) => void;
-  onDuplicate?: (bill: Bill) => void;
-  onBillUpdate?: (updatedBill: Bill) => void;
-}
+export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navigation }) => {
+  const { billId } = route.params;
+  const { getBillById, markParticipantPaid, markParticipantPending, deleteBill } = useBillStore();
+  const { defaultVPA } = useSettingsStore();
 
-// Default VPA for testing - replace with your actual UPI ID or add to app settings
-// Valid formats: yourname@paytm, yourname@ybl, yourname@okaxis, etc.
-const DEFAULT_VPA = 'merchant@paytm'; // IMPORTANT: Replace with actual UPI ID before production use
+  const [bill, setBill] = useState(getBillById(billId));
 
-export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({
-  bill: initialBill,
-  onBack,
-  onEdit,
-  onDelete,
-  onDuplicate,
-  onBillUpdate,
-}) => {
-  const [bill, setBill] = useState<Bill>(initialBill);
+  // Update local state when store changes (initial load)
+  useEffect(() => {
+    setBill(getBillById(billId));
+  }, [billId, getBillById]);
+
+  // Auto-refresh bill when screen gains focus (e.g., after updating payment status)
+  useFocusEffect(
+    useCallback(() => {
+      const updatedBill = getBillById(billId);
+      setBill(updatedBill);
+    }, [billId, getBillById])
+  );
+
+  const vpaToUse = defaultVPA || 'merchant@paytm'; // Fallback VPA
+
+  if (!bill) {
+    // Bill not found, navigate back
+    useEffect(() => {
+      navigation.goBack();
+    }, [navigation]);
+    return null;
+  }
 
   const handleTogglePaymentStatus = async (participant: Participant) => {
     try {
-      const newStatus: PaymentStatus = participant.status === PaymentStatus.PAID ? PaymentStatus.PENDING : PaymentStatus.PAID;
-
-      // Update database
-      await updateParticipantStatus(participant.id, newStatus);
-
-      // Update local state
-      const updatedBill: Bill = {
-        ...bill,
-        participants: bill.participants.map((p) =>
-          p.id === participant.id ? { ...p, status: newStatus } : p
-        ),
-      };
+      if (participant.status === PaymentStatus.PAID) {
+        await markParticipantPending(billId, participant.id);
+      } else {
+        await markParticipantPaid(billId, participant.id);
+      }
+      // Immediately update local state to reflect the change
+      const updatedBill = getBillById(billId);
       setBill(updatedBill);
-      onBillUpdate?.(updatedBill);
     } catch (error) {
       console.error('Failed to update payment status:', error);
       Alert.alert('Error', 'Failed to update payment status. Please try again.');
@@ -63,7 +66,7 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({
 
   const handleGenerateUPILink = (participant: Participant): string => {
     const result = generateUPILink({
-      pa: DEFAULT_VPA,
+      pa: vpaToUse,
       pn: 'Vasooly',
       am: participant.amountPaise / 100, // Convert paise to rupees
       tn: `Payment for ${bill.title} - ${participant.name}`,
@@ -132,11 +135,9 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        {onBack && (
-          <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7}>
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>{bill.title}</Text>
           <Text style={styles.headerDate}>
@@ -263,33 +264,41 @@ export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
-          {onDuplicate && (
-            <TouchableOpacity
-              onPress={() => onDuplicate(bill)}
-              style={[styles.actionButton, styles.actionButtonSecondary]}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.actionButtonTextSecondary}>📋 Duplicate</Text>
-            </TouchableOpacity>
-          )}
-          {onEdit && (
-            <TouchableOpacity
-              onPress={() => onEdit(bill)}
-              style={[styles.actionButton, styles.actionButtonSecondary]}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.actionButtonTextSecondary}>✏️ Edit</Text>
-            </TouchableOpacity>
-          )}
-          {onDelete && (
-            <TouchableOpacity
-              onPress={() => onDelete(bill)}
-              style={[styles.actionButton, styles.actionButtonDanger]}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.actionButtonTextDanger}>🗑️ Delete</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('BillCreate', { bill })}
+            style={[styles.actionButton, styles.actionButtonSecondary]}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.actionButtonTextSecondary}>✏️ Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={async () => {
+              Alert.alert(
+                'Delete Bill',
+                `Are you sure you want to delete "${bill.title}"?`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        await deleteBill(billId);
+                        navigation.goBack();
+                      } catch (error) {
+                        console.error('Failed to delete bill:', error);
+                        Alert.alert('Error', 'Failed to delete bill. Please try again.');
+                      }
+                    },
+                  },
+                ]
+              );
+            }}
+            style={[styles.actionButton, styles.actionButtonDanger]}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.actionButtonTextDanger}>🗑️ Delete</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

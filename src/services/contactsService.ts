@@ -12,7 +12,6 @@
  */
 
 import * as Contacts from 'expo-contacts';
-import type { Contact } from 'expo-contacts';
 
 export interface ContactPickerResult {
   success: boolean;

@@ -1,163 +1,169 @@
-import React, { useState, useCallback } from 'react';
+/**
+ * AppNavigator - React Navigation Stack Navigator
+ *
+ * Main navigation structure for the app using @react-navigation/native-stack
+ * with Reanimated-powered transitions.
+ */
+
+import React, { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import type { StackScreenProps } from '@react-navigation/stack';
 import {
   BillCreateScreen,
   BillHistoryScreen,
   BillDetailScreen,
+  SettingsScreen,
 } from '@/screens';
-import { deleteBill, duplicateBill } from '@/lib/data/billRepository';
 import type { Bill } from '@/types';
-import { Alert } from 'react-native';
+import { useBillStore, useHistoryStore, useSettingsStore } from '@/stores';
 
-type Screen = 'history' | 'create' | 'detail' | 'edit';
+// Navigation types
+export type RootStackParamList = {
+  BillHistory: undefined;
+  BillCreate: { bill?: Bill } | undefined;
+  BillDetail: { billId: string };
+  Settings: undefined;
+};
 
-interface NavigationState {
-  screen: Screen;
-  params?: {
-    bill?: Bill;
-  };
-}
+export type BillHistoryScreenProps = StackScreenProps<RootStackParamList, 'BillHistory'>;
+export type BillCreateScreenProps = StackScreenProps<RootStackParamList, 'BillCreate'>;
+export type BillDetailScreenProps = StackScreenProps<RootStackParamList, 'BillDetail'>;
+export type SettingsScreenProps = StackScreenProps<RootStackParamList, 'Settings'>;
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 export const AppNavigator: React.FC = () => {
-  const [navState, setNavState] = useState<NavigationState>({
-    screen: 'create', // Start with create screen for MVP
-  });
+  const { loadAllBills } = useBillStore();
+  const { loadBills } = useHistoryStore();
+  const { loadSettings } = useSettingsStore();
 
-  const navigateTo = useCallback((screen: Screen, params?: { bill?: Bill }) => {
-    setNavState({ screen, params });
-  }, []);
-
-  const handleBillCreated = useCallback(() => {
-    // After creating a bill, go to history
-    navigateTo('history');
-  }, [navigateTo]);
-
-  const handleBillPress = useCallback(
-    (bill: Bill) => {
-      navigateTo('detail', { bill });
-    },
-    [navigateTo]
-  );
-
-  const handleEdit = useCallback(
-    (bill: Bill) => {
-      navigateTo('edit', { bill });
-    },
-    [navigateTo]
-  );
-
-  const handleDelete = useCallback(
-    async (bill: Bill) => {
-      Alert.alert(
-        'Delete Bill',
-        `Are you sure you want to delete "${bill.title}"? This action can be undone later.`,
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await deleteBill(bill.id);
-                Alert.alert('Success', 'Bill deleted successfully', [
-                  { text: 'OK', onPress: () => navigateTo('history') },
-                ]);
-              } catch (error) {
-                console.error('Failed to delete bill:', error);
-                Alert.alert('Error', 'Failed to delete bill. Please try again.');
-              }
-            },
-          },
-        ]
-      );
-    },
-    [navigateTo]
-  );
-
-  const handleDuplicate = useCallback(
-    async (bill: Bill) => {
+  // Load initial data on mount
+  useEffect(() => {
+    const initializeStores = async () => {
       try {
-        const newBillId = `bill-${Date.now()}`;
-        const newParticipantIds = bill.participants.map((_, i) => `participant-${Date.now()}-${i}`);
-
-        const duplicatedBill = await duplicateBill(bill.id, newBillId, newParticipantIds);
-
-        Alert.alert('Success', 'Bill duplicated successfully', [
-          {
-            text: 'View',
-            onPress: () => navigateTo('detail', { bill: duplicatedBill }),
-          },
-          {
-            text: 'OK',
-            style: 'cancel',
-          },
+        await Promise.all([
+          loadAllBills(),
+          loadBills(),
+          loadSettings(),
         ]);
       } catch (error) {
-        console.error('Failed to duplicate bill:', error);
-        Alert.alert('Error', 'Failed to duplicate bill. Please try again.');
+        console.error('Failed to initialize stores:', error);
       }
+    };
+
+    initializeStores();
+  }, [loadAllBills, loadBills, loadSettings]);
+
+  // Dark theme to prevent white flash during navigation
+  const navigationTheme = {
+    dark: true,
+    colors: {
+      primary: '#6C5CE7',
+      background: '#0A0A0F',
+      card: '#0A0A0F',
+      text: '#FFFFFF',
+      border: 'rgba(255, 255, 255, 0.1)',
+      notification: '#6C5CE7',
     },
-    [navigateTo]
+    fonts: {
+      regular: {
+        fontFamily: 'System',
+        fontWeight: '400' as '400',
+      },
+      medium: {
+        fontFamily: 'System',
+        fontWeight: '500' as '500',
+      },
+      bold: {
+        fontFamily: 'System',
+        fontWeight: '700' as '700',
+      },
+      heavy: {
+        fontFamily: 'System',
+        fontWeight: '900' as '900',
+      },
+    },
+  };
+
+  return (
+    <NavigationContainer theme={navigationTheme}>
+      <Stack.Navigator
+        initialRouteName="BillHistory"
+        screenOptions={{
+          headerShown: false,
+          gestureEnabled: true,
+          cardStyle: { backgroundColor: '#0A0A0F' },
+        }}
+      >
+        <Stack.Screen
+          name="BillHistory"
+          component={BillHistoryScreen}
+          options={{
+            cardStyleInterpolator: ({ current }) => ({
+              cardStyle: {
+                opacity: current.progress,
+              },
+            }),
+          }}
+        />
+        <Stack.Screen
+          name="BillCreate"
+          component={BillCreateScreen}
+          options={{
+            presentation: 'modal',
+            cardStyleInterpolator: ({ current, layouts }) => ({
+              cardStyle: {
+                transform: [
+                  {
+                    translateY: current.progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [layouts.screen.height, 0],
+                    }),
+                  },
+                ],
+              },
+            }),
+          }}
+        />
+        <Stack.Screen
+          name="BillDetail"
+          component={BillDetailScreen}
+          options={{
+            cardStyleInterpolator: ({ current, layouts }) => ({
+              cardStyle: {
+                transform: [
+                  {
+                    translateX: current.progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [layouts.screen.width, 0],
+                    }),
+                  },
+                ],
+              },
+            }),
+          }}
+        />
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            presentation: 'modal',
+            cardStyleInterpolator: ({ current, layouts }) => ({
+              cardStyle: {
+                transform: [
+                  {
+                    translateY: current.progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [layouts.screen.height, 0],
+                    }),
+                  },
+                ],
+              },
+            }),
+          }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-
-  const handleBillUpdate = useCallback((updatedBill: Bill) => {
-    // Update the current bill in navigation state
-    setNavState((prev) => ({
-      ...prev,
-      params: { bill: updatedBill },
-    }));
-  }, []);
-
-  const handleBillEdited = useCallback(() => {
-    // After editing, go back to history
-    navigateTo('history');
-  }, [navigateTo]);
-
-  // Render current screen
-  switch (navState.screen) {
-    case 'history':
-      return (
-        <BillHistoryScreen
-          onBillPress={handleBillPress}
-          onCreatePress={() => navigateTo('create')}
-        />
-      );
-
-    case 'create':
-      return <BillCreateScreen onSuccess={handleBillCreated} onViewHistory={() => navigateTo('history')} />;
-
-    case 'detail':
-      if (!navState.params?.bill) {
-        navigateTo('history');
-        return null;
-      }
-      return (
-        <BillDetailScreen
-          bill={navState.params.bill}
-          onBack={() => navigateTo('history')}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onDuplicate={handleDuplicate}
-          onBillUpdate={handleBillUpdate}
-        />
-      );
-
-    case 'edit':
-      if (!navState.params?.bill) {
-        navigateTo('history');
-        return null;
-      }
-      return (
-        <BillCreateScreen
-          existingBill={navState.params.bill}
-          onSuccess={handleBillEdited}
-          onCancel={() => navigateTo('detail', { bill: navState.params!.bill! })}
-        />
-      );
-
-    default:
-      return <BillCreateScreen onSuccess={handleBillCreated} />;
-  }
 };

@@ -390,11 +390,3 @@ export async function enableAutomaticBackups(db: Database) {
 3. **Testability First**: Pure functions, DI, comprehensive tests
 4. **Performance by Design**: Optimized rendering, lazy loading
 5. **Privacy Focused**: Local-first, minimal permissions, transparent data handling
-
----
-
-*[Continue with full sections 4-13 from ARCHITECTURE.md and ARCHITECTURE_REVIEW.md merged...]*
-
----
-
-**Note**: Full SYSTEM_DESIGN.md content continues with all sections from ARCHITECTURE.md integrated with critical review findings. Would you like me to continue generating the complete merged document, or is this consolidation structure acceptable?

@@ -1,6 +1,8 @@
 import 'react-native-reanimated';
+import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { initializeDatabase } from './src/lib/data/database';
 
@@ -22,23 +24,31 @@ export default function App() {
 
   if (dbError) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Database Error</Text>
-        <Text style={styles.errorMessage}>{dbError}</Text>
-      </View>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Database Error</Text>
+          <Text style={styles.errorMessage}>{dbError}</Text>
+        </View>
+      </GestureHandlerRootView>
     );
   }
 
   if (!isDbReady) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6C5CE7" />
-        <Text style={styles.loadingText}>Initializing...</Text>
-      </View>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6C5CE7" />
+          <Text style={styles.loadingText}>Initializing...</Text>
+        </View>
+      </GestureHandlerRootView>
     );
   }
 
-  return <AppNavigator />;
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppNavigator />
+    </GestureHandlerRootView>
+  );
 }
 
 const styles = StyleSheet.create({

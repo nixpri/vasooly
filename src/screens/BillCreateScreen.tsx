@@ -19,33 +19,24 @@ import {
   SplitValidationError,
 } from '@/lib/business/splitEngine';
 import type { DetailedSplitResult } from '@/lib/business/splitEngine';
-import { createBill, updateBill } from '@/lib/data/billRepository';
+import { useBillStore } from '@/stores';
 import { BillStatus, PaymentStatus } from '@/types';
 import type { Bill, Participant } from '@/types';
+import type { BillCreateScreenProps } from '@/navigation/AppNavigator';
 
 interface ParticipantInput {
   id: string;
   name: string;
 }
 
-interface BillCreateScreenProps {
-  existingBill?: Bill; // If provided, edit mode
-  onSuccess?: () => void; // Callback after create/edit
-  onCancel?: () => void; // Callback for cancel in edit mode
-  onViewHistory?: () => void; // Callback to view history
-}
-
 /**
  * BillCreateScreen - Main screen for creating/editing bills with split calculations
  * Integrates amount input, participant management, and split display
  */
-export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
-  existingBill,
-  onSuccess,
-  onCancel,
-  onViewHistory,
-}) => {
+export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navigation }) => {
+  const existingBill = route.params?.bill;
   const isEditMode = !!existingBill;
+  const { createBill: createBillInStore, updateBill: updateBillInStore } = useBillStore();
 
   // Initialize state from existingBill if in edit mode
   const [billTitle, setBillTitle] = useState(existingBill?.title ?? '');
@@ -165,21 +156,10 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
           updatedAt: now,
         };
 
-        await updateBill(updatedBill);
+        await updateBillInStore(updatedBill); // Use updateBill for edit mode
 
-        // Success
-        Alert.alert(
-          'Bill Updated',
-          `Bill "${updatedBill.title}" updated successfully!`,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                onSuccess?.();
-              },
-            },
-          ]
-        );
+        // Success - navigate back
+        navigation.goBack();
       } else {
         // Create new bill
         const billId = `bill-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -194,31 +174,10 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
           updatedAt: now,
         };
 
-        await createBill(newBill);
+        await createBillInStore(newBill); // Use createBill for new bills
 
-        // Success
-        Alert.alert(
-          'Bill Created',
-          `Bill "${newBill.title}" created successfully with ${newBill.participants.length} participants!`,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                if (onSuccess) {
-                  onSuccess();
-                } else {
-                  // Reset form if no callback
-                  setBillTitle('');
-                  setAmountPaise(0);
-                  setParticipants([
-                    { id: `reset-1-${Date.now()}`, name: 'You' },
-                  ]);
-                  setSplitResult(null);
-                }
-              },
-            },
-          ]
-        );
+        // Success - navigate back to history
+        navigation.goBack();
       }
     } catch (error) {
       Alert.alert(
@@ -241,11 +200,9 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
       {/* Header */}
         <View style={styles.header}>
-          {isEditMode && onCancel && (
-            <TouchableOpacity onPress={onCancel} style={styles.backButton} activeOpacity={0.7}>
-              <Text style={styles.backButtonText}>← Cancel</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
+            <Text style={styles.backButtonText}>← {isEditMode ? 'Cancel' : 'Back'}</Text>
+          </TouchableOpacity>
           <View style={styles.headerTop}>
             <View style={styles.headerText}>
               <Text style={styles.headerTitle}>{isEditMode ? 'Edit Bill' : 'Create Bill'}</Text>
@@ -253,15 +210,6 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({
                 {isEditMode ? 'Update bill details and participants' : 'Split your bill with friends'}
               </Text>
             </View>
-            {!isEditMode && onViewHistory && (
-              <TouchableOpacity
-                onPress={onViewHistory}
-                style={styles.viewHistoryButton}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.viewHistoryButtonText}>History</Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
 
@@ -442,18 +390,18 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   createButton: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#6C5CE7',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
-    shadowColor: '#6366F1',
+    shadowColor: '#6C5CE7',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 5,
   },
   createButtonDisabled: {
-    backgroundColor: 'rgba(99, 102, 241, 0.3)',
+    backgroundColor: 'rgba(108, 92, 231, 0.3)',
     shadowOpacity: 0,
     elevation: 0,
   },
