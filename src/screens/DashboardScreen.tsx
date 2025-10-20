@@ -142,20 +142,17 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View style={styles.headerContent}>
-            <View style={styles.logoRow}>
-              <Image
-                source={require('../../assets/vasooly-icon.png')}
-                style={styles.headerIcon}
-                resizeMode="contain"
-              />
-              <Image
-                source={require('../../assets/vasooly-text.png')}
-                style={styles.headerText}
-                resizeMode="contain"
-              />
-            </View>
-            <Text style={styles.headerSubtitle}>Bills khatam, vasooly shuru!</Text>
+          <View style={styles.logoRow}>
+            <Image
+              source={require('../../assets/vasooly-icon.png')}
+              style={styles.headerIcon}
+              resizeMode="contain"
+            />
+            <Image
+              source={require('../../assets/vasooly-text.png')}
+              style={styles.headerText}
+              resizeMode="contain"
+            />
           </View>
         </View>
       </View>
@@ -264,30 +261,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  headerContent: {
-    flex: 1,
-    gap: 4,
-  },
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
   headerIcon: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
   },
   headerText: {
-    width: 120,
-    height: 28,
-  },
-  headerSubtitle: {
-    fontSize: tokens.typography.caption.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    color: tokens.colors.brand.primary,
-    fontWeight: tokens.typography.fontWeight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    width: 160,
+    height: 38,
   },
   scrollView: {
     flex: 1,
