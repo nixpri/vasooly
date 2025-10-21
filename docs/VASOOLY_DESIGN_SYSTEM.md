@@ -14,7 +14,7 @@
 - ✅ Core functionality (bill splitting, UPI links, payment tracking)
 - ✅ Basic animations and haptic feedback
 - ✅ Dark theme with glass-morphism effects
-- ✅ 4 screens: BillCreate, BillHistory, BillDetail, Settings
+- ✅ 10 screens: Onboarding (6), Dashboard, Activity, BillDetail, BillCreate, Profile, FriendsListScreen, Settings
 
 **Critical Gaps:**
 - ❌ No onboarding (users dumped into app with no context)

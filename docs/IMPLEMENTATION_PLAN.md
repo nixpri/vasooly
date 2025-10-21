@@ -66,7 +66,7 @@ This document provides the complete 21.5-week implementation roadmap, combining:
 - ✅ Database integration with billRepository
 
 ### Week 4: Bill Management ✅
-- ✅ BillHistoryScreen with FlashList virtualization (~456 lines)
+- ✅ ActivityScreen with FlashList virtualization (~456 lines, later enhanced to timeline view)
 - ✅ BillDetailScreen with payment tracking (~571 lines)
 - ✅ UPI payment integration (links + sharing)
 - ✅ Multi-screen navigation flow
@@ -265,9 +265,10 @@ Modal Screens (outside tabs)
 - **Pull-to-Refresh**: Sage color theme
 
 **Navigation Integration**:
-- Renamed BillHistoryScreen → ActivityScreen (kept old for backward compatibility)
+- Replaced BillHistoryScreen with ActivityScreen (legacy file removed post-Week 12)
 - Updated AppNavigator.tsx to use ActivityScreen
 - Activity tab shows enhanced timeline view
+- Removed legacy exports and type definitions for backward compatibility
 
 **Validation**:
 - TypeScript: ✅ 0 errors (fixed enum usage, import patterns)

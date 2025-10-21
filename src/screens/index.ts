@@ -1,7 +1,6 @@
 // Screen exports
 export { BillCreateScreen } from './BillCreateScreen';
-export { BillHistoryScreen } from './BillHistoryScreen'; // Legacy - kept for backward compatibility
-export { ActivityScreen } from './ActivityScreen'; // New enhanced activity feed
+export { ActivityScreen } from './ActivityScreen';
 export { BillDetailScreen } from './BillDetailScreen';
 export { SettingsScreen } from './SettingsScreen';
 export { OnboardingScreen } from './OnboardingScreen';

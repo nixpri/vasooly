@@ -27,12 +27,12 @@ import { generateUPILink } from '@/lib/business/upiGenerator';
 import { PaymentStatus } from '@/types';
 import type { Participant } from '@/types';
 import { useBillStore, useSettingsStore } from '@/stores';
-import type { BillDetailScreenProps } from '@/navigation/types';
+import type { HomeBillDetailScreenProps } from '@/navigation/types';
 import { useHaptics } from '@/hooks';
 import { springConfigs } from '@/utils/animations';
 import { tokens } from '@/theme/ThemeProvider';
 
-export const BillDetailScreen: React.FC<BillDetailScreenProps> = ({ route, navigation }) => {
+export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, navigation }) => {
   const { billId } = route.params;
   const { getBillById, markParticipantPaid, markParticipantPending, deleteBill } = useBillStore();
   const { defaultVPA, defaultUPIName } = useSettingsStore();

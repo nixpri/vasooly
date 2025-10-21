@@ -141,12 +141,3 @@ declare global {
     interface RootParamList extends RootStackParamList {}
   }
 }
-
-/**
- * Legacy exports for backward compatibility
- *
- * These are kept for existing screens that haven't been updated to the new navigation structure.
- * Will be removed in Week 13 when screens are fully migrated.
- */
-export type BillHistoryScreenProps = ActivityScreenProps;
-export type BillDetailScreenProps = HomeBillDetailScreenProps;
