@@ -17,3 +17,5 @@ export {
 export { BalanceCard } from './BalanceCard';
 export { TransactionCard } from './TransactionCard';
 export { TabBar } from './TabBar';
+export { ActivityCard } from './ActivityCard';
+export { DateGroupHeader } from './DateGroupHeader';

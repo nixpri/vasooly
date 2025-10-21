@@ -28,3 +28,18 @@ export enum PaymentStatus {
   PENDING = 'PENDING',
   PAID = 'PAID',
 }
+
+export enum ActivityType {
+  BILL_CREATED = 'BILL_CREATED',
+  PAYMENT_MADE = 'PAYMENT_MADE',
+  BILL_SETTLED = 'BILL_SETTLED',
+  BILL_UPDATED = 'BILL_UPDATED',
+}
+
+export interface ActivityItem {
+  id: string;
+  type: ActivityType;
+  bill: Bill;
+  timestamp: Date;
+  description: string;
+}

@@ -13,7 +13,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   BillCreateScreen,
-  BillHistoryScreen,
+  ActivityScreen,
   BillDetailScreen,
   SettingsScreen,
   OnboardingScreen,
@@ -100,7 +100,7 @@ const ActivityNavigator: React.FC = () => {
     >
       <ActivityStack.Screen
         name="ActivityScreen"
-        component={BillHistoryScreen}
+        component={ActivityScreen}
         options={{
           cardStyleInterpolator: ({ current }) => ({
             cardStyle: {

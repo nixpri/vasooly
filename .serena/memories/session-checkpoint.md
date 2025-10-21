@@ -1,301 +1,303 @@
-# Session Checkpoint: Week 12 Day 1-2 Complete + Illustrations Integrated
+# Session Checkpoint - Week 12 Day 6 Complete
 
-**Date**: 2025-10-21
-**Session Focus**: Onboarding Illustrations Integration
-**Duration**: ~1 hour
-**Status**: ✅ Complete and Ready for Testing
+**Session Date**: 2025-10-21
+**Session Focus**: Profile Screen Implementation + UI Redesign
+**Session Duration**: ~2 hours
+**Status**: ✅ COMPLETE
 
 ---
 
 ## Session Summary
 
-Successfully integrated all 6 onboarding illustrations into the app, replacing placeholder text with actual PNG images. Fixed Metro bundler path resolution issues.
-
-### Accomplishments
-
-**1. Onboarding Illustrations Integration** (6 illustrations)
-- Created `OnboardingIllustrations.tsx` component wrapper (98 lines)
-- Integrated 6 PNG illustrations from AI generation
-- Fixed Metro bundler path alias issues (require() needs relative paths)
-- Updated OnboardingScreen to use actual illustrations
-
-**Illustrations Integrated**:
-1. **welcome.png** (995KB) - Friendly character waving with sparkles
-2. **bill-splitting.png** (1.3MB) - Receipt → Scissors → People flow [UPDATED]
-3. **friend-groups.png** (815KB) - User connected to multiple groups
-4. **settlement-tracking.png** (717KB) - Balance indicator with checkmark
-5. **privacy-security.png** (1.4MB) - Shield with lock and protected data
-6. **ready-to-start.png** (935KB) - Character with flag and sparkles [UPDATED]
-
-**Total Illustration Size**: ~6.2MB (PNG format)
-
-**2. Metro Bundler Path Fix**
-- **Issue**: Metro bundler doesn't resolve TypeScript path aliases in `require()`
-- **Solution**: Changed all `require('@/assets/...')` to `require('../../assets/...')`
-- **Impact**: 6 require() statements fixed in OnboardingIllustrations.tsx
-- **Pattern**: React Native requires relative paths for asset imports
+This session completed Week 12 Day 6 (Profile Screen) after 6 design iterations to achieve proper layout and alignment. The final implementation uses horizontal card layout with icon-left, stats-right pattern and proper profile centering.
 
 ---
 
-## Technical Highlights
+## Completed Tasks
 
-### Component Architecture
-**OnboardingIllustrations.tsx** (98 lines):
-```typescript
-// 6 wrapper components, each using relative paths
-export const WelcomeIllustration: React.FC<IllustrationProps>
-export const BillSplittingIllustration: React.FC<IllustrationProps>
-export const FriendGroupsIllustration: React.FC<IllustrationProps>
-export const SettlementTrackingIllustration: React.FC<IllustrationProps>
-export const PrivacySecurityIllustration: React.FC<IllustrationProps>
-export const ReadyToStartIllustration: React.FC<IllustrationProps>
-```
+### 1. Profile Screen Implementation (6 Iterations) ✅
 
-**Integration Pattern**:
-```typescript
-// OnboardingScreen.tsx
-interface ScreenData {
-  id: number;
-  title: string;
-  description: string;
-  Illustration: React.FC; // Changed from illustrationPlaceholder
-}
+**Iteration 1 - Initial Implementation**:
+- Created basic ProfileScreen with vertical card layout
+- User info card with avatar, name, UPI copy functionality
+- 4 statistics cards (icon above value above label)
+- Settings button
+- Fixed: expo-clipboard missing, h4 typography doesn't exist
+- **Result**: Basic structure but multiple alignment issues
 
-// Each screen references its illustration component
-{ONBOARDING_SCREENS.map((screen) => (
-  <View>
-    <screen.Illustration />
-  </View>
-))}
-```
+**Iteration 2 - First Alignment Attempt**:
+- Added textAlign: 'center', increased gaps
+- Reduced padding sizes
+- **Result**: Still broken - Activity screen blank space, statistics alignment poor
 
-### Critical Learning: Metro Bundler Path Resolution
+**Iteration 3 - Activity Screen Fix**:
+- Fixed horizontal ScrollView taking vertical flex space
+- Added `style={{ flexGrow: 0 }}` to ScrollView
+- Added new style rule for ScrollView
+- **Result**: Activity screen fixed, Profile still has issues
 
-**Problem**:
-```typescript
-// ❌ BREAKS - TypeScript path alias doesn't work with require()
-source={require('@/assets/illustrations/welcome.png')}
-```
+**Iteration 4 - Statistics Size Reduction**:
+- Reduced paddingVertical: lg → md (16px → 12px)
+- Reduced paddingHorizontal: md → sm (12px → 8px)
+- Reduced gap: sm → xs (8px → 4px)
+- Increased statsGrid marginBottom: 2xl → 4xl (28px → 40px)
+- **Result**: Still broken - cards too tall, settings overlapping
+
+**Iteration 5 - Frontend Architect Redesign**:
+- Invoked frontend-architect agent for complete redesign
+- Added Dimensions API for calculated card widths
+- Fixed card height: 128px
+- Increased icon containers: 40px → 48px
+- Increased icon sizes: 20px → 24px
+- Triple-layer spacing for settings separation
+- **Result**: Better but avatar still not centered, vertical layout awkward
+
+**Iteration 6 - FINAL Horizontal Layout** ✅:
+- **Profile Centering**: Added `userInfoContent` wrapper with explicit width and center alignment
+- **Card Structure**: Complete restructure to horizontal layout
+- **Icon Left, Stats Right**: Icon (48x48px) on left, value/label stacked on right
+- **Left-Aligned Text**: Removed center alignment from stats
+- **Simplified Sizing**: Removed fixed height, used padding only
+- **Result**: All issues resolved, clean professional appearance
+
+### 2. Activity Screen Layout Fix ✅
+
+**Problem**: Horizontal ScrollView for filters taking vertical flex space, creating large clickable blank area
 
 **Solution**:
-```typescript
-// ✅ WORKS - Relative path works with Metro bundler
-source={require('../../assets/illustrations/welcome.png')}
+- Added `style={styles.filtersScrollView}` to horizontal ScrollView
+- Created new style: `filtersScrollView: { flexGrow: 0 }`
+- Prevents ScrollView from expanding vertically beyond content
+
+**Files Modified**:
+- `src/screens/ActivityScreen.tsx` (lines 297-298, 399-401)
+
+---
+
+## Key Pattern Discoveries
+
+### Profile Picture Centering Pattern
+
+**Problem**: Multiple attempts at `alignSelf: 'center'` failed to center avatar
+
+**Root Cause**: Parent container had padding but no width constraint for children
+
+**Solution**:
+```tsx
+// Before (broken)
+<GlassCard style={styles.userCard}>  {/* alignItems: 'center' */}
+  <View style={styles.avatar}>...</View>
+</GlassCard>
+
+// After (works)
+<GlassCard style={styles.userCard}>  {/* no alignItems */}
+  <View style={styles.userInfoContent}>  {/* width: '100%', alignItems: 'center' */}
+    <View style={styles.avatar}>...</View>
+  </View>
+</GlassCard>
 ```
 
-**Why**:
-- TypeScript path aliases (`@/`) work for **imports** (compile-time)
-- Metro bundler resolves **`require()`** at runtime using Node.js resolution
-- `require()` needs relative or absolute paths, not TypeScript aliases
-- Alternative: Configure babel-plugin-module-resolver (more complex)
+**Pattern**:
+1. Remove `alignItems: 'center'` from outer card
+2. Add inner wrapper with `width: '100%'` and `alignItems: 'center'`
+3. This ensures centering works on correctly sized children
 
-**Pattern for React Native Assets**:
-- ✅ Use relative paths in `require()` for images/assets
-- ✅ Use `@/` alias for TypeScript imports (components, utils, etc.)
-- ✅ Place assets in `assets/` at root (React Native convention)
+### Horizontal Statistics Card Pattern
+
+**Discovery**: Icon-left, stats-right layout is more compact and scannable than vertical
+
+**Implementation**:
+```tsx
+<GlassCard style={styles.statCard}>
+  <View style={styles.statCardContent}>  {/* flexDirection: 'row', gap: 12px */}
+    <View style={styles.statIconContainer}>  {/* 48x48px, flexShrink: 0 */}
+      <Icon size={24} />
+    </View>
+    <View style={styles.statTextContainer}>  {/* flex: 1, gap: 4px */}
+      <Text style={styles.statValue}>123</Text>  {/* left-aligned */}
+      <Text style={styles.statLabel}>Label</Text>  {/* left-aligned */}
+    </View>
+  </View>
+</GlassCard>
+```
+
+**Advantages**:
+- More compact (no fixed height needed)
+- Natural horizontal scan on mobile
+- Left-aligned text is more readable
+- Icon acts as visual anchor
+- Flexible height adapts to content
+
+### ScrollView Layout Pattern
+
+**Discovery**: Horizontal ScrollView without style prop takes vertical flex space
+
+**Solution**:
+```tsx
+<ScrollView
+  horizontal
+  style={{ flexGrow: 0 }}  // Prevents vertical expansion
+  contentContainerStyle={styles.filtersContainer}
+>
+  {/* content */}
+</ScrollView>
+```
+
+**Pattern**:
+1. Always add `style={{ flexGrow: 0 }}` to horizontal ScrollView
+2. Use `contentContainerStyle` for inner padding/spacing
+3. Keep outer style minimal to prevent layout issues
+
+---
+
+## Files Modified
+
+1. **src/screens/ProfileScreen.tsx** (308 lines final)
+   - Added Dimensions import
+   - Removed avatarContainer, added userInfoContent wrapper
+   - Restructured all statCard components to horizontal layout
+   - Added statCardContent and statTextContainer wrappers
+   - Updated all statistics styles for horizontal layout
+   - Added proper width calculations
+   - Removed fixed heights
+   - 6 complete redesigns during session
+
+2. **src/screens/ActivityScreen.tsx** (461 lines)
+   - Added filtersScrollView style
+   - Fixed horizontal ScrollView layout issue
+   - Lines modified: 297-298 (JSX), 399-401 (styles)
+
+3. **package.json**
+   - Added expo-clipboard dependency (if not already present)
+
+---
+
+## Technical Discoveries
+
+### React Native Layout Learnings
+
+1. **Centering with Padding**: When parent has padding, children don't get proper width for centering
+   - Solution: Use inner wrapper with explicit width
+
+2. **Horizontal ScrollView**: Takes flex space vertically unless constrained
+   - Solution: Add `style={{ flexGrow: 0 }}`
+
+3. **Fixed Heights**: Can cause layout issues on different screen sizes
+   - Solution: Use flex and padding for adaptive sizing
+
+4. **Icon-Text Layout**: Horizontal is more natural on mobile than vertical
+   - Pattern: Icon left (fixed width), text right (flex: 1)
+
+5. **Left vs Center Alignment**: Left-aligned text in cards is more scannable
+   - Exception: Profile info (name, avatar) should be centered
+
+### Design System Integration
+
+1. **Calculated Widths**: Use Dimensions API for responsive card sizing
+   - `(screenWidth - padding - gap) / columns`
+
+2. **Triple-Layer Spacing**: For preventing overlap
+   - Layer 1: marginBottom on top element
+   - Layer 2: marginTop on bottom element
+   - Layer 3: paddingBottom on container
+
+3. **Icon Sizing Hierarchy**:
+   - Container: 48x48px
+   - Icon: 24px
+   - Ratio: 2:1 container-to-icon
 
 ---
 
 ## Validation Results
 
-```
-✅ TypeScript: 0 errors
-✅ ESLint: 0 errors (15 warnings, acceptable)
-✅ Unit Tests: 282 passing (12 suites)
-✅ Metro Bundler: Path resolution working
-✅ All illustrations loading correctly
-```
+- ✅ **TypeScript**: 0 errors (all 6 iterations)
+- ✅ **ESLint**: 0 errors (all 6 iterations)
+- ✅ **Tests**: 282 passing (no test changes required)
+- ✅ **Build**: Successful compilation
+- ✅ **Git Status**: Clean, ready to commit
 
 ---
 
-## Files Created (1 new file)
+## Week 12 Completion Status
 
-1. **`src/components/OnboardingIllustrations.tsx`** (~98 lines)
-   - 6 illustration wrapper components
-   - Relative path imports for Metro bundler
-   - Consistent 280x280px sizing
-   - Clean component API
+All 6 days of Week 12 now complete:
+- Day 1: ✅ Onboarding Flow
+- Day 2-3: ✅ Dashboard/Home Screen
+- Day 4: ✅ Tab Navigation + Icon Migration
+- Day 5: ✅ Enhanced Activity Feed
+- Day 6: ✅ Profile Screen (this session)
 
----
-
-## Files Modified (3 files)
-
-1. **`src/components/index.ts`**
-   - Added exports for all 6 illustration components
-
-2. **`src/screens/OnboardingScreen.tsx`**
-   - Updated ScreenData interface to use React components
-   - Replaced placeholder text with illustration components
-   - Removed unused placeholder styles
-
-3. **`src/components/OnboardingPagination.tsx`**
-   - Fixed ESLint errors (removed unused `interpolate`, `Extrapolate` imports)
+**Week 12**: 100% Complete
 
 ---
 
-## Assets Added (6 PNG files)
+## Git Commit Recommendation
 
-**Directory**: `assets/illustrations/`
-
-```
-welcome.png              995KB  (Oct 20 20:48)
-bill-splitting.png      1.3MB  (Oct 21 00:06) [UPDATED]
-friend-groups.png       815KB  (Oct 20 20:48)
-settlement-tracking.png 717KB  (Oct 20 20:48)
-privacy-security.png    1.4MB  (Oct 20 20:48)
-ready-to-start.png      935KB  (Oct 21 00:06) [UPDATED]
-```
-
-**Total**: ~6.2MB
-
----
-
-## Implementation Notes
-
-### Illustration Source
-- AI-generated illustrations (user provided)
-- Earthen color palette (terracotta, olive, beige)
-- Line art style with minimal color
-- 280x280px dimensions (mobile optimized)
-
-### Asset Optimization Opportunities (Future)
-- **Convert to WebP**: Could reduce size by 30-50% (~3-4MB total)
-- **SVG Conversion**: Vector format for infinite scaling (if needed)
-- **On-demand Loading**: Lazy load non-visible screens (optimization)
-
-### Navigation Flow
-1. **First Launch**: App → Onboarding Screen (6 screens with illustrations) → Get Started → BillHistory
-2. **Subsequent Launches**: App → BillHistory (skip onboarding)
-3. **Skip Action**: Any screen 1-5 → Skip → BillHistory
-4. **Complete Action**: Screen 6 → Get Started → BillHistory
-5. **No Back**: Replace navigation prevents back button to onboarding
-
----
-
-## Next Steps: Week 12 Day 2-3
-
-### Dashboard Screen Implementation
-
-**Screens to Create**:
-1. **DashboardScreen** (new home screen)
-   - Balance overview card (you owe vs owed to you)
-   - Net balance calculation using `billStore.getNetBalance()`
-   - Recent activity preview using `historyStore.getRecentActivity(5)`
-   - Quick action buttons (Add Expense, Settle Up, Invite Friend)
-   - Pull-to-refresh functionality
-
-**Components to Create**:
-- `src/screens/DashboardScreen.tsx` (~450-550 lines)
-- `src/components/BalanceCard.tsx` (~200 lines)
-- `src/components/TransactionCard.tsx` (~150 lines)
-
-**Store Integration** (already prepared):
-- ✅ `billStore.getNetBalance()` - implemented in Week 12 prep
-- ✅ `historyStore.getRecentActivity(5)` - implemented in Week 12 prep
-
-**Estimated Duration**: 1-2 sessions
-
----
-
-## Code Metrics
-
-- **Production Code Added**: ~100 lines (OnboardingIllustrations)
-- **Modified Code**: ~50 lines (OnboardingScreen, exports, pagination fix)
-- **Assets Added**: 6 PNG files (~6.2MB)
-- **Total Tests**: 282 passing (no regression)
-- **TypeScript Errors**: 0
-- **ESLint Errors**: 0
-- **Build Status**: ✅ Ready for development testing
-
----
-
-## Session Learnings
-
-### What Worked Well
-1. **Component Composition**: Separate illustration wrapper components for clean architecture
-2. **Path Resolution Fix**: Quick identification and fix of Metro bundler issue
-3. **Codebase Scan**: Verified no other files affected by path alias issue
-4. **Validation**: All quality checks passing (TypeScript, ESLint, tests)
-5. **User Collaboration**: Quick iteration on illustration updates (replaced 2 & 6)
-
-### Technical Decisions
-1. **PNG vs SVG**: Used PNG for simplicity (can optimize to WebP or SVG later)
-2. **Relative Paths**: Standard React Native pattern, no additional config needed
-3. **Component Wrappers**: Clean API for potential future enhancements (animations, etc.)
-4. **Illustration Updates**: Easy to swap files without code changes
-
-### Challenges Overcome
-- Metro bundler path alias resolution (require() vs import)
-- Identified pattern that could cause future issues
-- Documented best practice for React Native assets
-
----
-
-## Outstanding Work
-
-### Week 12 Remaining Tasks
-- Day 2-3: Dashboard Screen (balance cards, recent activity) ⏳ NEXT
-- Day 4: Bottom Tab Navigation (5 tabs) ⏳ PENDING
-- Day 5: Enhanced Activity Feed (timeline view) ⏳ PENDING
-
-### Future Enhancements (Deferred)
-- Optimize illustration file sizes (WebP conversion)
-- Add illustration entry animations (FadeIn, ScaleIn)
-- A/B test onboarding flow variations
-- Add onboarding analytics tracking
-- Create SVG versions for infinite scaling
-
----
-
-## Project Context
-
-**Current Phase**: Phase 2A - UI/UX Revamp
-**Week**: 12 of 21.5
-**Progress**: Week 11 complete, Week 12 Day 1-2 complete
-**Next Milestone**: Week 12 complete (Core Screens Design Implementation)
-
-**Overall Status**:
-- Foundation: ✅ Complete
-- Core Development: ✅ Complete  
-- Integration & Polish: ✅ Complete
-- UI/UX Revamp: 🔄 In Progress (Week 12 of 6 weeks)
-- Testing & Hardening: ⏳ Pending
-- Beta Testing: ⏳ Pending
-- Production Launch: ⏳ Pending
-
-**Test Coverage**: 282 tests passing, 100% on critical paths
-**Build Status**: ✅ All validations passing
-**Git Status**: Ready to commit (illustrations integrated)
-
----
-
-## Session Context for Next Time
-
-### Ready to Continue With
-- All illustrations integrated and loading
-- Metro bundler working correctly
-- All quality checks passing
-- Clear path forward to Dashboard Screen
-
-### Remember for Next Session
-1. **Asset Paths**: Use relative paths in `require()`, not `@/` alias
-2. **Illustration Updates**: Just replace PNG files, no code changes needed
-3. **Dashboard Prerequisites**: Store selectors already implemented
-4. **Design System**: Full earthen design system ready for Dashboard
-
-### Quick Start for Next Session
 ```bash
-# Verify illustrations are working
-npx expo start
-# Press 'a' for Android or 'i' for iOS
+git add .
+git commit -m "feat: implement Profile Screen with horizontal card layout (Week 12 Day 6)
 
-# Start Dashboard implementation
-# Reference: week12-implementation-roadmap memory
-# Components: BalanceCard, TransactionCard, DashboardScreen
+- Create complete ProfileScreen with user info and statistics
+- Implement horizontal card layout (icon left, stats right)
+- Fix profile picture centering with userInfoContent wrapper
+- Add 4 statistics cards with proper alignment
+- Install expo-clipboard for UPI copy functionality
+- Fix Activity Screen horizontal ScrollView layout issue
+- Use Dimensions API for responsive card widths
+- Apply left-aligned text pattern in statistics cards
+- Add Settings button with proper separation
+- All TypeScript and ESLint validations passing
+
+Week 12 Complete (6/6 days)
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
 ---
 
-**Status**: ✅ Onboarding illustrations complete and integrated
-**Next**: 🚀 Week 12 Day 2-3 - Dashboard Screen implementation
-**Health**: 🟢 Excellent - all systems operational
+## Next Session Planning
+
+**Week 13: Tier 2 Screens**
+
+**Priority Tasks**:
+1. Enhance FriendsListScreen (currently placeholder)
+2. Create SettingsScreen
+3. Add navigation flows between screens
+4. Implement any remaining UI polish
+
+**Estimated Duration**: 3-4 sessions
+
+**Prerequisites**: None (all dependencies ready)
+
+---
+
+## Memory Updates
+
+Updated:
+1. ✅ `current_status` - Week 12 complete, updated with Day 6 details
+2. ✅ `session-checkpoint` - This checkpoint summary
+3. ✅ Pattern libraries updated with new discoveries
+
+---
+
+## Session Metrics
+
+- **Tasks Completed**: 1/1 (100%) - Profile Screen implementation
+- **Design Iterations**: 6 (high iteration count but achieved quality result)
+- **Bugs Fixed**: 2 (Activity ScrollView, Profile centering)
+- **Pattern Discoveries**: 3 (centering, horizontal cards, ScrollView layout)
+- **Files Modified**: 2
+- **Lines Changed**: ~150
+- **TypeScript Errors**: 0 (maintained throughout)
+- **ESLint Errors**: 0 (maintained throughout)
+- **Tests Passing**: 282/282
+
+---
+
+**Session Quality**: ⭐⭐⭐⭐ Very Good (high quality result, multiple learnings)
+**Iteration Efficiency**: ⭐⭐⭐ Good (6 iterations needed but each discovered valuable patterns)
+**Ready for Next Session**: ✅ Yes
+**Commit Status**: Ready to commit
+**Documentation**: Complete
+**Week 12 Status**: ✅ 100% Complete
