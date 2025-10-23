@@ -43,3 +43,13 @@ export interface ActivityItem {
   timestamp: Date;
   description: string;
 }
+
+export interface Friend {
+  id: string;
+  name: string;
+  phone?: string;
+  upiId?: string;
+  addedAt: Date;
+  billCount: number;
+  totalAmountPaise: number;
+}

@@ -204,7 +204,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
       >
         {/* Error Message */}
         {error && (
-          <GlassCard style={styles.errorCard} borderRadius={12}>
+          <GlassCard style={styles.errorCard} borderRadius={tokens.radius.md}>
             <Text style={styles.errorText}>⚠️ {error}</Text>
           </GlassCard>
         )}
@@ -216,7 +216,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
             Set your default VPA for receiving payments
           </Text>
 
-          <GlassCard style={styles.card} borderRadius={12}>
+          <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
             {!hasDefaultVPA() || isEditingVPA ? (
               <View style={styles.cardContent}>
                 <View style={styles.inputGroup}>
@@ -314,7 +314,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           <Text style={styles.sectionTitle}>Preferences</Text>
 
           {/* Haptic Feedback */}
-          <GlassCard style={styles.card} borderRadius={12}>
+          <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Haptic Feedback</Text>
@@ -332,7 +332,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           </GlassCard>
 
           {/* Reminders */}
-          <GlassCard style={styles.card} borderRadius={12}>
+          <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Payment Reminders</Text>
@@ -350,7 +350,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           </GlassCard>
 
           {/* Auto-Delete Days */}
-          <GlassCard style={styles.card} borderRadius={12}>
+          <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
             <View style={styles.cardContent}>
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Auto-Delete Settled Bills</Text>
@@ -382,7 +382,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, styles.dangerTitle]}>Danger Zone</Text>
 
-          <GlassCard style={styles.dangerCard} borderRadius={12}>
+          <GlassCard style={styles.dangerCard} borderRadius={tokens.radius.md}>
             <View style={styles.cardContent}>
               <View style={styles.settingInfo}>
                 <Text style={[styles.settingLabel, styles.dangerText]}>
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.colors.background.input,
     borderWidth: 1,
     borderColor: tokens.colors.border.default,
-    borderRadius: 8,
+    borderRadius: tokens.radius.sm,
     paddingHorizontal: 12,
     fontSize: 14,
     color: tokens.colors.text.primary,
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     backgroundColor: tokens.colors.financial.positiveLight,
-    borderRadius: 5,
+    borderRadius: tokens.radius.sm,
     borderWidth: 1,
     borderColor: tokens.colors.financial.positive,
   },
@@ -561,9 +561,9 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    paddingVertical: 11,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: tokens.spacing.md,
+    paddingHorizontal: tokens.spacing.lg,
+    borderRadius: tokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 44,

@@ -2,7 +2,7 @@
  * OnboardingScreen - Multi-step onboarding flow
  *
  * Introduces new users to Vasooly's core features through
- * 6 illustrated screens with swipe navigation.
+ * 3 illustrated screens with swipe navigation.
  */
 
 import React, { useRef, useState } from 'react';
@@ -19,12 +19,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSettingsStore } from '@/stores';
 import {
   OnboardingPagination,
-  WelcomeIllustration,
   BillSplittingIllustration,
-  FriendGroupsIllustration,
   SettlementTrackingIllustration,
-  PrivacySecurityIllustration,
-  ReadyToStartIllustration,
+  FriendGroupsIllustration,
 } from '@/components';
 import { tokens } from '@/theme/tokens';
 
@@ -38,45 +35,27 @@ interface ScreenData {
   id: number;
   title: string;
   description: string;
-  Illustration: React.FC;
+  Illustration: React.FC<{ size?: number }>;
 }
 
 const ONBOARDING_SCREENS: ScreenData[] = [
   {
     id: 0,
-    title: 'Welcome to Vasooly',
-    description: 'Split bills fairly, settle up easily',
-    Illustration: WelcomeIllustration,
-  },
-  {
-    id: 1,
-    title: 'Split any expense',
-    description: 'Meals, trips, rent, or utilities - divide costs fairly',
+    title: 'Split & Send in 60 Seconds',
+    description: 'Split any bill, generate UPI payment links, and send to friends via WhatsApp or SMS. They don\'t need the app!',
     Illustration: BillSplittingIllustration,
   },
   {
-    id: 2,
-    title: 'Organize by groups',
-    description: 'Create groups for roommates, trips, or regular hangouts',
-    Illustration: FriendGroupsIllustration,
-  },
-  {
-    id: 3,
-    title: 'Track balances easily',
-    description: 'See who owes what, settle up with a tap',
+    id: 1,
+    title: 'Track & Remind Effortlessly',
+    description: 'See who paid, who owes. Send automatic reminders to friends who haven\'t settled up yet',
     Illustration: SettlementTrackingIllustration,
   },
   {
-    id: 4,
-    title: 'Your data is private',
-    description: 'End-to-end encryption keeps your expenses secure',
-    Illustration: PrivacySecurityIllustration,
-  },
-  {
-    id: 5,
-    title: "You're all set!",
-    description: 'Start splitting expenses with friends',
-    Illustration: ReadyToStartIllustration,
+    id: 2,
+    title: 'Organize & Analyze',
+    description: 'Group expenses by trips or friends. Get insights on spending patterns and settlement rates',
+    Illustration: FriendGroupsIllustration,
   },
 ];
 
@@ -147,7 +126,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
             >
               {/* Illustration */}
               <View style={styles.illustrationContainer}>
-                <screen.Illustration />
+                <screen.Illustration size={340} />
               </View>
 
               {/* Text Content */}
@@ -238,8 +217,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing['2xl'],
   },
   illustrationContainer: {
-    height: 280,
-    width: 280,
+    height: 340,
+    width: 340,
     marginBottom: tokens.spacing['3xl'],
     alignItems: 'center',
     justifyContent: 'center',

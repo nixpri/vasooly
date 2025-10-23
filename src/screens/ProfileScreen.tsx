@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { User, Copy, Settings, TrendingUp, CheckCircle, IndianRupee } from 'lucide-react-native';
-import { GlassCard } from '@/components/GlassCard';
+import { GlassCard, ScreenHeader } from '@/components';
 import { useBillStore, useSettingsStore } from '@/stores';
 import { formatPaise } from '@/lib/business/splitEngine';
 import type { ProfileScreenProps } from '@/navigation/types';
@@ -32,14 +32,30 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { bills, getSettledBills } = useBillStore();
   const { defaultUPIName, defaultVPA } = useSettingsStore();
 
+  // Helper function to check if participant is the current user
+  const isCurrentUser = (participantName: string): boolean => {
+    if (!defaultUPIName) return false;
+    return participantName.toLowerCase() === defaultUPIName.toLowerCase();
+  };
+
   // Calculate profile statistics
   const stats = useMemo(() => {
     const totalBills = bills.length;
     const settledBills = getSettledBills().length;
     const successRate = totalBills > 0 ? (settledBills / totalBills) * 100 : 0;
 
-    // Calculate total vasooly amount (sum of all bill amounts)
-    const totalVasoolyPaise = bills.reduce((sum, bill) => sum + bill.totalAmountPaise, 0);
+    // Calculate total vasooly amount (sum of amounts owed by others, excluding user's share)
+    // This matches Dashboard logic
+    let totalVasoolyPaise = 0;
+    bills.forEach((bill) => {
+      bill.participants.forEach((participant) => {
+        // Skip if this is the current user's share
+        if (isCurrentUser(participant.name)) return;
+
+        // Add all amounts from others (both paid and pending)
+        totalVasoolyPaise += participant.amountPaise;
+      });
+    });
 
     return {
       totalBills,
@@ -47,7 +63,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       successRate,
       totalVasoolyPaise,
     };
-  }, [bills, getSettledBills]);
+  }, [bills, getSettledBills, defaultUPIName]);
 
   const handleCopyUPI = async () => {
     if (defaultVPA) {
@@ -61,22 +77,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const hasUPI = defaultVPA !== null;
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-      </View>
+      <ScreenHeader title="Profile" />
 
-      {/* User Info Card */}
-      <GlassCard style={styles.userCard} borderRadius={16}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* User Info Card */}
+        <GlassCard style={styles.userCard} borderRadius={tokens.radius.lg}>
         <View style={styles.userInfoContent}>
           {/* Avatar */}
           <View style={styles.avatar}>
-            <User size={48} color={tokens.colors.brand.primary} strokeWidth={2} />
+            <User size={40} color={tokens.colors.brand.primary} strokeWidth={2} />
           </View>
 
           {/* User Name */}
@@ -107,7 +122,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       <View style={styles.statsGrid}>
         {/* Total Bills */}
-        <GlassCard style={styles.statCard} borderRadius={12}>
+        <GlassCard style={styles.statCard} borderRadius={tokens.radius.md}>
           <View style={styles.statCardContent}>
             <View style={[styles.statIconContainer, { backgroundColor: `${tokens.colors.sage[500]}15` }]}>
               <TrendingUp size={24} color={tokens.colors.sage[500]} strokeWidth={2} />
@@ -120,7 +135,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </GlassCard>
 
         {/* Total Vasooly Amount */}
-        <GlassCard style={styles.statCard} borderRadius={12}>
+        <GlassCard style={styles.statCard} borderRadius={tokens.radius.md}>
           <View style={styles.statCardContent}>
             <View style={[styles.statIconContainer, { backgroundColor: `${tokens.colors.amber[500]}15` }]}>
               <IndianRupee size={24} color={tokens.colors.amber[500]} strokeWidth={2} />
@@ -133,7 +148,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </GlassCard>
 
         {/* Settled Bills */}
-        <GlassCard style={styles.statCard} borderRadius={12}>
+        <GlassCard style={styles.statCard} borderRadius={tokens.radius.md}>
           <View style={styles.statCardContent}>
             <View style={[styles.statIconContainer, { backgroundColor: `${tokens.colors.brand.primary}15` }]}>
               <CheckCircle size={24} color={tokens.colors.brand.primary} strokeWidth={2} />
@@ -146,7 +161,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </GlassCard>
 
         {/* Success Rate */}
-        <GlassCard style={styles.statCard} borderRadius={12}>
+        <GlassCard style={styles.statCard} borderRadius={tokens.radius.md}>
           <View style={styles.statCardContent}>
             <View style={[styles.statIconContainer, { backgroundColor: `${tokens.colors.sage[500]}15` }]}>
               <TrendingUp size={24} color={tokens.colors.sage[500]} strokeWidth={2} />
@@ -165,45 +180,40 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         onPress={() => navigation.navigate('Settings')}
         activeOpacity={0.7}
       >
-        <GlassCard style={styles.settingsCard} borderRadius={12}>
+        <GlassCard style={styles.settingsCard} borderRadius={tokens.radius.md}>
           <View style={styles.settingsContent}>
             <View style={[styles.settingsIconContainer, { backgroundColor: `${tokens.colors.text.tertiary}15` }]}>
-              <Settings size={22} color={tokens.colors.text.tertiary} strokeWidth={2} />
+              <Settings size={24} color={tokens.colors.text.tertiary} strokeWidth={2} />
             </View>
             <Text style={styles.settingsText}>Settings</Text>
           </View>
         </GlassCard>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 // Calculate stat card width: (screen width - horizontal padding - gap) / 2
 const { width: screenWidth } = Dimensions.get('window');
-const STAT_CARD_WIDTH = (screenWidth - (tokens.spacing.lg * 2) - tokens.spacing.md) / 2;
+const STAT_CARD_WIDTH = (screenWidth - (tokens.spacing.xl * 2) - tokens.spacing.md) / 2;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: tokens.colors.background.base,
   },
+  scrollView: {
+    flex: 1,
+  },
   contentContainer: {
-    paddingHorizontal: tokens.spacing.lg, // 16px for proper card alignment
+    paddingHorizontal: tokens.spacing.xl, // 20px for consistency with other screens
+    paddingTop: tokens.spacing.xl, // 20px breathing room from header divider
     paddingBottom: tokens.spacing['2xl'], // 24px bottom padding for scroll clearance
-  },
-  header: {
-    paddingTop: 52,
-    paddingBottom: tokens.spacing.lg,
-  },
-  headerTitle: {
-    fontSize: tokens.typography.h2.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    fontWeight: tokens.typography.fontWeight.bold,
-    color: tokens.colors.text.primary,
   },
   userCard: {
     width: '100%',
-    paddingVertical: tokens.spacing['2xl'], // 24px top/bottom
+    paddingVertical: tokens.spacing.lg, // 16px top/bottom (reduced for compact look)
     paddingHorizontal: tokens.spacing.xl, // 20px left/right
     marginBottom: tokens.spacing.xl, // 20px below card
   },
@@ -212,18 +222,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatar: {
-    width: 96,
-    height: 96,
+    width: 80,
+    height: 80,
     borderRadius: tokens.radius.full,
     backgroundColor: `${tokens.colors.brand.primary}15`,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: tokens.spacing.lg, // 16px below avatar
+    marginBottom: tokens.spacing.md, // 12px below avatar (reduced for compact look)
   },
   userName: {
-    fontSize: tokens.typography.h3.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    fontWeight: tokens.typography.fontWeight.bold,
+    ...tokens.typography.h3,
     color: tokens.colors.text.primary,
     marginBottom: tokens.spacing.sm, // 8px below name
     textAlign: 'center',
@@ -241,13 +249,11 @@ const styles = StyleSheet.create({
     borderColor: tokens.colors.border.subtle,
   },
   upiText: {
-    fontSize: tokens.typography.caption.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
+    ...tokens.typography.caption,
     color: tokens.colors.text.secondary,
   },
   noUpiText: {
-    fontSize: tokens.typography.caption.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
+    ...tokens.typography.caption,
     color: tokens.colors.text.tertiary,
     fontStyle: 'italic',
     textAlign: 'center',
@@ -256,8 +262,7 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.md, // 12px below section title
   },
   sectionTitle: {
-    fontSize: tokens.typography.h3.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
+    ...tokens.typography.h3,
     fontWeight: tokens.typography.fontWeight.semibold,
     color: tokens.colors.text.primary,
   },
@@ -289,14 +294,11 @@ const styles = StyleSheet.create({
     flexShrink: 0, // Prevent icon container from shrinking
   },
   statValue: {
-    fontSize: tokens.typography.h3.fontSize, // 20px
-    fontFamily: tokens.typography.fontFamily.primary,
-    fontWeight: tokens.typography.fontWeight.bold,
+    ...tokens.typography.h3,
     color: tokens.colors.text.primary,
   },
   statLabel: {
-    fontSize: tokens.typography.caption.fontSize, // 12px
-    fontFamily: tokens.typography.fontFamily.primary,
+    ...tokens.typography.caption,
     color: tokens.colors.text.secondary,
   },
   settingsButton: {
@@ -320,8 +322,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   settingsText: {
-    fontSize: tokens.typography.bodyLarge.fontSize, // 16px (increased from 14px)
-    fontFamily: tokens.typography.fontFamily.primary,
+    ...tokens.typography.bodyLarge,
     fontWeight: tokens.typography.fontWeight.semibold,
     color: tokens.colors.text.primary,
   },

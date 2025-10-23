@@ -270,7 +270,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Bill Title</Text>
               <View style={styles.titleInputContainer}>
-                <FileText size={18} color={tokens.colors.text.secondary} strokeWidth={2} />
+                <FileText size={20} color={tokens.colors.text.secondary} strokeWidth={2} />
                 <TextInput
                   style={styles.titleInput}
                   value={billTitle}
@@ -320,7 +320,7 @@ export const BillCreateScreen: React.FC<BillCreateScreenProps> = ({ route, navig
               hapticIntensity="medium"
             >
               <View style={styles.createButtonContent}>
-                {isSaving && <LoadingSpinner size={18} color={tokens.colors.text.inverse} />}
+                {isSaving && <LoadingSpinner size={20} color={tokens.colors.text.inverse} />}
                 <Text style={styles.createButtonText}>
                   {isSaving
                     ? isEditMode
@@ -343,12 +343,12 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.colors.background.base,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: tokens.spacing.xl,
     paddingTop: 52,
-    paddingBottom: 16,
+    paddingBottom: tokens.spacing.lg,
     backgroundColor: tokens.colors.background.elevated,
     borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border.light,
+    borderBottomColor: tokens.colors.border.subtle,
   },
   backButton: {
     marginBottom: 8,
@@ -397,11 +397,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 20,
+    padding: tokens.spacing.xl,
+    paddingBottom: tokens.spacing.xl,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: tokens.spacing.xl,
   },
   sectionLabel: {
     fontSize: 13,
@@ -428,12 +428,12 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   footer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: tokens.spacing.xl,
     paddingTop: 12,
-    paddingBottom: 16,
+    paddingBottom: tokens.spacing.lg,
     backgroundColor: tokens.colors.background.elevated,
     borderTopWidth: 1,
-    borderTopColor: tokens.colors.border.light,
+    borderTopColor: tokens.colors.border.subtle,
   },
   createButton: {
     backgroundColor: tokens.colors.amber[500],  // Amber for primary CTA

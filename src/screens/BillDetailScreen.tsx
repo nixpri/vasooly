@@ -247,7 +247,7 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
         {/* Summary Card */}
         <AnimatedGlassCard
           style={isFullySettled ? styles.settledSummaryCard : styles.pendingSummaryCard}
-          borderRadius={16}
+          borderRadius={tokens.radius.lg}
         >
           <View style={styles.summaryContent}>
             <View style={styles.summaryRow}>
@@ -290,10 +290,10 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
         </AnimatedGlassCard>
 
         {/* Instructional Section */}
-        <GlassCard style={styles.instructionsCard} borderRadius={12}>
+        <GlassCard style={styles.instructionsCard} borderRadius={tokens.radius.md}>
           <View style={styles.instructionsContent}>
             <View style={styles.instructionsTitleRow}>
-              <IndianRupee size={18} color={tokens.colors.text.primary} strokeWidth={2.5} />
+              <IndianRupee size={20} color={tokens.colors.text.primary} strokeWidth={2.5} />
               <Text style={styles.instructionsTitle}>Vasooly Management</Text>
             </View>
             <Text style={styles.instructionsText}>
@@ -314,7 +314,7 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
             hapticIntensity="light"
           >
             <View style={styles.shareAllButtonContent}>
-              <Share2 size={18} color={tokens.colors.text.inverse} strokeWidth={2.5} />
+              <Share2 size={20} color={tokens.colors.text.inverse} strokeWidth={2.5} />
               <Text style={styles.shareAllButtonText}>
                 Send Vasoolis to All Pending ({pendingCount})
               </Text>
@@ -332,7 +332,7 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
             const isCreator = isCurrentUser(participant.name);
 
             return (
-              <GlassCard key={participant.id} style={styles.participantCard} borderRadius={12}>
+              <GlassCard key={participant.id} style={styles.participantCard} borderRadius={tokens.radius.md}>
                 <View style={styles.participantContent}>
                   {/* Top Row: Avatar + Name + Amount */}
                   <View style={styles.participantTopRow}>
@@ -367,7 +367,7 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
                     {/* Action Buttons - Show locked state for creator */}
                     {isCreator ? (
                       <View style={styles.lockedIndicator}>
-                        <Lock size={14} color={tokens.colors.text.secondary} strokeWidth={2} />
+                        <Lock size={16} color={tokens.colors.text.secondary} strokeWidth={2} />
                         <Text style={styles.lockedText}>Locked</Text>
                       </View>
                     ) : (
@@ -380,9 +380,9 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
                         >
                           <View style={styles.actionButtonContent}>
                             {isPaid ? (
-                              <RotateCcw size={14} color={tokens.colors.terracotta[700]} strokeWidth={2.5} />
+                              <RotateCcw size={16} color={tokens.colors.terracotta[700]} strokeWidth={2.5} />
                             ) : (
-                              <Check size={14} color={tokens.colors.text.inverse} strokeWidth={3} />
+                              <Check size={16} color={tokens.colors.text.inverse} strokeWidth={3} />
                             )}
                             <Text style={isPaid ? styles.actionButtonUndoText : styles.actionButtonText}>
                               {isPaid ? 'Undo' : 'Mark Paid'}
@@ -401,7 +401,7 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
                             hapticIntensity="light"
                           >
                             <View style={styles.actionButtonContent}>
-                              <Share2 size={14} color={tokens.colors.text.inverse} strokeWidth={2.5} />
+                              <Share2 size={16} color={tokens.colors.text.inverse} strokeWidth={2.5} />
                               <Text style={styles.actionButtonShareText}>Share</Text>
                             </View>
                           </AnimatedButton>
@@ -478,12 +478,12 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.colors.background.base,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: tokens.spacing.xl,
     paddingTop: 52,
-    paddingBottom: 16,
+    paddingBottom: tokens.spacing.lg,
     backgroundColor: tokens.colors.background.elevated,
     borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border.light,
+    borderBottomColor: tokens.colors.border.subtle,
   },
   backButton: {
     marginBottom: 8,
@@ -514,9 +514,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    padding: tokens.spacing.xl,
     paddingBottom: 120, // Extra padding for bottom navigation and safe area
-    gap: 20,
+    gap: tokens.spacing.xl,
   },
   summaryCard: {
     width: '100%',
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   instructionsContent: {
-    padding: 16,
+    padding: tokens.spacing.lg,
     gap: 6,
   },
   instructionsTitleRow: {
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: tokens.colors.sage[600],
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: tokens.spacing.lg,
     borderRadius: tokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',

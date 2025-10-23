@@ -24,7 +24,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect } from '@react-navigation/native';
 import { Search, X } from 'lucide-react-native';
-import { GlassCard } from '@/components/GlassCard';
+import { GlassCard, ScreenHeader } from '@/components';
 import { ActivityCard } from '@/components/ActivityCard';
 import { DateGroupHeader } from '@/components/DateGroupHeader';
 import { ActivityType } from '@/types';
@@ -252,20 +252,16 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) =>
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>Activity</Text>
-          <Text style={styles.headerSubtitle}>
-            {groupedActivities.filter((g) => g.type === 'activity').length} activities
-          </Text>
-        </View>
-      </View>
+      <ScreenHeader
+        title="Activity"
+        subtitle={`${groupedActivities.filter((g) => g.type === 'activity').length} activities`}
+      />
 
       {/* KeyboardAvoidingView wraps search, filters, and list */}
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <GlassCard style={styles.searchCard} borderRadius={12}>
+          <GlassCard style={styles.searchCard} borderRadius={tokens.radius.md}>
             <View style={styles.searchInputWrapper}>
               <Search size={16} color={tokens.colors.text.tertiary} strokeWidth={2} />
               <TextInput
@@ -349,28 +345,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: tokens.colors.background.base,
-  },
-  header: {
-    paddingHorizontal: tokens.spacing.xl,
-    paddingTop: 52,
-    paddingBottom: tokens.spacing.lg,
-    backgroundColor: tokens.colors.background.elevated,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border.subtle,
-  },
-  headerTop: {
-    gap: 2,
-  },
-  headerTitle: {
-    fontSize: tokens.typography.h2.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    fontWeight: tokens.typography.fontWeight.bold,
-    color: tokens.colors.text.primary,
-  },
-  headerSubtitle: {
-    fontSize: tokens.typography.caption.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    color: tokens.colors.text.secondary,
   },
   searchContainer: {
     paddingHorizontal: tokens.spacing.xl,
