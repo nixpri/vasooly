@@ -17,13 +17,7 @@ export const SplitResultDisplay: React.FC<SplitResultDisplayProps> = ({
   splitResult,
 }) => {
   if (!splitResult) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          Enter amount and add participants to see split
-        </Text>
-      </View>
-    );
+    return null;
   }
 
   const { splits, totalAmountPaise, isExactlySplit, remainderPaise } =
@@ -83,31 +77,6 @@ export const SplitResultDisplay: React.FC<SplitResultDisplayProps> = ({
           </Text>
         </View>
       )}
-
-      {/* Exact split indicator */}
-      {isExactlySplit && (
-        <View style={styles.footer}>
-          <Text style={styles.successText}>
-            ✓ Amount splits exactly ({splits.length} participants)
-          </Text>
-        </View>
-      )}
-
-      {/* Summary Stats */}
-      <GlassCard style={styles.summaryContainer} borderRadius={12}>
-        <View style={styles.summaryContent}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Per Person (avg)</Text>
-            <Text style={styles.summaryValue}>
-              {formatPaise(splitResult.averageAmountPaise)}
-            </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Participants</Text>
-            <Text style={styles.summaryValue}>{splits.length}</Text>
-          </View>
-        </View>
-      </GlassCard>
     </View>
   );
 };

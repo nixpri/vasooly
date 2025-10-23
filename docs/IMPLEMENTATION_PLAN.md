@@ -62,12 +62,12 @@ This document provides the complete 21.5-week implementation roadmap, combining:
 ### Week 3: Split Engine ✅
 - ✅ Enhanced split engine with `calculateDetailedSplit()` (98.52% coverage, 32 tests)
 - ✅ UI components: BillAmountInput, ParticipantList, SplitResultDisplay (~680 lines)
-- ✅ BillCreateScreen with real-time validation (~355 lines)
+- ✅ AddVasoolyScreen with real-time validation (~355 lines)
 - ✅ Database integration with billRepository
 
 ### Week 4: Bill Management ✅
 - ✅ ActivityScreen with FlashList virtualization (~456 lines, later enhanced to timeline view)
-- ✅ BillDetailScreen with payment tracking (~571 lines)
+- ✅ VasoolyDetailScreen with payment tracking (~571 lines)
 - ✅ UPI payment integration (links + sharing)
 - ✅ Multi-screen navigation flow
 - ✅ Android keyboard handling optimized
@@ -221,13 +221,13 @@ This document provides the complete 21.5-week implementation roadmap, combining:
 **Navigation Structure**:
 ```
 Bottom Tabs (4 tabs)
-├─ Home Stack: Dashboard → BillDetail
-├─ Activity Stack: ActivityScreen → BillDetail
-├─ Karzedaars Stack: KarzedaarsList
+├─ Home Stack: Dashboard → VasoolyDetail → AddVasooly
+├─ Activity Stack: ActivityScreen → VasoolyDetail
+├─ Karzedaars Stack: KarzedaarsList → KarzedaarDetail → SettleUp
 └─ Profile Stack: ProfileScreen → Settings
 
-Modal Screens (outside tabs)
-└─ BillCreate (modal presentation)
+Modal Screens (within stacks)
+└─ AddVasooly (modal presentation in Home stack)
 ```
 
 **Bug Fixes**:
@@ -412,7 +412,7 @@ Modal Screens (outside tabs)
   - Avatar: 96px → 80px
   - Vasooly calculation: Exclude user's share (matches Dashboard)
 - ✅ **KarzedaarsListScreen**: Applied ScreenHeader, fixed title (h1 → h2)
-- ✅ **BillDetailScreen**: Applied ScreenHeader, standardized typography
+- ✅ **VasoolyDetailScreen**: Applied ScreenHeader, standardized typography
 - ✅ **SettingsScreen**: Applied ScreenHeader, consistent styling
 - ✅ All screens using token spreads (`...tokens.typography.h2`)
 
@@ -440,7 +440,7 @@ Modal Screens (outside tabs)
 
 #### Day 2-3: Add Vasooly Modal (Enhanced) ✅ COMPLETE
 **Files Modified**:
-- `src/screens/AddVasoolyModal.tsx` - Functional modal for creating vasoolys
+- `src/screens/AddVasoolyScreen.tsx` - Functional modal screen for creating vasoolys
 - `src/components/BillAmountInput.tsx` - Currency input with proper formatting
 - `src/components/ParticipantList.tsx` - Participant management
 
@@ -477,25 +477,55 @@ Modal Screens (outside tabs)
 
 **Status**: ✅ COMPLETE (2025-10-23) - Core functionality complete, enhancements deferred
 
-#### Day 3-4: Karzedaar Detail & Settle Up
-- [ ] Create `KarzedaarDetailScreen.tsx`:
-  - Karzedaar info card (name, contact, total balance)
-  - Transaction history with this karzedaar
-  - Net balance visualization
-  - "Settle Up" button
-  - "Remind" button (if they owe you)
-- [ ] Create `SettleUpScreen.tsx`:
-  - Settlement summary (amount, breakdown)
-  - Settlement method selection (UPI, cash, other)
-  - Generate UPI payment link
-  - Mark as settled confirmation
-  - Partial settlement support (optional)
-- [ ] Integrate with UPI generator
-- [ ] Add settlement success celebration
-- [ ] Update karzedaar balance after settlement
+#### Day 3-4: Karzedaar Detail & Settle Up ✅ COMPLETE
+**Files Created**:
+- `src/screens/KarzedaarDetailScreen.tsx` (546 lines) - Individual karzedaar overview
+- `src/screens/SettleUpScreen.tsx` (556 lines) - Settlement flow for marking payments received
 
-#### Day 4-5: Enhanced Bill Detail & Settings
-- [ ] Enhance `BillDetailScreen.tsx`:
+**Features Implemented**:
+- ✅ **KarzedaarDetailScreen**:
+  - Karzedaar info card (avatar, name, contact details)
+  - Net balance calculation (positive = they owe you)
+  - Balance visualization with icons (TrendingUp/Down)
+  - Stats row (active bills, settled bills, total bills)
+  - Action buttons (Remind if they owe you, Settle Up)
+  - Transaction history with FlashList
+  - Bill cards with payment status badges
+  - Cross-tab navigation to VasoolyDetail
+- ✅ **SettleUpScreen**:
+  - Settlement summary card with total amount
+  - Bill breakdown list
+  - Settlement method selection (UPI, Cash, Other)
+  - Confirmation dialog for payment receipt
+  - Success celebration screen
+  - Marks all pending participants as paid
+  - Settlement approach: Records that USER RECEIVED payment (not sends)
+
+**Technical Highlights**:
+- Cross-tab navigation with `navigation.getParent()?.navigate()`
+- Proper color token usage (`tokens.colors.success.main`, `tokens.colors.error.main`, etc.)
+- AnimatedButton without variant prop (using style prop with backgroundColor)
+- Design consistency with existing screens
+- Type-safe navigation props
+- Pull-to-refresh support
+- Empty states
+
+**Important Clarification**:
+- This is a COLLECTION app - Vasooly means to collect money
+- Settle Up records that the user RECEIVED payment from karzedaar
+- Payment happens OUTSIDE the app (via UPI/Cash/Other)
+- No UPI payment links generated in SettleUpScreen (payment already received)
+
+**Validation**:
+- TypeScript: ✅ 0 errors
+- ESLint: ✅ 0 errors (15 pre-existing test warnings in other files)
+- Tests: ✅ 282 passing
+- Design Tokens: ✅ 100% compliance
+
+**Status**: ✅ COMPLETE (2025-10-23)
+
+#### Day 4-5: Enhanced Vasooly Detail & Settings
+- [ ] Enhance `VasoolyDetailScreen.tsx`:
   - Add receipt photo display (if uploaded)
   - Add bill notes/description
   - Add bill category badge
@@ -1157,5 +1187,6 @@ Each phase has mandatory quality gates:
 - **Bottom sheet modal**: 85% height, rounded corners, drag handle, swipe-to-dismiss gesture
 - **Categories & receipts**: Fully implemented with 5 categories and photo/PDF upload
 - Currency input bug fixed (auto-decimal formatting issue resolved)
-- AddExpenseModal → AddVasoolyModal renaming complete across codebase
+- BillDetailScreen → VasoolyDetailScreen renaming complete across codebase (2025-10-24)
+- AddExpenseModal → AddVasoolyScreen renaming complete across codebase
 - Karzedaar management approach clarified (auto-add via vasooly creation)

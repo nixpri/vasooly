@@ -73,7 +73,7 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) =>
 
   const handleActivityPress = useCallback(
     (bill: Bill) => {
-      navigation.navigate('BillDetail', { billId: bill.id });
+      navigation.navigate('VasoolyDetail', { billId: bill.id });
     },
     [navigation]
   );

@@ -25,31 +25,33 @@ export type TabParamList = {
 /**
  * Home Stack Navigator Params
  *
- * Dashboard → Bill Detail
+ * Dashboard → Vasooly Detail → Add Vasooly
  */
 export type HomeStackParamList = {
   Dashboard: undefined;
-  BillDetail: { billId: string };
+  VasoolyDetail: { billId: string };
+  AddVasooly: { bill?: any } | undefined; // bill param for edit mode
 };
 
 /**
  * Activity Stack Navigator Params
  *
- * Activity (renamed from BillHistory) → Bill Detail
+ * Activity (renamed from BillHistory) → Vasooly Detail
  */
 export type ActivityStackParamList = {
   ActivityScreen: undefined;
-  BillDetail: { billId: string };
+  VasoolyDetail: { billId: string };
 };
 
 /**
  * Karzedaars Stack Navigator Params
  *
- * Karzedaars List → Karzedaar Detail (placeholder for now)
+ * Karzedaars List → Karzedaar Detail → Settle Up
  */
 export type KarzedaarsStackParamList = {
   KarzedaarsList: undefined;
-  // KarzedaarDetail: { karzedaarId: string };  // Week 13
+  KarzedaarDetail: { karzedaarId: string };
+  SettleUp: { karzedaarId: string };
 };
 
 /**
@@ -81,23 +83,26 @@ export type OnboardingScreenProps = StackScreenProps<RootStackParamList, 'Onboar
 
 // Home Stack - Use composite props to enable navigation to root modals
 export type DashboardScreenProps = StackScreenProps<HomeStackParamList, 'Dashboard'>;
-export type HomeBillDetailScreenProps = CompositeScreenProps<
-  StackScreenProps<HomeStackParamList, 'BillDetail'>,
+export type HomeVasoolyDetailScreenProps = CompositeScreenProps<
+  StackScreenProps<HomeStackParamList, 'VasoolyDetail'>,
   StackScreenProps<RootStackParamList>
 >;
+export type AddVasoolyScreenProps = StackScreenProps<HomeStackParamList, 'AddVasooly'>;
 
 // Activity Stack - Use composite props to enable navigation to root modals
 export type ActivityScreenProps = CompositeScreenProps<
   StackScreenProps<ActivityStackParamList, 'ActivityScreen'>,
   StackScreenProps<RootStackParamList>
 >;
-export type ActivityBillDetailScreenProps = CompositeScreenProps<
-  StackScreenProps<ActivityStackParamList, 'BillDetail'>,
+export type ActivityVasoolyDetailScreenProps = CompositeScreenProps<
+  StackScreenProps<ActivityStackParamList, 'VasoolyDetail'>,
   StackScreenProps<RootStackParamList>
 >;
 
 // Karzedaars Stack
 export type KarzedaarsListScreenProps = StackScreenProps<KarzedaarsStackParamList, 'KarzedaarsList'>;
+export type KarzedaarDetailScreenProps = StackScreenProps<KarzedaarsStackParamList, 'KarzedaarDetail'>;
+export type SettleUpScreenProps = StackScreenProps<KarzedaarsStackParamList, 'SettleUp'>;
 
 // Profile Stack
 export type ProfileScreenProps = StackScreenProps<ProfileStackParamList, 'ProfileScreen'>;

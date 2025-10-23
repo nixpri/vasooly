@@ -28,39 +28,90 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { Search, UserPlus, X, Users } from 'lucide-react-native';
+import { Search, X, Users } from 'lucide-react-native';
 import type { KarzedaarsListScreenProps } from '@/navigation/types';
 import { tokens } from '@/theme/ThemeProvider';
 import { KarzedaarCard, GlassCard, LoadingSpinner, ScreenHeader } from '@/components';
-import { pickContact, getContactErrorMessage } from '@/services/contactsService';
-import { useKarzedaarsStore } from '@/stores';
+import { useKarzedaarsStore, useBillStore, useSettingsStore } from '@/stores';
 import type { Karzedaar } from '@/types';
 
-export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = () => {
+export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = ({ navigation }) => {
   // State
-  const { karzedaars, loadKarzedaars, addOrUpdateKarzedaar, isLoading } = useKarzedaarsStore();
+  const { karzedaars, loadKarzedaars, removeKarzedaar, isLoading } = useKarzedaarsStore();
+  const { bills } = useBillStore();
+  const { defaultUPIName } = useSettingsStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [adding, setAdding] = useState(false);
 
-  // Load karzedaars on mount
+  // Load karzedaars when screen gains focus (to pick up changes from bill deletion, etc.)
+  useFocusEffect(
+    useCallback(() => {
+      loadKarzedaars();
+    }, [loadKarzedaars])
+  );
+
+  // Clean up current user entries on mount
   useEffect(() => {
-    loadKarzedaars();
-  }, [loadKarzedaars]);
+    // Clean up any existing current user entries (including legacy "You" entries)
+    const currentUserKarzedaars = karzedaars.filter(k => {
+      const trimmedName = k.name.trim();
+      return (
+        trimmedName === '' ||
+        trimmedName.toLowerCase() === 'you' ||
+        (defaultUPIName && trimmedName.toLowerCase() === defaultUPIName.toLowerCase())
+      );
+    });
 
-  // Filter karzedaars based on search query
+    // Remove all current user karzedaars
+    currentUserKarzedaars.forEach(k => {
+      console.log('Removing current user from karzedaars:', k.name);
+      removeKarzedaar(k.id);
+    });
+  }, [karzedaars.length]); // Run when karzedaars list changes
+
+  // Clean up karzedaars with zero bills (orphaned from bill deletions)
+  useEffect(() => {
+    karzedaars.forEach((karzedaar) => {
+      // Count bills for this karzedaar
+      const karzedaarBillCount = bills.filter((bill) =>
+        bill.participants.some(
+          (p) => p.name.toLowerCase() === karzedaar.name.toLowerCase()
+        )
+      ).length;
+
+      // Remove karzedaar if they have no bills
+      if (karzedaarBillCount === 0) {
+        console.log(`Removing karzedaar ${karzedaar.name} with zero bills`);
+        removeKarzedaar(karzedaar.id);
+      }
+    });
+  }, [karzedaars.length, bills.length]); // Run when counts change
+
+  // Filter karzedaars based on search query AND exclude current user
   const filteredKarzedaars = useMemo(() => {
-    if (!searchQuery.trim()) return karzedaars;
+    // First filter out current user (including legacy "You" entries)
+    const karzedaarsWithoutCurrentUser = karzedaars.filter(k => {
+      const trimmedName = k.name.trim();
+      const isCurrentUser =
+        trimmedName === '' ||
+        trimmedName.toLowerCase() === 'you' ||
+        (defaultUPIName && trimmedName.toLowerCase() === defaultUPIName.toLowerCase());
+      return !isCurrentUser;
+    });
+
+    // Then apply search filter
+    if (!searchQuery.trim()) return karzedaarsWithoutCurrentUser;
 
     const query = searchQuery.toLowerCase();
-    return karzedaars.filter(
+    return karzedaarsWithoutCurrentUser.filter(
       (karzedaar) =>
         karzedaar.name.toLowerCase().includes(query) ||
         karzedaar.phone?.toLowerCase().includes(query) ||
         karzedaar.upiId?.toLowerCase().includes(query)
     );
-  }, [karzedaars, searchQuery]);
+  }, [karzedaars, searchQuery, defaultUPIName]);
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
@@ -69,41 +120,14 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = () => {
     setRefreshing(false);
   }, [loadKarzedaars]);
 
-  // Handle add karzedaar from contacts
-  const handleAddFromContacts = useCallback(async () => {
-    setAdding(true);
-    try {
-      const result = await pickContact();
-
-      if (!result.success) {
-        const errorMessage = getContactErrorMessage(result);
-        if (errorMessage) {
-          Alert.alert('Unable to Add Karzedaar', errorMessage);
-        }
-        return;
-      }
-
-      if (result.contacts && result.contacts.length > 0) {
-        const contact = result.contacts[0];
-        await addOrUpdateKarzedaar(contact.name, contact.phoneNumber);
-        Alert.alert('Success', `${contact.name} added to your karzedaars!`);
-      }
-    } catch (error) {
-      console.error('Error adding karzedaar from contacts:', error);
-      Alert.alert('Error', 'Failed to add karzedaar. Please try again.');
-    } finally {
-      setAdding(false);
-    }
-  }, [addOrUpdateKarzedaar]);
 
   // Handle karzedaar press
-  const handleKarzedaarPress = useCallback((karzedaar: Karzedaar) => {
-    Alert.alert(
-      karzedaar.name,
-      `Bill history and karzedaar details coming soon!\n\n${karzedaar.billCount} bills • ₹${(karzedaar.totalAmountPaise / 100).toFixed(0)} total`,
-      [{ text: 'OK' }]
-    );
-  }, []);
+  const handleKarzedaarPress = useCallback(
+    (karzedaar: Karzedaar) => {
+      navigation.navigate('KarzedaarDetail', { karzedaarId: karzedaar.id });
+    },
+    [navigation]
+  );
 
   // Handle clear search
   const handleClearSearch = useCallback(() => {
@@ -116,17 +140,9 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = () => {
       <Users size={64} color={tokens.colors.text.tertiary} strokeWidth={1.5} />
       <Text style={styles.emptyTitle}>No Karzedaars Yet</Text>
       <Text style={styles.emptySubtitle}>
-        Add karzedaars to quickly create bills and track payments together
+        Karzedaars are automatically added when you create a vasooly.{'\n\n'}
+        Tap the "Add Vasooly" button on the Home screen to create your first vasooly!
       </Text>
-      <Pressable
-        style={styles.emptyButton}
-        onPress={handleAddFromContacts}
-        accessibilityLabel="Add your first karzedaar"
-        accessibilityRole="button"
-      >
-        <UserPlus size={20} color={tokens.colors.background.card} strokeWidth={2} />
-        <Text style={styles.emptyButtonText}>Add Your First Karzedaar</Text>
-      </Pressable>
     </View>
   );
 
@@ -149,17 +165,6 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = () => {
         {/* Header */}
         <ScreenHeader
           title="Karzedaars"
-          rightActions={
-            <Pressable
-              style={styles.iconButton}
-              onPress={handleAddFromContacts}
-              disabled={adding}
-              accessibilityLabel="Add karzedaar from contacts"
-              accessibilityRole="button"
-            >
-              <UserPlus size={24} color={tokens.colors.brand.primary} strokeWidth={2} />
-            </Pressable>
-          }
         />
 
         {/* Search Bar */}
@@ -206,6 +211,7 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = () => {
             renderItem={({ item }) => (
               <KarzedaarCard
                 karzedaar={item}
+                bills={bills}
                 onPress={() => handleKarzedaarPress(item)}
                 style={styles.karzedaarCard}
               />

@@ -20,7 +20,7 @@ interface KarzedaarsState {
 
   // Actions
   loadKarzedaars: () => Promise<void>;
-  addOrUpdateKarzedaar: (name: string, phone?: string) => Promise<Karzedaar>;
+  addOrUpdateKarzedaar: (name: string, phone?: string, currentUserName?: string) => Promise<Karzedaar | null>;
   updateKarzedaarStats: (name: string, billAmountPaise: number, increment: boolean) => Promise<void>;
   removeKarzedaar: (karzedaarId: string) => Promise<void>;
   clearAllKarzedaars: () => Promise<void>;
@@ -56,9 +56,23 @@ export const useKarzedaarsStore = create<KarzedaarsState>((set, get) => ({
 
   /**
    * Add a new karzedaar or return existing one (case-insensitive match by name)
+   * IMPORTANT: Never adds the current user as a karzedaar
    */
-  addOrUpdateKarzedaar: async (name: string, phone?: string): Promise<Karzedaar> => {
+  addOrUpdateKarzedaar: async (name: string, phone?: string, currentUserName?: string): Promise<Karzedaar | null> => {
     const { karzedaars } = get();
+
+    const trimmedName = name.trim();
+
+    // Safety check: Never add current user as a karzedaar
+    // Handle legacy "You" OR empty string OR matching currentUserName
+    if (
+      trimmedName === '' ||
+      trimmedName.toLowerCase() === 'you' ||
+      (currentUserName && trimmedName.toLowerCase() === currentUserName.toLowerCase())
+    ) {
+      console.log('Skipping current user from karzedaar list:', name);
+      return null;
+    }
 
     // Check if karzedaar already exists (case-insensitive)
     const existingKarzedaar = karzedaars.find(

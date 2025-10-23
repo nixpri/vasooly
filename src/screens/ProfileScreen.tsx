@@ -34,8 +34,19 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   // Helper function to check if participant is the current user
   const isCurrentUser = (participantName: string): boolean => {
-    if (!defaultUPIName) return false;
-    return participantName.toLowerCase() === defaultUPIName.toLowerCase();
+    const trimmedName = participantName.trim();
+
+    // Check for "You" or empty string (current user markers)
+    if (trimmedName === '' || trimmedName.toLowerCase() === 'you') {
+      return true;
+    }
+
+    // Check against defaultUPIName if set
+    if (defaultUPIName) {
+      return trimmedName.toLowerCase() === defaultUPIName.toLowerCase();
+    }
+
+    return false;
   };
 
   // Calculate profile statistics

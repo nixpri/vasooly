@@ -21,7 +21,6 @@ import {
   Pressable,
   Image,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { ChevronRight, ClipboardList } from 'lucide-react-native';
 import { useBillStore } from '../stores/billStore';
@@ -30,24 +29,16 @@ import { tokens } from '../theme/tokens';
 import { BalanceCard } from '../components/BalanceCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { AnimatedButton } from '../components/AnimatedButton';
-import { AddVasoolyModal } from './AddVasoolyModal';
 import { PaymentStatus } from '../types';
-
-type RootStackParamList = {
-  Dashboard: undefined;
-  BillDetail: { billId: string };
-  BillHistory: undefined;
-};
-
-type DashboardScreenProps = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
+import type { DashboardScreenProps } from '@/navigation/types';
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   // Zustand stores
   const { bills, loadAllBills, isLoading } = useBillStore();
   const { defaultUPIName } = useSettingsStore();
 
-  // Modal state
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  // Separate refreshing state for pull-to-refresh (don't show spinner for automatic background refreshes)
+  const [refreshing, setRefreshing] = useState(false);
 
   // Load data on mount
   useEffect(() => {
@@ -66,10 +57,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
   // Pull-to-refresh handler
   const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
     try {
       await loadAllBills();
     } catch (error) {
       console.error('Failed to refresh dashboard:', error);
+    } finally {
+      setRefreshing(false);
     }
   }, [loadAllBills]);
 
@@ -93,8 +87,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   // Calculate Vasooly metrics (excluding user's own amounts)
   // Helper function to check if participant is the current user
   const isCurrentUser = (participantName: string) => {
-    if (!defaultUPIName) return false;
-    return participantName.toLowerCase() === defaultUPIName.toLowerCase();
+    const trimmedName = participantName.trim();
+
+    // Check for "You" or empty string (current user markers)
+    if (trimmedName === '' || trimmedName.toLowerCase() === 'you') {
+      return true;
+    }
+
+    // Check against defaultUPIName if set
+    if (defaultUPIName) {
+      return trimmedName.toLowerCase() === defaultUPIName.toLowerCase();
+    }
+
+    return false;
   };
 
   // Calculate from ALL bills, not just recent 5
@@ -128,22 +133,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
   // Navigation handlers
   const handleAddVasooly = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalVisible(false);
-    // Refresh bills after closing modal to show new vasooly
-    loadAllBills();
+    navigation.navigate('AddVasooly');
   };
 
   const handleViewAllActivity = () => {
-    // Navigate to Activity tab
-    navigation.getParent()?.navigate('Activity');
+    // Navigate to Activity tab and ensure ActivityScreen is shown
+    navigation.getParent()?.navigate('Activity', { screen: 'ActivityScreen' });
   };
 
   const handleBillPress = (billId: string) => {
-    navigation.navigate('BillDetail', { billId });
+    navigation.navigate('VasoolyDetail', { billId });
   };
 
   return (
@@ -164,7 +163,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         contentContainerStyle={styles.contentContainer}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading}
+            refreshing={refreshing}
             onRefresh={handleRefresh}
             tintColor={tokens.colors.brand.primary}
             colors={[tokens.colors.brand.primary]}
@@ -198,13 +197,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <ChevronRight size={24} color="rgba(255, 255, 255, 0.8)" strokeWidth={2.5} />
             </View>
           </AnimatedButton>
-
-          {/* Coming soon hint */}
-          {!hasNoBills && (
-            <Text style={styles.comingSoonHint}>
-              Settle up & invite features coming soon 🚀
-            </Text>
-          )}
         </View>
 
         {/* Recent Activity */}
@@ -242,12 +234,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           )}
         </View>
       </ScrollView>
-
-      {/* Add Vasooly Modal */}
-      <AddVasoolyModal
-        isVisible={isModalVisible}
-        onClose={handleCloseModal}
-      />
     </View>
   );
 };
@@ -337,13 +323,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.85)',
     fontWeight: '500',
-  },
-  comingSoonHint: {
-    fontSize: 12,
-    color: tokens.colors.text.tertiary,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginTop: tokens.spacing.sm,
   },
   recentActivitySection: {
     marginBottom: tokens.spacing['2xl'],

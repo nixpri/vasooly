@@ -14,7 +14,7 @@
 - ✅ Core functionality (bill splitting, UPI links, payment tracking)
 - ✅ Basic animations and haptic feedback
 - ✅ Dark theme with glass-morphism effects
-- ✅ 10 screens: Onboarding (6), Dashboard, Activity, BillDetail, BillCreate, Profile, FriendsListScreen, Settings
+- ✅ 10 screens: Onboarding (6), Dashboard, Activity, VasoolyDetailScreen, AddVasoolyScreen, Profile, KarzedaarsListScreen, Settings
 
 **Critical Gaps:**
 - ❌ No onboarding (users dumped into app with no context)
@@ -2247,7 +2247,7 @@ Animation:
   - [ ] Category selection
   - [ ] Live split calculation
 - [ ] Update existing screens
-  - [ ] BillDetail → Expense Detail
+  - [x] VasoolyDetailScreen (formerly BillDetail) - COMPLETED
   - [ ] Settings screen refinement
   - [ ] Activity screen with filters
 

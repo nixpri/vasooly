@@ -13,12 +13,15 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   ActivityScreen,
-  BillDetailScreen,
+  VasoolyDetailScreen,
   SettingsScreen,
   OnboardingScreen,
   DashboardScreen,
   KarzedaarsListScreen,
+  KarzedaarDetailScreen,
+  SettleUpScreen,
   ProfileScreen,
+  AddVasoolyScreen,
 } from '@/screens';
 import { TabBar } from '@/components/TabBar';
 import { useBillStore, useHistoryStore, useSettingsStore } from '@/stores';
@@ -55,8 +58,8 @@ const HomeNavigator: React.FC = () => {
     >
       <HomeStack.Screen name="Dashboard" component={DashboardScreen} />
       <HomeStack.Screen
-        name="BillDetail"
-        component={BillDetailScreen}
+        name="VasoolyDetail"
+        component={VasoolyDetailScreen}
         options={{
           cardStyleInterpolator: ({ current, layouts }) => ({
             cardStyle: {
@@ -77,6 +80,25 @@ const HomeNavigator: React.FC = () => {
             },
           }),
           cardOverlayEnabled: true,
+        }}
+      />
+      <HomeStack.Screen
+        name="AddVasooly"
+        component={AddVasoolyScreen}
+        options={{
+          presentation: 'modal',
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [
+                {
+                  translateY: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [layouts.screen.height, 0],
+                  }),
+                },
+              ],
+            },
+          }),
         }}
       />
     </HomeStack.Navigator>
@@ -109,8 +131,8 @@ const ActivityNavigator: React.FC = () => {
         }}
       />
       <ActivityStack.Screen
-        name="BillDetail"
-        component={BillDetailScreen}
+        name="VasoolyDetail"
+        component={VasoolyDetailScreen}
         options={{
           cardStyleInterpolator: ({ current, layouts }) => ({
             cardStyle: {
@@ -140,7 +162,7 @@ const ActivityNavigator: React.FC = () => {
 /**
  * Karzedaars Stack Navigator
  *
- * Karzedaars List (placeholder for Week 13)
+ * Karzedaars List → Karzedaar Detail → Settle Up
  */
 const KarzedaarsNavigator: React.FC = () => {
   return (
@@ -152,6 +174,56 @@ const KarzedaarsNavigator: React.FC = () => {
       }}
     >
       <KarzedaarsStack.Screen name="KarzedaarsList" component={KarzedaarsListScreen} />
+      <KarzedaarsStack.Screen
+        name="KarzedaarDetail"
+        component={KarzedaarDetailScreen}
+        options={{
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [
+                {
+                  translateX: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [layouts.screen.width, 0],
+                  }),
+                },
+              ],
+            },
+            overlayStyle: {
+              opacity: current.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.3],
+              }),
+            },
+          }),
+          cardOverlayEnabled: true,
+        }}
+      />
+      <KarzedaarsStack.Screen
+        name="SettleUp"
+        component={SettleUpScreen}
+        options={{
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [
+                {
+                  translateX: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [layouts.screen.width, 0],
+                  }),
+                },
+              ],
+            },
+            overlayStyle: {
+              opacity: current.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.3],
+              }),
+            },
+          }),
+          cardOverlayEnabled: true,
+        }}
+      />
     </KarzedaarsStack.Navigator>
   );
 };

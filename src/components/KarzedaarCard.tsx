@@ -10,17 +10,20 @@
  * Uses horizontal layout pattern (avatar left, info right)
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle, Pressable } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { User, Phone, IndianRupee } from 'lucide-react-native';
+import { User, Phone } from 'lucide-react-native';
 import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
-import type { Karzedaar } from '../types';
+import type { Karzedaar, Bill } from '../types';
+import { PaymentStatus } from '../types';
 
 interface KarzedaarCardProps {
   /** Karzedaar data */
   karzedaar: Karzedaar;
+  /** Bills for calculating pending amounts */
+  bills: Bill[];
   /** Callback on press */
   onPress: () => void;
   /** Optional style */
@@ -46,8 +49,24 @@ const formatCurrency = (paise: number): string => {
   return `₹${rupees.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 };
 
-export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, onPress, style }) => {
+export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, bills, onPress, style }) => {
   const [pressed, setPressed] = React.useState(false);
+
+  // Calculate pending amount from bills
+  const pendingAmountPaise = useMemo(() => {
+    let pending = 0;
+    bills.forEach((bill) => {
+      const participant = bill.participants.find(
+        (p) => p.name.toLowerCase() === karzedaar.name.toLowerCase()
+      );
+      if (participant && participant.status === PaymentStatus.PENDING) {
+        pending += participant.amountPaise;
+      }
+    });
+    return pending;
+  }, [bills, karzedaar.name]);
+
+  const hasPending = pendingAmountPaise > 0;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -74,7 +93,7 @@ export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, onPress
       accessibilityRole="button"
     >
       <Animated.View style={animatedStyle}>
-        <GlassCard borderRadius={tokens.radius.md}>
+        <GlassCard borderRadius={tokens.radius.md} style={hasPending ? styles.cardPending : styles.cardSettled}>
           <View style={styles.container}>
             {/* Horizontal Layout: Avatar Left, Info Right */}
             <View style={styles.contentRow}>
@@ -125,15 +144,11 @@ export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, onPress
                     <>
                       <View style={styles.statDivider} />
                       <View style={styles.statItem}>
-                        <IndianRupee
-                          size={12}
-                          color={tokens.colors.brand.primary}
-                          style={styles.rupeeIcon}
-                        />
-                        <Text style={styles.statValue}>
-                          {formatCurrency(karzedaar.totalAmountPaise)}
+                        <Text style={hasPending ? styles.statValuePending : styles.statValue}>
+                          {hasPending
+                            ? `${formatCurrency(pendingAmountPaise)} pending of ${formatCurrency(karzedaar.totalAmountPaise)}`
+                            : `${formatCurrency(karzedaar.totalAmountPaise)} (all paid)`}
                         </Text>
-                        <Text style={styles.statLabel}>total</Text>
                       </View>
                     </>
                   )}
@@ -151,6 +166,14 @@ export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, onPress
 };
 
 const styles = StyleSheet.create({
+  cardPending: {
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.colors.amber[500],
+  },
+  cardSettled: {
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.colors.sage[500],
+  },
   container: {
     padding: tokens.spacing.md,
   },
@@ -214,6 +237,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: tokens.colors.text.primary,
   },
+  statValuePending: {
+    ...tokens.typography.caption,
+    fontWeight: '600',
+    color: tokens.colors.amber[700],
+  },
   statLabel: {
     ...tokens.typography.caption,
     color: tokens.colors.text.tertiary,
@@ -222,9 +250,6 @@ const styles = StyleSheet.create({
     width: 1,
     height: 12,
     backgroundColor: tokens.colors.border.light,
-  },
-  rupeeIcon: {
-    marginRight: -2,
   },
   chevron: {
     ...tokens.typography.h3,

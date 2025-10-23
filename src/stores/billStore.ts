@@ -108,12 +108,41 @@ export const useBillStore = create<BillState>((set, get) => ({
   deleteBill: async (billId: string) => {
     set({ isLoading: true, error: null });
     try {
+      // Get the bill before deleting to update karzedaar stats
+      const billToDelete = get().bills.find((b) => b.id === billId);
+
       await dbDeleteBill(billId);
       set((state) => ({
         bills: state.bills.filter((b) => b.id !== billId),
         currentBill: state.currentBill?.id === billId ? null : state.currentBill,
         isLoading: false,
       }));
+
+      // Update karzedaar stats after successful deletion
+      if (billToDelete) {
+        // Import karzedaarsStore to update stats
+        const { useKarzedaarsStore } = await import('./karzedaarsStore');
+        const { updateKarzedaarStats, karzedaars, removeKarzedaar } = useKarzedaarsStore.getState();
+
+        // Update stats for each participant (decrement)
+        for (const participant of billToDelete.participants) {
+          const trimmedName = participant.name.trim();
+          // Skip current user (You or empty)
+          if (trimmedName === '' || trimmedName.toLowerCase() === 'you') continue;
+
+          await updateKarzedaarStats(participant.name, participant.amountPaise, false);
+
+          // Check if karzedaar now has zero bills and remove them
+          const karzedaar = karzedaars.find(
+            (k) => k.name.toLowerCase() === participant.name.toLowerCase()
+          );
+          if (karzedaar && karzedaar.billCount <= 1) {
+            // This was their last bill, remove the karzedaar
+            console.log(`Removing karzedaar ${karzedaar.name} after deleting last bill`);
+            await removeKarzedaar(karzedaar.id);
+          }
+        }
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete bill';
       set({ error: errorMessage, isLoading: false });
@@ -163,8 +192,52 @@ export const useBillStore = create<BillState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const bills = await dbGetAllBills();
+
+      // Data migration: Fix "You" participants that are marked as PENDING
+      // This handles legacy data where current user was stored as "You" or empty string
+      let needsMigration = false;
+      const migratedBills = bills.map(bill => {
+        const migratedParticipants = bill.participants.map(participant => {
+          const trimmedName = participant.name.trim();
+          // Check if this is the current user (empty, "You", or matches default UPI name)
+          const isCurrentUser = trimmedName === '' || trimmedName.toLowerCase() === 'you';
+
+          // If current user is marked as PENDING, fix it to PAID
+          if (isCurrentUser && participant.status === PaymentStatus.PENDING) {
+            needsMigration = true;
+            console.log(`Migrating participant "${participant.name}" to PAID in bill "${bill.title}"`);
+            return { ...participant, status: PaymentStatus.PAID };
+          }
+          return participant;
+        });
+
+        // If any participants were migrated, return updated bill
+        if (migratedParticipants.some((p, i) => p.status !== bill.participants[i].status)) {
+          return { ...bill, participants: migratedParticipants, updatedAt: new Date() };
+        }
+        return bill;
+      });
+
+      // If migration occurred, update database
+      if (needsMigration) {
+        console.log('Running data migration for current user participants...');
+        for (const bill of migratedBills) {
+          const originalBill = bills.find(b => b.id === bill.id);
+          if (originalBill && bill !== originalBill) {
+            await dbUpdateBill(bill);
+            // Also update participant status in database
+            for (const participant of bill.participants) {
+              const originalParticipant = originalBill.participants.find(p => p.id === participant.id);
+              if (originalParticipant && participant.status !== originalParticipant.status) {
+                await dbUpdateParticipantStatus(participant.id, participant.status);
+              }
+            }
+          }
+        }
+      }
+
       set({
-        bills,
+        bills: migratedBills,
         isLoading: false,
       });
     } catch (error) {

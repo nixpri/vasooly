@@ -26,12 +26,12 @@ import { generateUPILink } from '@/lib/business/upiGenerator';
 import { PaymentStatus } from '@/types';
 import type { Participant } from '@/types';
 import { useBillStore, useSettingsStore } from '@/stores';
-import type { HomeBillDetailScreenProps } from '@/navigation/types';
+import type { HomeVasoolyDetailScreenProps } from '@/navigation/types';
 import { useHaptics } from '@/hooks';
 import { springConfigs } from '@/utils/animations';
 import { tokens } from '@/theme/ThemeProvider';
 
-export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, navigation }) => {
+export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ route, navigation }) => {
   const { billId } = route.params;
   const { getBillById, markParticipantPaid, markParticipantPending, deleteBill } = useBillStore();
   const { defaultVPA, defaultUPIName } = useSettingsStore();
@@ -39,8 +39,19 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
 
   // Helper function to check if participant is the current user (bill creator)
   const isCurrentUser = (participantName: string): boolean => {
-    if (!defaultUPIName) return false;
-    return participantName.toLowerCase() === defaultUPIName.toLowerCase();
+    const trimmedName = participantName.trim();
+
+    // Handle legacy "You" participant name OR empty string (when no UPI name was set)
+    if (trimmedName === '' || trimmedName.toLowerCase() === 'you') {
+      return true;
+    }
+
+    // If UPI name is set, check against that
+    if (defaultUPIName) {
+      return trimmedName.toLowerCase() === defaultUPIName.toLowerCase();
+    }
+
+    return false;
   };
 
   const [bill, setBill] = useState(getBillById(billId));
@@ -288,19 +299,6 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
           </View>
         </AnimatedGlassCard>
 
-        {/* Instructional Section */}
-        <GlassCard style={styles.instructionsCard} borderRadius={tokens.radius.md}>
-          <View style={styles.instructionsContent}>
-            <View style={styles.instructionsTitleRow}>
-              <IndianRupee size={20} color={tokens.colors.text.primary} strokeWidth={2.5} />
-              <Text style={styles.instructionsTitle}>Vasooly Management</Text>
-            </View>
-            <Text style={styles.instructionsText}>
-              Share payment links with participants and mark who has paid
-            </Text>
-          </View>
-        </GlassCard>
-
         {/* Share All Pending Button */}
         {pendingCount > 0 && (
           <AnimatedButton
@@ -331,18 +329,25 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
             const isCreator = isCurrentUser(participant.name);
 
             return (
-              <GlassCard key={participant.id} style={styles.participantCard} borderRadius={tokens.radius.md}>
+              <GlassCard
+                key={participant.id}
+                style={[
+                  styles.participantCard,
+                  isPaid ? styles.participantCardPaid : styles.participantCardPending
+                ]}
+                borderRadius={tokens.radius.md}
+              >
                 <View style={styles.participantContent}>
                   {/* Top Row: Avatar + Name + Amount */}
                   <View style={styles.participantTopRow}>
                     <View style={styles.participantAvatar}>
                       <Text style={styles.participantAvatarText}>
-                        {participant.name.charAt(0).toUpperCase()}
+                        {participant.name.trim() ? participant.name.charAt(0).toUpperCase() : 'Y'}
                       </Text>
                     </View>
                     <View style={styles.participantInfo}>
                       <Text style={styles.participantName}>
-                        {participant.name}{isCreator && ' (You)'}
+                        {participant.name.trim() ? `${participant.name}${isCreator ? ' (You)' : ''}` : 'You'}
                       </Text>
                       <Text style={styles.participantAmount}>
                         {formatPaise(participant.amountPaise)}
@@ -613,28 +618,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: tokens.colors.financial.positive,
   },
-  instructionsCard: {
-    width: '100%',
-  },
-  instructionsContent: {
-    padding: tokens.spacing.lg,
-    gap: 6,
-  },
-  instructionsTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  instructionsTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: tokens.colors.text.primary,
-  },
-  instructionsText: {
-    fontSize: 13,
-    color: tokens.colors.text.secondary,
-    lineHeight: 18,
-  },
   shareAllButton: {
     width: '100%',
     backgroundColor: tokens.colors.sage[600],
@@ -664,7 +647,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: tokens.colors.text.primary,
-    marginBottom: 12,
+    marginBottom: 4,
   },
   participantsList: {
     gap: 8,
@@ -672,9 +655,17 @@ const styles = StyleSheet.create({
   participantCard: {
     width: '100%',
   },
+  participantCardPaid: {
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.colors.sage[500],
+  },
+  participantCardPending: {
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.colors.amber[500],
+  },
   participantContent: {
-    padding: 14,
-    gap: 12,
+    padding: 10,
+    gap: 8,
   },
   // Modern Horizontal Layout - Top Row
   participantTopRow: {
@@ -707,8 +698,8 @@ const styles = StyleSheet.create({
     color: tokens.colors.text.primary,
   },
   participantAmount: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '500',
     color: tokens.colors.text.primary,
   },
 
@@ -716,7 +707,7 @@ const styles = StyleSheet.create({
   participantDivider: {
     height: 1,
     backgroundColor: tokens.colors.border.subtle,
-    marginVertical: 4,
+    marginVertical: 2,
   },
 
   // Modern Horizontal Layout - Action Row

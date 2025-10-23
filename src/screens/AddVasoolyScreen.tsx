@@ -1,3 +1,20 @@
+/**
+ * Add Vasooly Screen - Create or Edit Bill/Expense
+ *
+ * Features:
+ * - Bill title and amount input
+ * - Category selection
+ * - Receipt photo upload (camera, gallery, PDF)
+ * - Participant management with contacts integration
+ * - Split calculation and preview
+ * - Keyboard-aware scrolling
+ *
+ * Design patterns:
+ * - Glass-morphism design system
+ * - Standard screen with keyboard handling
+ * - Type-safe navigation
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -8,25 +25,15 @@ import {
   TextInput,
   Image,
   ScrollView,
-  Modal,
   Platform,
-  Dimensions,
-  Pressable,
-  Keyboard,
+  KeyboardAvoidingView,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from 'react-native-reanimated';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Contacts from 'expo-contacts';
 import {
-  X,
   FileText,
   Camera,
   Image as ImageIcon,
@@ -38,6 +45,7 @@ import {
   Check,
   File,
   UserPlus,
+  X,
 } from 'lucide-react-native';
 import { AnimatedButton, LoadingSpinner } from '@/components';
 import { BillAmountInput } from '@/components/BillAmountInput';
@@ -54,10 +62,12 @@ import { BillStatus, PaymentStatus, ExpenseCategory } from '@/types';
 import type { Bill, Participant } from '@/types';
 import { useHaptics } from '@/hooks';
 import { tokens } from '@/theme/ThemeProvider';
+import type { AddVasoolyScreenProps } from '@/navigation/types';
 
 interface ParticipantInput {
   id: string;
   name: string;
+  phone?: string;
 }
 
 interface CategoryConfig {
@@ -100,36 +110,30 @@ const CATEGORIES: Record<ExpenseCategory, CategoryConfig> = {
   },
 };
 
-interface AddVasoolyModalProps {
-  isVisible: boolean;
-  onClose: () => void;
-  existingBill?: Bill;
-}
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.85;
-const DISMISS_THRESHOLD = 100;
-
-export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
-  isVisible,
-  onClose,
-  existingBill,
-}) => {
+export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, route }) => {
+  const existingBill = route.params?.bill;
   const isEditMode = !!existingBill;
+
   const { createBill: createBillInStore, updateBill: updateBillInStore } = useBillStore();
   const { defaultUPIName } = useSettingsStore();
   const { addOrUpdateKarzedaar, updateKarzedaarStats } = useKarzedaarsStore();
   const haptics = useHaptics();
 
-  // Animation values for bottom sheet
-  const translateY = useSharedValue(BOTTOM_SHEET_HEIGHT);
-  const backdropOpacity = useSharedValue(0);
-  const bottomSheetHeight = useSharedValue(BOTTOM_SHEET_HEIGHT);
-
   // Helper function to check if participant is the current user
   const isCurrentUser = (participantName: string): boolean => {
-    if (!defaultUPIName) return false;
-    return participantName.toLowerCase() === defaultUPIName.toLowerCase();
+    const trimmedName = participantName.trim();
+
+    // Handle legacy "You" participant name OR empty string (when no UPI name was set)
+    if (trimmedName === '' || trimmedName.toLowerCase() === 'you') {
+      return true;
+    }
+
+    // If UPI name is set, check against that
+    if (defaultUPIName) {
+      return trimmedName.toLowerCase() === defaultUPIName.toLowerCase();
+    }
+
+    return false;
   };
 
   // State
@@ -148,64 +152,6 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
   const [amountError, setAmountError] = useState<string>('');
   const [participantError, setParticipantError] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // Keyboard listeners to dynamically resize bottom sheet when keyboard appears
-  useEffect(() => {
-    const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (event) => {
-        const keyboardHeight = event.endCoordinates.height;
-        setKeyboardHeight(keyboardHeight);
-        // Shrink bottom sheet to fit available space
-        bottomSheetHeight.value = withTiming(SCREEN_HEIGHT - keyboardHeight, { duration: 250 });
-      }
-    );
-
-    const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-        // Restore bottom sheet to original height
-        bottomSheetHeight.value = withTiming(BOTTOM_SHEET_HEIGHT, { duration: 250 });
-      }
-    );
-
-    return () => {
-      keyboardWillShowListener.remove();
-      keyboardWillHideListener.remove();
-    };
-  }, []);
-
-  // Animate bottom sheet open/close
-  useEffect(() => {
-    if (isVisible) {
-      // Animate in
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 200,
-      });
-      backdropOpacity.value = withTiming(1, { duration: 250 });
-    } else {
-      // Animate out
-      translateY.value = withTiming(BOTTOM_SHEET_HEIGHT, { duration: 250 });
-      backdropOpacity.value = withTiming(0, { duration: 250 });
-    }
-  }, [isVisible]);
-
-  // Reset form state when modal opens for a new bill
-  useEffect(() => {
-    if (isVisible && !existingBill) {
-      setBillTitle('');
-      setAmountPaise(0);
-      setSelectedCategory(ExpenseCategory.FOOD);
-      setReceiptPhoto(null);
-      setParticipants([{ id: 'default-1', name: defaultUPIName || 'You' }]);
-      setSplitResult(null);
-      setAmountError('');
-      setParticipantError('');
-    }
-  }, [isVisible, existingBill, defaultUPIName]);
 
   // Calculate split whenever amount or participants change
   useEffect(() => {
@@ -239,42 +185,6 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
       }
     }
   }, [amountPaise, participants]);
-
-  // Gesture handler for swipe-to-dismiss
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      // Only allow downward swipes
-      if (event.translationY > 0) {
-        translateY.value = event.translationY;
-      }
-    })
-    .onEnd((event) => {
-      // Dismiss if swiped down past threshold or with sufficient velocity
-      if (event.translationY > DISMISS_THRESHOLD || event.velocityY > 500) {
-        translateY.value = withTiming(BOTTOM_SHEET_HEIGHT, { duration: 250 });
-        backdropOpacity.value = withTiming(0, { duration: 250 });
-        runOnJS(onClose)();
-      } else {
-        // Snap back to top
-        translateY.value = withSpring(0, {
-          damping: 20,
-          stiffness: 200,
-        });
-      }
-    });
-
-  // Animated styles
-  const bottomSheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  const bottomSheetHeightStyle = useAnimatedStyle(() => ({
-    height: bottomSheetHeight.value,
-  }));
-
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
 
   const handleTakePhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -348,9 +258,16 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
       const result = await Contacts.presentContactPickerAsync();
       if (result && result.name) {
         haptics.success();
+
+        // Get phone number from contact if available
+        const phoneNumber = result.phoneNumbers && result.phoneNumbers.length > 0
+          ? result.phoneNumbers[0].number
+          : undefined;
+
         const newParticipant: ParticipantInput = {
           id: `participant-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           name: result.name,
+          phone: phoneNumber,
         };
         setParticipants((prev) => [...prev, newParticipant]);
       }
@@ -401,6 +318,11 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
             ? existingBill.participants.find((p) => p.name === split.participantName)
             : undefined;
 
+        // Find phone from current participants input
+        const participantInput = participants.find(
+          (p) => p.name === split.participantName
+        );
+
         let paymentStatus: PaymentStatus;
         if (isCurrentUser(split.participantName)) {
           paymentStatus = PaymentStatus.PAID;
@@ -413,7 +335,7 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
           name: split.participantName,
           amountPaise: split.amountPaise,
           status: paymentStatus,
-          phone: existingParticipant?.phone,
+          phone: participantInput?.phone || existingParticipant?.phone,
         };
       });
 
@@ -430,7 +352,7 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
 
         await updateBillInStore(updatedBill);
         haptics.success();
-        onClose();
+        navigation.goBack();
       } else {
         const billId = `bill-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -450,16 +372,16 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
 
         // Auto-add all participants to karzedaars (except current user)
         for (const participant of participantData) {
+          // Add participant as karzedaar (store will filter out current user as safety check)
+          await addOrUpdateKarzedaar(participant.name, participant.phone, defaultUPIName || undefined);
+          // Update karzedaar stats with their split amount (only if not current user)
           if (!isCurrentUser(participant.name)) {
-            // Add participant as karzedaar
-            await addOrUpdateKarzedaar(participant.name, participant.phone);
-            // Update karzedaar stats with their split amount
             await updateKarzedaarStats(participant.name, participant.amountPaise, true);
           }
         }
 
         haptics.success();
-        onClose();
+        navigation.goBack();
       }
     } catch (error) {
       haptics.error();
@@ -478,134 +400,120 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
     billTitle.trim() !== '' && amountPaise > 0 && splitResult !== null && !isSaving;
 
   return (
-    <Modal
-      visible={isVisible}
-      animationType="fade"
-      transparent
-      presentationStyle="overFullScreen"
-      onRequestClose={onClose}
-    >
-      <GestureHandlerRootView style={styles.modalOverlay}>
-        {/* Backdrop */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
-          <Animated.View style={[styles.backdrop, backdropStyle]} />
-        </Pressable>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={tokens.colors.background.base} />
 
-        {/* Bottom Sheet */}
-        <Animated.View style={[styles.bottomSheet, bottomSheetStyle, bottomSheetHeightStyle]}>
-          {/* Drag Handle */}
-          <GestureDetector gesture={panGesture}>
-            <View style={styles.dragHandleContainer}>
-              <View style={styles.dragHandle} />
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{isEditMode ? 'Edit Vasooly' : "Let's Vasooly!"}</Text>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.closeButton}
+          activeOpacity={0.7}
+        >
+          <X size={24} color={tokens.colors.text.primary} strokeWidth={2} />
+        </TouchableOpacity>
+      </View>
+
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        {/* Content */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
+            {/* Bill Title */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Title</Text>
+              <View style={styles.titleInputContainer}>
+                <FileText size={20} color={tokens.colors.text.secondary} strokeWidth={2} />
+                <TextInput
+                  style={styles.titleInput}
+                  value={billTitle}
+                  onChangeText={setBillTitle}
+                  placeholder="e.g., Dinner at Taj, Movie tickets..."
+                  placeholderTextColor={tokens.colors.text.tertiary}
+                />
+              </View>
             </View>
-          </GestureDetector>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>
-                {isEditMode ? 'Edit Vasooly' : "Let's Vasooly!"}
-              </Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color={tokens.colors.text.secondary} strokeWidth={2} />
-              </TouchableOpacity>
+            {/* Category Selection */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Category (Optional)</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.categoryList}>
+                  {Object.entries(CATEGORIES).map(([key, config]) => {
+                    const Icon = config.icon;
+                    const isSelected = selectedCategory === key;
+                    return (
+                      <TouchableOpacity
+                        key={key}
+                        style={[
+                          styles.categoryChip,
+                          { backgroundColor: isSelected ? config.bgColor : tokens.colors.background.input },
+                        ]}
+                        onPress={() => {
+                          haptics.light();
+                          setSelectedCategory(key as ExpenseCategory);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Icon size={18} color={config.color} strokeWidth={2} />
+                        <Text
+                          style={[
+                            styles.categoryLabel,
+                            { color: isSelected ? config.color : tokens.colors.text.secondary },
+                          ]}
+                        >
+                          {config.label}
+                        </Text>
+                        {isSelected && (
+                          <Check size={16} color={config.color} strokeWidth={2.5} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
             </View>
-          </View>
 
-          {/* Content */}
-          <ScrollView
-            contentContainerStyle={[styles.content, { paddingBottom: keyboardHeight > 0 ? keyboardHeight : tokens.spacing.xl }]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-          >
-          {/* Bill Title */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Title</Text>
-            <View style={styles.titleInputContainer}>
-              <FileText size={20} color={tokens.colors.text.secondary} strokeWidth={2} />
-              <TextInput
-                style={styles.titleInput}
-                value={billTitle}
-                onChangeText={setBillTitle}
-                placeholder="e.g., Dinner at Taj, Movie tickets..."
-                placeholderTextColor={tokens.colors.text.tertiary}
+            {/* Amount Input */}
+            <View style={styles.section}>
+              <BillAmountInput
+                amount={amountPaise}
+                onAmountChange={setAmountPaise}
+                error={amountError}
               />
             </View>
-          </View>
 
-          {/* Category Selection */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Category (Optional)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.categoryList}>
-                {Object.entries(CATEGORIES).map(([key, config]) => {
-                  const Icon = config.icon;
-                  const isSelected = selectedCategory === key;
-                  return (
-                    <TouchableOpacity
-                      key={key}
-                      style={[
-                        styles.categoryChip,
-                        { backgroundColor: isSelected ? config.bgColor : tokens.colors.background.input },
-                      ]}
-                      onPress={() => {
-                        haptics.light();
-                        setSelectedCategory(key as ExpenseCategory);
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Icon size={18} color={config.color} strokeWidth={2} />
-                      <Text
-                        style={[
-                          styles.categoryLabel,
-                          { color: isSelected ? config.color : tokens.colors.text.secondary },
-                        ]}
-                      >
-                        {config.label}
-                      </Text>
-                      {isSelected && (
-                        <Check size={16} color={config.color} strokeWidth={2.5} />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </ScrollView>
-          </View>
-
-          {/* Amount Input */}
-          <View style={styles.section}>
-            <BillAmountInput
-              amount={amountPaise}
-              onAmountChange={setAmountPaise}
-              error={amountError}
-            />
-          </View>
-
-          {/* Receipt Photo Upload */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Receipt (Optional)</Text>
-            {receiptPhoto ? (
-              <View style={styles.photoPreviewContainer}>
-                {receiptPhoto.endsWith('.pdf') ? (
-                  <View style={styles.pdfPreview}>
-                    <File size={48} color={tokens.colors.text.secondary} strokeWidth={1.5} />
-                    <Text style={styles.pdfPreviewText}>PDF Receipt</Text>
-                  </View>
-                ) : (
-                  <Image source={{ uri: receiptPhoto }} style={styles.photoPreview} />
-                )}
-                <TouchableOpacity
-                  style={styles.removePhotoButton}
-                  onPress={handleRemovePhoto}
-                  activeOpacity={0.7}
-                >
-                  <X size={16} color={tokens.colors.text.inverse} strokeWidth={2.5} />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <>
+            {/* Receipt Photo Upload */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Receipt (Optional)</Text>
+              {receiptPhoto ? (
+                <View style={styles.photoPreviewContainer}>
+                  {receiptPhoto.endsWith('.pdf') ? (
+                    <View style={styles.pdfPreview}>
+                      <File size={48} color={tokens.colors.text.secondary} strokeWidth={1.5} />
+                      <Text style={styles.pdfPreviewText}>PDF Receipt</Text>
+                    </View>
+                  ) : (
+                    <Image source={{ uri: receiptPhoto }} style={styles.photoPreview} />
+                  )}
+                  <TouchableOpacity
+                    style={styles.removePhotoButton}
+                    onPress={handleRemovePhoto}
+                    activeOpacity={0.7}
+                  >
+                    <X size={16} color={tokens.colors.text.inverse} strokeWidth={2.5} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
                 <View style={styles.photoButtons}>
                   <TouchableOpacity
                     style={styles.photoButton}
@@ -623,140 +531,111 @@ export const AddVasoolyModal: React.FC<AddVasoolyModalProps> = ({
                     <ImageIcon size={20} color={tokens.colors.text.secondary} strokeWidth={2} />
                     <Text style={styles.photoButtonText}>Gallery</Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.photoButton}
+                    onPress={handlePickDocument}
+                    activeOpacity={0.7}
+                  >
+                    <File size={20} color={tokens.colors.text.secondary} strokeWidth={2} />
+                    <Text style={styles.photoButtonText}>PDF</Text>
+                  </TouchableOpacity>
                 </View>
+              )}
+            </View>
+
+            {/* Participant List */}
+            <View style={styles.section}>
+              <ParticipantList
+                participants={participants}
+                onParticipantsChange={setParticipants}
+                minParticipants={2}
+                error={participantError}
+                showManualAdd={false}
+                currentUserName={defaultUPIName || 'You'}
+              />
+
+              {/* Add Participant Actions */}
+              <View style={styles.addParticipantActions}>
                 <TouchableOpacity
-                  style={styles.documentButton}
-                  onPress={handlePickDocument}
-                  activeOpacity={0.7}
+                  style={styles.addFromContactsButton}
+                  onPress={handlePickFromContacts}
+                  activeOpacity={0.8}
                 >
-                  <File size={20} color={tokens.colors.text.secondary} strokeWidth={2} />
-                  <Text style={styles.photoButtonText}>Upload PDF</Text>
+                  <UserPlus size={20} color={tokens.colors.text.inverse} strokeWidth={2.5} />
+                  <Text style={styles.addFromContactsText}>Add from Contacts</Text>
                 </TouchableOpacity>
-              </>
-            )}
-          </View>
-
-          {/* Participant List */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Split With</Text>
-            <ParticipantList
-              participants={participants}
-              onParticipantsChange={setParticipants}
-              minParticipants={2}
-              error={participantError}
-              showManualAdd={false}
-            />
-
-            {/* Add Participant Actions */}
-            <View style={styles.addParticipantActions}>
-              <TouchableOpacity
-                style={styles.addFromContactsButton}
-                onPress={handlePickFromContacts}
-                activeOpacity={0.8}
-              >
-                <UserPlus size={20} color={tokens.colors.text.inverse} strokeWidth={2.5} />
-                <Text style={styles.addFromContactsText}>Add from Contacts</Text>
-              </TouchableOpacity>
+              </View>
             </View>
-          </View>
 
-          {/* Split Result Display */}
-          <View style={styles.section}>
-            <SplitResultDisplay splitResult={splitResult} />
-          </View>
+            {/* Split Result Display */}
+            <View style={styles.section}>
+              <SplitResultDisplay splitResult={splitResult} />
+            </View>
           </ScrollView>
+      </KeyboardAvoidingView>
 
-          {/* Save Button */}
-          <View style={styles.footer}>
-          <AnimatedButton
-            style={[styles.saveButton, !canSaveBill && styles.saveButtonDisabled]}
-            onPress={handleSaveBill}
-            disabled={!canSaveBill}
-            haptic
-            hapticIntensity="medium"
-          >
-            <View style={styles.saveButtonContent}>
-              {isSaving && <LoadingSpinner size={20} color={tokens.colors.text.inverse} />}
-              <Text style={styles.saveButtonText}>
-                {isSaving
-                  ? isEditMode
-                    ? 'Updating...'
-                    : 'Saving...'
-                  : isEditMode
-                    ? 'Update Vasooly'
-                    : 'Add Vasooly'}
-              </Text>
-            </View>
-          </AnimatedButton>
+      {/* Save Button - Fixed at bottom above tab bar */}
+      <View style={styles.footer}>
+        <AnimatedButton
+          style={[styles.saveButton, !canSaveBill && styles.saveButtonDisabled]}
+          onPress={handleSaveBill}
+          disabled={!canSaveBill}
+          haptic
+          hapticIntensity="medium"
+        >
+          <View style={styles.saveButtonContent}>
+            {isSaving && <LoadingSpinner size={20} color={tokens.colors.text.inverse} />}
+            <Text style={styles.saveButtonText}>
+              {isSaving
+                ? isEditMode
+                  ? 'Updating...'
+                  : 'Saving...'
+                : isEditMode
+                  ? 'Update Vasooly'
+                  : 'Add Vasooly!'}
+            </Text>
           </View>
-        </Animated.View>
-      </GestureHandlerRootView>
-    </Modal>
+        </AnimatedButton>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  safeArea: {
     flex: 1,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  bottomSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    // height is controlled by bottomSheetHeightStyle animation
     backgroundColor: tokens.colors.background.base,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  bottomSheetContent: {
-    flex: 1,
-  },
-  dragHandleContainer: {
-    alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  dragHandle: {
-    width: 36,
-    height: 5,
-    backgroundColor: tokens.colors.border.medium,
-    borderRadius: 3,
   },
   header: {
-    paddingHorizontal: tokens.spacing.xl,
-    paddingTop: 8,
-    paddingBottom: tokens.spacing.md,
-    backgroundColor: tokens.colors.background.base,
-  },
-  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing.xl,
+    paddingTop: 52,
+    paddingBottom: tokens.spacing.lg,
+    backgroundColor: tokens.colors.background.elevated,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.border.subtle,
   },
   headerTitle: {
-    ...tokens.typography.h2,
+    fontSize: tokens.typography.h2.fontSize,
+    fontFamily: tokens.typography.fontFamily.primary,
+    fontWeight: tokens.typography.fontWeight.bold,
     color: tokens.colors.text.primary,
   },
   closeButton: {
     padding: 4,
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: tokens.spacing.xl,
-    paddingTop: tokens.spacing.lg,
-    // paddingBottom is controlled dynamically based on keyboard height
+    paddingTop: tokens.spacing.xl,
+    paddingBottom: 170, // Extra space for fixed footer button + tab bar
   },
   section: {
     marginBottom: tokens.spacing.xl,
@@ -881,36 +760,32 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 6,
   },
-  documentButton: {
+  footer: {
+    position: 'absolute',
+    bottom: 96, // Position above tab bar with padding (tab bar ~88px + 8px gap)
+    left: 0,
+    right: 0,
+    paddingHorizontal: tokens.spacing.xl,
+    paddingVertical: 12,
+    backgroundColor: tokens.colors.background.elevated,
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.border.subtle,
+    zIndex: 999,
+    elevation: 10,
+  },
+  saveButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: tokens.colors.background.input,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: tokens.colors.border.default,
-    paddingVertical: 14,
-    marginTop: 12,
-  },
-  footer: {
-    paddingHorizontal: tokens.spacing.xl,
-    paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 34 : tokens.spacing.lg,
-    backgroundColor: tokens.colors.background.elevated,
-    borderTopWidth: 1,
-    borderTopColor: tokens.colors.border.subtle,
-  },
-  saveButton: {
     backgroundColor: tokens.colors.amber[500],
     borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
+    paddingVertical: 14,
     shadowColor: tokens.colors.amber[500],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   saveButtonDisabled: {
     backgroundColor: tokens.colors.border.medium,
@@ -925,6 +800,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 14,
     color: tokens.colors.text.inverse,
-    fontWeight: '700',
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });

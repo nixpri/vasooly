@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { Lock } from 'lucide-react-native';
 import { tokens } from '@/theme/ThemeProvider';
 
 interface ParticipantInput {
@@ -20,6 +21,7 @@ interface ParticipantListProps {
   minParticipants?: number;
   error?: string;
   showManualAdd?: boolean;
+  currentUserName?: string; // Name of current user to lock
 }
 
 /**
@@ -32,8 +34,23 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
   minParticipants = 2,
   error,
   showManualAdd = true,
+  currentUserName,
 }) => {
   const [newParticipantName, setNewParticipantName] = useState('');
+
+  // Helper to check if participant is current user
+  const isCurrentUser = (participantName: string): boolean => {
+    if (!currentUserName) return false;
+    const trimmedParticipant = participantName.trim();
+    const trimmedCurrent = currentUserName.trim();
+
+    // Handle "You" or empty string as current user
+    if (trimmedParticipant === '' || trimmedParticipant.toLowerCase() === 'you') {
+      return trimmedCurrent === '' || trimmedCurrent.toLowerCase() === 'you';
+    }
+
+    return trimmedParticipant.toLowerCase() === trimmedCurrent.toLowerCase();
+  };
 
   const handleAddParticipant = () => {
     const trimmedName = newParticipantName.trim();
@@ -82,36 +99,48 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
 
       {/* Participant List */}
       <ScrollView style={styles.listContainer} nestedScrollEnabled>
-        {participants.map((participant, index) => (
-          <View key={participant.id} style={styles.participantRow}>
-            <View style={styles.participantInfo}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {participant.name.charAt(0).toUpperCase() || '?'}
-                </Text>
-              </View>
-              <TextInput
-                style={styles.participantNameInput}
-                value={participant.name}
-                onChangeText={(text) =>
-                  handleUpdateParticipantName(participant.id, text)
-                }
-                placeholder={`Person ${index + 1}`}
-                placeholderTextColor={tokens.colors.text.tertiary}
-              />
-            </View>
+        {participants.map((participant, index) => {
+          const isLocked = isCurrentUser(participant.name);
 
-            {participants.length > minParticipants && (
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => handleRemoveParticipant(participant.id)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.removeButtonText}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
+          return (
+            <View key={participant.id} style={styles.participantRow}>
+              <View style={styles.participantInfo}>
+                <View style={[styles.avatar, isLocked && styles.avatarLocked]}>
+                  <Text style={[styles.avatarText, isLocked && styles.avatarTextLocked]}>
+                    {participant.name.charAt(0).toUpperCase() || '?'}
+                  </Text>
+                </View>
+                <TextInput
+                  style={[
+                    styles.participantNameInput,
+                    isLocked && styles.participantNameInputLocked,
+                  ]}
+                  value={participant.name}
+                  onChangeText={(text) =>
+                    handleUpdateParticipantName(participant.id, text)
+                  }
+                  placeholder={`Person ${index + 1}`}
+                  placeholderTextColor={tokens.colors.text.tertiary}
+                  editable={!isLocked}
+                />
+              </View>
+
+              {isLocked ? (
+                <View style={styles.lockIndicator}>
+                  <Lock size={16} color={tokens.colors.text.secondary} strokeWidth={2} />
+                </View>
+              ) : participants.length > minParticipants ? (
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => handleRemoveParticipant(participant.id)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.removeButtonText}>✕</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          );
+        })}
       </ScrollView>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -215,6 +244,28 @@ const styles = StyleSheet.create({
     color: tokens.colors.text.primary,
     fontWeight: '400',
     padding: 0,
+  },
+  participantNameInputLocked: {
+    color: tokens.colors.text.secondary,
+    fontWeight: '600',
+  },
+  avatarLocked: {
+    backgroundColor: `${tokens.colors.amber[500]}26`,
+    borderWidth: 2,
+    borderColor: tokens.colors.amber[500],
+  },
+  avatarTextLocked: {
+    color: tokens.colors.amber[500],
+    fontWeight: '700',
+  },
+  lockIndicator: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: `${tokens.colors.text.secondary}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
   },
   removeButton: {
     width: 26,
