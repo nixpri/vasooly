@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: tokens.spacing.xl, // 20px for consistency with other screens
     paddingTop: tokens.spacing.xl, // 20px breathing room from header divider
-    paddingBottom: tokens.spacing['2xl'], // 24px bottom padding for scroll clearance
+    paddingBottom: 120, // Extra padding for bottom tab bar
   },
   userCard: {
     width: '100%',

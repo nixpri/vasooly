@@ -18,7 +18,6 @@ import {
   Check,
   Lock,
   RotateCcw,
-  Edit2,
   Trash2
 } from 'lucide-react-native';
 import { GlassCard, AnimatedGlassCard, AnimatedButton } from '@/components';
@@ -418,20 +417,6 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
         {/* Actions */}
         <View style={styles.actionsContainer}>
           <AnimatedButton
-            onPress={() => {
-              haptics.light();
-              navigation.navigate('BillCreate', { bill });
-            }}
-            style={[styles.actionButton, styles.actionButtonSecondary]}
-            haptic
-            hapticIntensity="light"
-          >
-            <View style={styles.actionButtonBottomContent}>
-              <Edit2 size={16} color={tokens.colors.text.primary} strokeWidth={2} />
-              <Text style={styles.actionButtonTextSecondary}>Edit</Text>
-            </View>
-          </AnimatedButton>
-          <AnimatedButton
             onPress={async () => {
               haptics.warning();
               Alert.alert(
@@ -457,13 +442,13 @@ export const BillDetailScreen: React.FC<HomeBillDetailScreenProps> = ({ route, n
                 ]
               );
             }}
-            style={[styles.actionButton, styles.actionButtonDanger]}
+            style={styles.deleteButton}
             haptic
             hapticIntensity="medium"
           >
-            <View style={styles.actionButtonBottomContent}>
-              <Trash2 size={16} color={tokens.colors.error.main} strokeWidth={2} />
-              <Text style={styles.actionButtonTextDanger}>Delete</Text>
+            <View style={styles.deleteButtonContent}>
+              <Trash2 size={18} color={tokens.colors.error.main} strokeWidth={2} />
+              <Text style={styles.deleteButtonText}>Delete Bill</Text>
             </View>
           </AnimatedButton>
         </View>
@@ -855,41 +840,28 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   actionsContainer: {
-    flexDirection: 'row',
-    gap: 8,
     paddingTop: 8,
   },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionButtonBottomContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  actionButtonSecondary: {
-    backgroundColor: tokens.colors.background.subtle,
-    borderWidth: 1,
-    borderColor: tokens.colors.border.default,
-  },
-  actionButtonDanger: {
+  deleteButton: {
+    width: '100%',
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     backgroundColor: tokens.colors.error.light,
     borderWidth: 1,
     borderColor: tokens.colors.error.main,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  actionButtonTextSecondary: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: tokens.colors.text.primary,
+  deleteButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  actionButtonTextDanger: {
-    fontSize: 13,
-    fontWeight: '600',
+  deleteButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
     color: tokens.colors.error.main,
+    letterSpacing: 0.3,
   },
 });

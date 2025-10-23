@@ -1,22 +1,22 @@
 /**
- * Friends List Screen - Friend Management Hub
+ * Karzedaars List Screen - Karzedaar Management Hub
  *
  * Features:
- * - FlashList for performant friend list rendering
- * - Search functionality for quick friend lookup
- * - Add friends from contacts or manually
- * - View friend details and bill history
+ * - FlashList for performant karzedaar list rendering
+ * - Search functionality for quick karzedaar lookup
+ * - Add karzedaars from contacts or manually
+ * - View karzedaar details and bill history
  * - Empty state for new users
  * - Pull-to-refresh for data updates
  *
  * Uses established patterns:
- * - FriendCard component (horizontal layout)
+ * - KarzedaarCard component (horizontal layout)
  * - Glass-morphism design system
  * - Lucide icons for consistency
  * - FlashList for 60fps scrolling
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,93 +30,77 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Search, UserPlus, X, Users } from 'lucide-react-native';
-import type { FriendsListScreenProps } from '@/navigation/types';
+import type { KarzedaarsListScreenProps } from '@/navigation/types';
 import { tokens } from '@/theme/ThemeProvider';
-import { FriendCard, GlassCard, LoadingSpinner, ScreenHeader } from '@/components';
+import { KarzedaarCard, GlassCard, LoadingSpinner, ScreenHeader } from '@/components';
 import { pickContact, getContactErrorMessage } from '@/services/contactsService';
-import type { Friend } from '@/types';
+import { useKarzedaarsStore } from '@/stores';
+import type { Karzedaar } from '@/types';
 
-export const FriendsListScreen: React.FC<FriendsListScreenProps> = () => {
+export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = () => {
   // State
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const { karzedaars, loadKarzedaars, addOrUpdateKarzedaar, isLoading } = useKarzedaarsStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [adding, setAdding] = useState(false);
 
-  // Filter friends based on search query
-  const filteredFriends = useMemo(() => {
-    if (!searchQuery.trim()) return friends;
+  // Load karzedaars on mount
+  useEffect(() => {
+    loadKarzedaars();
+  }, [loadKarzedaars]);
+
+  // Filter karzedaars based on search query
+  const filteredKarzedaars = useMemo(() => {
+    if (!searchQuery.trim()) return karzedaars;
 
     const query = searchQuery.toLowerCase();
-    return friends.filter(
-      (friend) =>
-        friend.name.toLowerCase().includes(query) ||
-        friend.phone?.toLowerCase().includes(query) ||
-        friend.upiId?.toLowerCase().includes(query)
+    return karzedaars.filter(
+      (karzedaar) =>
+        karzedaar.name.toLowerCase().includes(query) ||
+        karzedaar.phone?.toLowerCase().includes(query) ||
+        karzedaar.upiId?.toLowerCase().includes(query)
     );
-  }, [friends, searchQuery]);
+  }, [karzedaars, searchQuery]);
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    // TODO: Load friends from database/store
-    // For now, just simulate refresh
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await loadKarzedaars();
     setRefreshing(false);
-  }, []);
+  }, [loadKarzedaars]);
 
-  // Handle add friend from contacts
+  // Handle add karzedaar from contacts
   const handleAddFromContacts = useCallback(async () => {
-    setLoading(true);
+    setAdding(true);
     try {
       const result = await pickContact();
 
       if (!result.success) {
         const errorMessage = getContactErrorMessage(result);
         if (errorMessage) {
-          Alert.alert('Unable to Add Friend', errorMessage);
+          Alert.alert('Unable to Add Karzedaar', errorMessage);
         }
         return;
       }
 
       if (result.contacts && result.contacts.length > 0) {
         const contact = result.contacts[0];
-
-        // Create new friend
-        const newFriend: Friend = {
-          id: `friend-${Date.now()}`,
-          name: contact.name,
-          phone: contact.phoneNumber,
-          addedAt: new Date(),
-          billCount: 0,
-          totalAmountPaise: 0,
-        };
-
-        setFriends((prev) => [newFriend, ...prev]);
-        Alert.alert('Success', `${contact.name} added to your friends!`);
+        await addOrUpdateKarzedaar(contact.name, contact.phoneNumber);
+        Alert.alert('Success', `${contact.name} added to your karzedaars!`);
       }
     } catch (error) {
-      console.error('Error adding friend from contacts:', error);
-      Alert.alert('Error', 'Failed to add friend. Please try again.');
+      console.error('Error adding karzedaar from contacts:', error);
+      Alert.alert('Error', 'Failed to add karzedaar. Please try again.');
     } finally {
-      setLoading(false);
+      setAdding(false);
     }
-  }, []);
+  }, [addOrUpdateKarzedaar]);
 
-  // Handle add friend manually (future feature)
-  // const handleAddManually = useCallback(() => {
-  //   Alert.alert(
-  //     'Add Friend',
-  //     'Manual friend addition coming soon!\n\nFor now, please use "Add from Contacts".',
-  //     [{ text: 'OK' }]
-  //   );
-  // }, []);
-
-  // Handle friend press
-  const handleFriendPress = useCallback((friend: Friend) => {
+  // Handle karzedaar press
+  const handleKarzedaarPress = useCallback((karzedaar: Karzedaar) => {
     Alert.alert(
-      friend.name,
-      `Bill history and friend details coming soon!\n\n${friend.billCount} bills • ₹${(friend.totalAmountPaise / 100).toFixed(0)} total`,
+      karzedaar.name,
+      `Bill history and karzedaar details coming soon!\n\n${karzedaar.billCount} bills • ₹${(karzedaar.totalAmountPaise / 100).toFixed(0)} total`,
       [{ text: 'OK' }]
     );
   }, []);
@@ -130,18 +114,18 @@ export const FriendsListScreen: React.FC<FriendsListScreenProps> = () => {
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
       <Users size={64} color={tokens.colors.text.tertiary} strokeWidth={1.5} />
-      <Text style={styles.emptyTitle}>No Friends Yet</Text>
+      <Text style={styles.emptyTitle}>No Karzedaars Yet</Text>
       <Text style={styles.emptySubtitle}>
-        Add friends to quickly create bills and track payments together
+        Add karzedaars to quickly create bills and track payments together
       </Text>
       <Pressable
         style={styles.emptyButton}
         onPress={handleAddFromContacts}
-        accessibilityLabel="Add your first friend"
+        accessibilityLabel="Add your first karzedaar"
         accessibilityRole="button"
       >
         <UserPlus size={20} color={tokens.colors.background.card} strokeWidth={2} />
-        <Text style={styles.emptyButtonText}>Add Your First Friend</Text>
+        <Text style={styles.emptyButtonText}>Add Your First Karzedaar</Text>
       </Pressable>
     </View>
   );
@@ -164,13 +148,13 @@ export const FriendsListScreen: React.FC<FriendsListScreenProps> = () => {
       <View style={styles.container}>
         {/* Header */}
         <ScreenHeader
-          title="Friends"
+          title="Karzedaars"
           rightActions={
             <Pressable
               style={styles.iconButton}
               onPress={handleAddFromContacts}
-              disabled={loading}
-              accessibilityLabel="Add friend from contacts"
+              disabled={adding}
+              accessibilityLabel="Add karzedaar from contacts"
               accessibilityRole="button"
             >
               <UserPlus size={24} color={tokens.colors.brand.primary} strokeWidth={2} />
@@ -185,7 +169,7 @@ export const FriendsListScreen: React.FC<FriendsListScreenProps> = () => {
               <Search size={20} color={tokens.colors.text.tertiary} strokeWidth={2} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search friends..."
+                placeholder="Search karzedaars..."
                 placeholderTextColor={tokens.colors.text.tertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -207,23 +191,23 @@ export const FriendsListScreen: React.FC<FriendsListScreenProps> = () => {
           </GlassCard>
         </View>
 
-        {/* Friends List */}
-        {loading ? (
+        {/* Karzedaars List */}
+        {isLoading && karzedaars.length === 0 ? (
           <View style={styles.loadingContainer}>
             <LoadingSpinner size={48} color={tokens.colors.brand.primary} />
           </View>
-        ) : friends.length === 0 ? (
+        ) : karzedaars.length === 0 ? (
           <EmptyState />
-        ) : filteredFriends.length === 0 ? (
+        ) : filteredKarzedaars.length === 0 ? (
           <SearchEmptyState />
         ) : (
           <FlashList
-            data={filteredFriends}
+            data={filteredKarzedaars}
             renderItem={({ item }) => (
-              <FriendCard
-                friend={item}
-                onPress={() => handleFriendPress(item)}
-                style={styles.friendCard}
+              <KarzedaarCard
+                karzedaar={item}
+                onPress={() => handleKarzedaarPress(item)}
+                style={styles.karzedaarCard}
               />
             )}
             keyExtractor={(item) => item.id}
@@ -281,9 +265,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: tokens.spacing.xl,
-    paddingBottom: tokens.spacing.xl,
+    paddingBottom: 120, // Extra padding for bottom tab bar
   },
-  friendCard: {
+  karzedaarCard: {
     marginBottom: tokens.spacing.md,
   },
   emptyContainer: {

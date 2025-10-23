@@ -1,11 +1,11 @@
 /**
- * FriendCard - Individual friend display component
+ * KarzedaarCard - Individual karzedaar display component
  *
- * Displays friend information with:
+ * Displays karzedaar information with:
  * - Avatar with initials
  * - Name and contact info
  * - Bill count and total amount stats
- * - Tap to view friend details
+ * - Tap to view karzedaar details
  *
  * Uses horizontal layout pattern (avatar left, info right)
  */
@@ -16,11 +16,11 @@ import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import { User, Phone, IndianRupee } from 'lucide-react-native';
 import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
-import type { Friend } from '../types';
+import type { Karzedaar } from '../types';
 
-interface FriendCardProps {
-  /** Friend data */
-  friend: Friend;
+interface KarzedaarCardProps {
+  /** Karzedaar data */
+  karzedaar: Karzedaar;
   /** Callback on press */
   onPress: () => void;
   /** Optional style */
@@ -46,7 +46,7 @@ const formatCurrency = (paise: number): string => {
   return `₹${rupees.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 };
 
-export const FriendCard: React.FC<FriendCardProps> = ({ friend, onPress, style }) => {
+export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, onPress, style }) => {
   const [pressed, setPressed] = React.useState(false);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -60,8 +60,8 @@ export const FriendCard: React.FC<FriendCardProps> = ({ friend, onPress, style }
     ],
   }));
 
-  const initials = getInitials(friend.name);
-  const hasContactInfo = friend.phone || friend.upiId;
+  const initials = getInitials(karzedaar.name);
+  const hasContactInfo = karzedaar.phone || karzedaar.upiId;
 
   return (
     <Pressable
@@ -69,7 +69,7 @@ export const FriendCard: React.FC<FriendCardProps> = ({ friend, onPress, style }
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       style={style}
-      accessibilityLabel={`Friend: ${friend.name}`}
+      accessibilityLabel={`Karzedaar: ${karzedaar.name}`}
       accessibilityHint="Double tap to view details"
       accessibilityRole="button"
     >
@@ -83,29 +83,29 @@ export const FriendCard: React.FC<FriendCardProps> = ({ friend, onPress, style }
                 <Text style={styles.avatarText}>{initials}</Text>
               </View>
 
-              {/* Friend Info */}
+              {/* Karzedaar Info */}
               <View style={styles.infoContainer}>
                 {/* Name */}
                 <Text style={styles.name} numberOfLines={1}>
-                  {friend.name}
+                  {karzedaar.name}
                 </Text>
 
                 {/* Contact Info Row */}
                 {hasContactInfo && (
                   <View style={styles.contactRow}>
-                    {friend.phone && (
+                    {karzedaar.phone && (
                       <View style={styles.contactItem}>
                         <Phone size={12} color={tokens.colors.text.tertiary} />
                         <Text style={styles.contactText} numberOfLines={1}>
-                          {friend.phone}
+                          {karzedaar.phone}
                         </Text>
                       </View>
                     )}
-                    {friend.upiId && (
+                    {karzedaar.upiId && (
                       <View style={styles.contactItem}>
                         <User size={12} color={tokens.colors.text.tertiary} />
                         <Text style={styles.contactText} numberOfLines={1}>
-                          {friend.upiId}
+                          {karzedaar.upiId}
                         </Text>
                       </View>
                     )}
@@ -115,13 +115,13 @@ export const FriendCard: React.FC<FriendCardProps> = ({ friend, onPress, style }
                 {/* Stats Row */}
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{friend.billCount}</Text>
+                    <Text style={styles.statValue}>{karzedaar.billCount}</Text>
                     <Text style={styles.statLabel}>
-                      {friend.billCount === 1 ? 'bill' : 'bills'}
+                      {karzedaar.billCount === 1 ? 'bill' : 'bills'}
                     </Text>
                   </View>
 
-                  {friend.totalAmountPaise > 0 && (
+                  {karzedaar.totalAmountPaise > 0 && (
                     <>
                       <View style={styles.statDivider} />
                       <View style={styles.statItem}>
@@ -131,7 +131,7 @@ export const FriendCard: React.FC<FriendCardProps> = ({ friend, onPress, style }
                           style={styles.rupeeIcon}
                         />
                         <Text style={styles.statValue}>
-                          {formatCurrency(friend.totalAmountPaise)}
+                          {formatCurrency(karzedaar.totalAmountPaise)}
                         </Text>
                         <Text style={styles.statLabel}>total</Text>
                       </View>

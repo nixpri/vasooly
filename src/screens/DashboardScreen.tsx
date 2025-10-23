@@ -3,7 +3,7 @@
  *
  * Features:
  * - Balance overview card (owed to you vs you owe)
- * - Quick action buttons (Add Expense, Settle Up, Invite Friend)
+ * - Quick action buttons (Add Vasooly, Settle Up, Invite Friend)
  * - Recent activity feed (5 most recent bills)
  * - Pull-to-refresh functionality
  * - Empty state when no bills exist
@@ -11,7 +11,7 @@
  * Design: Earthen color palette with glass-morphism cards
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -30,11 +30,11 @@ import { tokens } from '../theme/tokens';
 import { BalanceCard } from '../components/BalanceCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { AnimatedButton } from '../components/AnimatedButton';
+import { AddVasoolyModal } from './AddVasoolyModal';
 import { PaymentStatus } from '../types';
 
 type RootStackParamList = {
   Dashboard: undefined;
-  BillCreate: { billId?: string } | undefined;
   BillDetail: { billId: string };
   BillHistory: undefined;
 };
@@ -45,6 +45,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   // Zustand stores
   const { bills, loadAllBills, isLoading } = useBillStore();
   const { defaultUPIName } = useSettingsStore();
+
+  // Modal state
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   // Load data on mount
   useEffect(() => {
@@ -124,8 +127,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   }, [bills, defaultUPIName]);
 
   // Navigation handlers
-  const handleAddExpense = () => {
-    navigation.navigate('BillCreate');
+  const handleAddVasooly = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    // Refresh bills after closing modal to show new vasooly
+    loadAllBills();
   };
 
   const handleViewAllActivity = () => {
@@ -177,7 +186,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
         {/* Quick Actions - Hero CTA */}
         <View style={styles.quickActionsSection}>
-          <AnimatedButton onPress={handleAddExpense} style={styles.heroActionButton} haptic>
+          <AnimatedButton onPress={handleAddVasooly} style={styles.heroActionButton} haptic>
             <View style={styles.heroActionContent}>
               <View style={styles.heroIconContainer}>
                 <Text style={styles.heroIcon}>₹</Text>
@@ -213,7 +222,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           {hasNoBills ? (
             <View style={styles.emptyState}>
               <ClipboardList size={48} color={tokens.colors.text.tertiary} strokeWidth={1.5} />
-              <Text style={styles.emptyStateTitle}>No expenses yet</Text>
+              <Text style={styles.emptyStateTitle}>No bills yet</Text>
               <Text style={styles.emptyStateDescription}>
                 Tap "Let's Vasooly!" to split your first bill
               </Text>
@@ -233,6 +242,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           )}
         </View>
       </ScrollView>
+
+      {/* Add Vasooly Modal */}
+      <AddVasoolyModal
+        isVisible={isModalVisible}
+        onClose={handleCloseModal}
+      />
     </View>
   );
 };

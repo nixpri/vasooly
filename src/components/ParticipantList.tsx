@@ -19,6 +19,7 @@ interface ParticipantListProps {
   onParticipantsChange: (participants: ParticipantInput[]) => void;
   minParticipants?: number;
   error?: string;
+  showManualAdd?: boolean;
 }
 
 /**
@@ -30,6 +31,7 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
   onParticipantsChange,
   minParticipants = 2,
   error,
+  showManualAdd = true,
 }) => {
   const [newParticipantName, setNewParticipantName] = useState('');
 
@@ -114,35 +116,39 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      {/* Add Participant Input */}
-      <View style={styles.addParticipantContainer}>
-        <TextInput
-          style={styles.addInput}
-          value={newParticipantName}
-          onChangeText={setNewParticipantName}
-          placeholder="Add participant name..."
-          placeholderTextColor={tokens.colors.text.tertiary}
-          returnKeyType="done"
-          onSubmitEditing={handleAddParticipant}
-        />
-        <TouchableOpacity
-          style={[
-            styles.addButton,
-            newParticipantName.trim() === '' && styles.addButtonDisabled,
-          ]}
-          onPress={handleAddParticipant}
-          disabled={newParticipantName.trim() === ''}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.addButtonText}>+ Add</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Add Participant Input - Only show if showManualAdd is true */}
+      {showManualAdd && (
+        <>
+          <View style={styles.addParticipantContainer}>
+            <TextInput
+              style={styles.addInput}
+              value={newParticipantName}
+              onChangeText={setNewParticipantName}
+              placeholder="Add participant name..."
+              placeholderTextColor={tokens.colors.text.tertiary}
+              returnKeyType="done"
+              onSubmitEditing={handleAddParticipant}
+            />
+            <TouchableOpacity
+              style={[
+                styles.addButton,
+                newParticipantName.trim() === '' && styles.addButtonDisabled,
+              ]}
+              onPress={handleAddParticipant}
+              disabled={newParticipantName.trim() === ''}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.addButtonText}>+ Add</Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Participant limit hint */}
-      {participants.length <= minParticipants && (
-        <Text style={styles.hintText}>
-          Minimum {minParticipants} participants required
-        </Text>
+          {/* Participant limit hint */}
+          {participants.length <= minParticipants && (
+            <Text style={styles.hintText}>
+              Minimum {minParticipants} participants required
+            </Text>
+          )}
+        </>
       )}
     </View>
   );

@@ -8,7 +8,6 @@
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { StackScreenProps } from '@react-navigation/stack';
-import type { Bill } from '@/types';
 
 /**
  * Bottom Tab Navigator Params
@@ -19,7 +18,7 @@ import type { Bill } from '@/types';
 export type TabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList> | undefined;
   Activity: NavigatorScreenParams<ActivityStackParamList> | undefined;
-  Friends: NavigatorScreenParams<FriendsStackParamList> | undefined;
+  Karzedaars: NavigatorScreenParams<KarzedaarsStackParamList> | undefined;
   Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
 
@@ -44,13 +43,13 @@ export type ActivityStackParamList = {
 };
 
 /**
- * Friends Stack Navigator Params
+ * Karzedaars Stack Navigator Params
  *
- * Friends List → Friend Detail (placeholder for now)
+ * Karzedaars List → Karzedaar Detail (placeholder for now)
  */
-export type FriendsStackParamList = {
-  FriendsList: undefined;
-  // FriendDetail: { friendId: string };  // Week 13
+export type KarzedaarsStackParamList = {
+  KarzedaarsList: undefined;
+  // KarzedaarDetail: { karzedaarId: string };  // Week 13
 };
 
 /**
@@ -66,12 +65,11 @@ export type ProfileStackParamList = {
 /**
  * Root Navigator Params
  *
- * Contains onboarding, main tabs, and modal screens
+ * Contains onboarding and main tabs
  */
 export type RootStackParamList = {
   Onboarding: undefined;
   MainTabs: undefined;
-  BillCreate: { bill?: Bill } | undefined;
 };
 
 /**
@@ -98,15 +96,12 @@ export type ActivityBillDetailScreenProps = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 
-// Friends Stack
-export type FriendsListScreenProps = StackScreenProps<FriendsStackParamList, 'FriendsList'>;
+// Karzedaars Stack
+export type KarzedaarsListScreenProps = StackScreenProps<KarzedaarsStackParamList, 'KarzedaarsList'>;
 
 // Profile Stack
 export type ProfileScreenProps = StackScreenProps<ProfileStackParamList, 'ProfileScreen'>;
 export type SettingsScreenProps = StackScreenProps<ProfileStackParamList, 'Settings'>;
-
-// Modal Screens
-export type BillCreateScreenProps = StackScreenProps<RootStackParamList, 'BillCreate'>;
 
 /**
  * Tab Screen Props (Composite types for nested navigation)
@@ -121,8 +116,8 @@ export type ActivityTabScreenProps = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 
-export type FriendsTabScreenProps = CompositeScreenProps<
-  BottomTabScreenProps<TabParamList, 'Friends'>,
+export type KarzedaarsTabScreenProps = CompositeScreenProps<
+  BottomTabScreenProps<TabParamList, 'Karzedaars'>,
   StackScreenProps<RootStackParamList>
 >;
 

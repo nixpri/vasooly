@@ -12,13 +12,12 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
-  BillCreateScreen,
   ActivityScreen,
   BillDetailScreen,
   SettingsScreen,
   OnboardingScreen,
   DashboardScreen,
-  FriendsListScreen,
+  KarzedaarsListScreen,
   ProfileScreen,
 } from '@/screens';
 import { TabBar } from '@/components/TabBar';
@@ -29,7 +28,7 @@ import type {
   TabParamList,
   HomeStackParamList,
   ActivityStackParamList,
-  FriendsStackParamList,
+  KarzedaarsStackParamList,
   ProfileStackParamList,
 } from './types';
 
@@ -37,7 +36,7 @@ const RootStack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 const HomeStack = createStackNavigator<HomeStackParamList>();
 const ActivityStack = createStackNavigator<ActivityStackParamList>();
-const FriendsStack = createStackNavigator<FriendsStackParamList>();
+const KarzedaarsStack = createStackNavigator<KarzedaarsStackParamList>();
 const ProfileStack = createStackNavigator<ProfileStackParamList>();
 
 /**
@@ -139,21 +138,21 @@ const ActivityNavigator: React.FC = () => {
 };
 
 /**
- * Friends Stack Navigator
+ * Karzedaars Stack Navigator
  *
- * Friends List (placeholder for Week 13)
+ * Karzedaars List (placeholder for Week 13)
  */
-const FriendsNavigator: React.FC = () => {
+const KarzedaarsNavigator: React.FC = () => {
   return (
-    <FriendsStack.Navigator
+    <KarzedaarsStack.Navigator
       screenOptions={{
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
       }}
     >
-      <FriendsStack.Screen name="FriendsList" component={FriendsListScreen} />
-    </FriendsStack.Navigator>
+      <KarzedaarsStack.Screen name="KarzedaarsList" component={KarzedaarsListScreen} />
+    </KarzedaarsStack.Navigator>
   );
 };
 
@@ -198,7 +197,7 @@ const ProfileNavigator: React.FC = () => {
 /**
  * Main Tab Navigator
  *
- * 4 tabs: Home, Activity, Friends, Profile
+ * 4 tabs: Home, Activity, Karzedaars, Profile
  */
 const MainTabNavigator: React.FC = () => {
   return (
@@ -239,16 +238,16 @@ const MainTabNavigator: React.FC = () => {
         })}
       />
       <Tab.Screen
-        name="Friends"
-        component={FriendsNavigator}
+        name="Karzedaars"
+        component={KarzedaarsNavigator}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             // Reset to root screen if already on this tab
             const state = navigation.getState();
-            const route = state.routes.find((r) => r.name === 'Friends');
+            const route = state.routes.find((r) => r.name === 'Karzedaars');
             if (route?.state?.index && route.state.index > 0) {
               e.preventDefault();
-              navigation.navigate('Friends', { screen: 'FriendsList' });
+              navigation.navigate('Karzedaars', { screen: 'KarzedaarsList' });
             }
           },
         })}
@@ -360,27 +359,6 @@ export const AppNavigator: React.FC = () => {
             cardStyleInterpolator: ({ current }) => ({
               cardStyle: {
                 opacity: current.progress,
-              },
-            }),
-          }}
-        />
-
-        {/* Modal Screens (outside tabs) */}
-        <RootStack.Screen
-          name="BillCreate"
-          component={BillCreateScreen}
-          options={{
-            presentation: 'modal',
-            cardStyleInterpolator: ({ current, layouts }) => ({
-              cardStyle: {
-                transform: [
-                  {
-                    translateY: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.height, 0],
-                    }),
-                  },
-                ],
               },
             }),
           }}

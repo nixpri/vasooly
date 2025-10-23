@@ -16,5 +16,5 @@ export { TransactionCard } from './TransactionCard';
 export { TabBar } from './TabBar';
 export { ActivityCard } from './ActivityCard';
 export { DateGroupHeader } from './DateGroupHeader';
-export { FriendCard } from './FriendCard';
+export { KarzedaarCard } from './KarzedaarCard';
 export { ScreenHeader } from './ScreenHeader';

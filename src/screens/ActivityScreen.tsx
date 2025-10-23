@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: tokens.spacing.xl,
     paddingTop: tokens.spacing.sm,
-    paddingBottom: tokens.spacing.xl,
+    paddingBottom: 120, // Extra padding for bottom tab bar
   },
   emptyContainer: {
     flex: 1,

@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: tokens.spacing.xl,
-    paddingBottom: 40,
+    paddingBottom: 120, // Extra padding for bottom tab bar
   },
   errorCard: {
     marginBottom: 16,

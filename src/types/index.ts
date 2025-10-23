@@ -1,5 +1,13 @@
 // Core domain types for Vasooly
 
+export enum ExpenseCategory {
+  FOOD = 'FOOD',
+  TRAVEL = 'TRAVEL',
+  SHOPPING = 'SHOPPING',
+  ENTERTAINMENT = 'ENTERTAINMENT',
+  OTHER = 'OTHER',
+}
+
 export interface Bill {
   id: string;
   title: string;
@@ -8,6 +16,8 @@ export interface Bill {
   updatedAt: Date;
   participants: Participant[];
   status: BillStatus;
+  category?: ExpenseCategory;
+  receiptPhoto?: string;
 }
 
 export interface Participant {
@@ -44,7 +54,7 @@ export interface ActivityItem {
   description: string;
 }
 
-export interface Friend {
+export interface Karzedaar {
   id: string;
   name: string;
   phone?: string;

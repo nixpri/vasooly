@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,8 +26,16 @@ export const BillAmountInput: React.FC<BillAmountInputProps> = ({
 }) => {
   // Display value in rupees (convert from paise)
   const [displayValue, setDisplayValue] = useState(
-    amount > 0 ? (amount / 100).toFixed(2) : ''
+    amount > 0 ? (amount / 100).toString() : ''
   );
+
+  // Only sync displayValue when amount is explicitly reset to 0 (modal close/reset)
+  // Don't sync during normal typing to avoid formatting interruptions
+  useEffect(() => {
+    if (amount === 0 && displayValue !== '') {
+      setDisplayValue('');
+    }
+  }, [amount, displayValue]);
 
   const handleAmountChange = (text: string) => {
     // Allow only numbers and decimal point
@@ -60,7 +68,7 @@ export const BillAmountInput: React.FC<BillAmountInputProps> = ({
   const quickAmounts = [100, 500, 1000, 2000];
 
   const handleQuickAmount = (rupees: number) => {
-    setDisplayValue(rupees.toFixed(2));
+    setDisplayValue(rupees.toString());
     onAmountChange(rupeesToPaise(rupees));
   };
 

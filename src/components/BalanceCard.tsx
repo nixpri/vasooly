@@ -1,9 +1,10 @@
 /**
  * BalanceCard - Dashboard balance overview component
  *
- * Displays simplified expense overview:
- * - Total expenses across all bills
- * - Number of bills
+ * Displays vasooly overview:
+ * - Total vasooly amount left to collect
+ * - Number of bills (pending and total)
+ * - Settled and pending amounts
  * - View details action
  *
  * Uses glass-morphism design with earthen color tokens
@@ -17,7 +18,7 @@ import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
 
 interface BalanceCardProps {
-  /** Total expenses across all bills (in paise) */
+  /** Total vasooly amount left to collect across all bills (in paise) */
   totalExpenses: number;
   /** Number of bills with pending payments */
   pendingBillCount: number;

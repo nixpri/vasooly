@@ -26,7 +26,7 @@ import { tokens } from '@/theme/tokens';
 const TAB_ICON_COMPONENTS: Record<string, React.ComponentType<{ size: number; color: string; strokeWidth: number }>> = {
   Home: Home,
   Activity: ClipboardList,
-  Friends: Users,
+  Karzedaars: Users,
   Profile: User,
 };
 
@@ -44,8 +44,8 @@ const TAB_ICON_COLORS: Record<string, { active: string; inactive: string }> = {
     active: tokens.colors.sage[600],        // Green for activity
     inactive: tokens.colors.sage[300],
   },
-  Friends: {
-    active: tokens.colors.brand.primary,    // Terracotta for friends
+  Karzedaars: {
+    active: tokens.colors.brand.primary,    // Terracotta for karzedaars
     inactive: tokens.colors.brand.primaryLight,
   },
   Profile: {
@@ -60,7 +60,7 @@ const TAB_ICON_COLORS: Record<string, { active: string; inactive: string }> = {
 const TAB_LABELS: Record<string, string> = {
   Home: 'Home',
   Activity: 'Activity',
-  Friends: 'Friends',
+  Karzedaars: 'Karzedaars',
   Profile: 'Profile',
 };
 
