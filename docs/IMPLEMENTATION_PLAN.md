@@ -725,32 +725,7 @@ Modal Screens (within stacks)
 **Deferred**:
 - Export insights (share as image) - moved to future iteration
 
-#### Day 2-3: Smart Features ✅ COMPLETE
-- [x] Smart split suggestions:
-  - Recent participants quick select
-  - Frequent split patterns
-  - "Same as last time" option
-- [x] Payment reminders:
-  - Auto-reminder after X days
-  - Smart reminder timing (not weekends, not late night)
-  - Reminder templates with friendly tone
-- [x] Receipt scanner (OCR):
-  - Camera integration
-  - Manual amount entry (OCR placeholder for future)
-  - Manual correction flow
-
-**Status**: ✅ COMPLETE (2025-10-24)
-**Implementation Details**:
-- `useSmartSuggestions` hook analyzes karzedaars and bills for intelligent suggestions
-- `SmartSuggestionsPanel` component with horizontal scrollable chips
-- "Same as last time" feature replicates last bill participants
-- Payment reminders system (`reminderService.ts`) with AsyncStorage persistence
-- Auto-scheduling reminders on bill creation with configurable settings
-- Receipt scanner component with camera integration and amount input modal
-- All features integrated into AddVasoolyScreen
-- TypeScript 0 errors, ESLint clean
-
-#### Day 3-4: Notifications & Activity Feed
+#### Day 2-3: Notifications & Activity Feed
 - [ ] Create notification system:
   - In-app notifications (bell icon badge)
   - Notification list screen
@@ -760,13 +735,10 @@ Modal Screens (within stacks)
 
 ### Week 14 Success Criteria
 ✅ Spending Insights screen with custom charts (Day 1-2 Complete)
-✅ Smart split suggestions working (Day 2-3 Complete)
-✅ Payment reminders system (Day 2-3 Complete)
-✅ Receipt scanner with basic manual entry (Day 2-3 Complete)
-- [ ] Notification system with in-app notifications (Day 3-4)
+- [ ] Notification system with in-app notifications (Day 2-3)
 - [ ] All features tested and working
 
-**Progress**: 🔄 IN PROGRESS (Day 1-3 Complete: Insights, Smart Features)
+**Progress**: 🔄 IN PROGRESS (Day 1-2 Complete: Insights)
 
 **Note**: Visual Debt Network feature removed as it doesn't fit Vasooly's single-user architecture where karzedaars are not app users.
 
@@ -958,9 +930,6 @@ Modal Screens (within stacks)
 
 **Premium Features**:
 ✅ Spending insights with charts
-✅ Smart split suggestions
-✅ Payment reminders
-✅ Receipt scanner (basic manual entry)
 - [ ] Notification system
 
 **Polish**:
