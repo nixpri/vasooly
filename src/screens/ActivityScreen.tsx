@@ -23,7 +23,7 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect } from '@react-navigation/native';
-import { Search, X } from 'lucide-react-native';
+import { Search, X, FileText } from 'lucide-react-native';
 import { GlassCard, ScreenHeader } from '@/components';
 import { ActivityCard } from '@/components/ActivityCard';
 import { DateGroupHeader } from '@/components/DateGroupHeader';
@@ -229,8 +229,12 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) =>
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📋</Text>
-      <Text style={styles.emptyTitle}>No activity yet</Text>
+      <FileText
+        size={64}
+        color={tokens.colors.text.tertiary}
+        strokeWidth={1.5}
+      />
+      <Text style={styles.emptyTitle}>No Activity Yet</Text>
       <Text style={styles.emptyText}>
         {searchQuery
           ? 'No activity matches your search'
@@ -413,24 +417,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: tokens.spacing['3xl'],
-    paddingTop: 60,
     gap: tokens.spacing.md,
   },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 6,
-  },
   emptyTitle: {
-    fontSize: tokens.typography.h3.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
-    fontWeight: tokens.typography.fontWeight.bold,
+    ...tokens.typography.h2,
     color: tokens.colors.text.primary,
+    textAlign: 'center',
+    marginTop: tokens.spacing.lg,
   },
   emptyText: {
-    fontSize: tokens.typography.body.fontSize,
-    fontFamily: tokens.typography.fontFamily.primary,
+    ...tokens.typography.body,
     color: tokens.colors.text.secondary,
     textAlign: 'center',
-    lineHeight: 20,
+    marginTop: tokens.spacing.sm,
+    maxWidth: 280,
   },
 });

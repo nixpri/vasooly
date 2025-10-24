@@ -731,9 +731,6 @@ Modal Screens (within stacks)
 ✅ All Week 14 features complete
 
 **Progress**: ✅ COMPLETE
-
-**Note**: Visual Debt Network feature removed as it doesn't fit Vasooly's single-user architecture where karzedaars are not app users.
-
 ---
 
 ### Week 15: Polish & Refinement (5 days)
