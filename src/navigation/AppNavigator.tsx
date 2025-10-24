@@ -247,19 +247,25 @@ const ProfileNavigator: React.FC = () => {
         name="Settings"
         component={SettingsScreen}
         options={{
-          presentation: 'modal',
           cardStyleInterpolator: ({ current, layouts }) => ({
             cardStyle: {
               transform: [
                 {
-                  translateY: current.progress.interpolate({
+                  translateX: current.progress.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [layouts.screen.height, 0],
+                    outputRange: [layouts.screen.width, 0],
                   }),
                 },
               ],
             },
+            overlayStyle: {
+              opacity: current.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.3],
+              }),
+            },
           }),
+          cardOverlayEnabled: true,
         }}
       />
     </ProfileStack.Navigator>

@@ -4,7 +4,7 @@
  */
 
 import { getDatabase } from './database';
-import { Bill, Participant, BillStatus, PaymentStatus } from '../../types';
+import { Bill, Participant, BillStatus, PaymentStatus, ExpenseCategory, ActivityEvent } from '../../types';
 
 /**
  * Database row types (snake_case matching DB schema)
@@ -17,6 +17,10 @@ interface BillRow {
   updated_at: number;
   status: string;
   deleted_at: number | null;
+  category: string | null;
+  receipt_photo: string | null;
+  description: string | null;
+  activity_log: string | null;
 }
 
 interface ParticipantRow {
@@ -41,6 +45,10 @@ function rowToBill(row: BillRow, participants: Participant[]): Bill {
     updatedAt: new Date(row.updated_at),
     status: row.status as BillStatus,
     participants,
+    category: row.category as ExpenseCategory | undefined,
+    receiptPhoto: row.receipt_photo ?? undefined,
+    description: row.description ?? undefined,
+    activityLog: row.activity_log ? JSON.parse(row.activity_log) : undefined,
   };
 }
 
@@ -66,8 +74,8 @@ export async function createBill(bill: Bill): Promise<void> {
   await db.withTransactionAsync(async () => {
     // Insert bill
     await db.runAsync(
-      `INSERT INTO bills (id, title, total_amount_paise, created_at, updated_at, status)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO bills (id, title, total_amount_paise, created_at, updated_at, status, category, receipt_photo, description, activity_log)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         bill.id,
         bill.title,
@@ -75,6 +83,10 @@ export async function createBill(bill: Bill): Promise<void> {
         bill.createdAt.getTime(),
         bill.updatedAt.getTime(),
         bill.status,
+        bill.category ?? null,
+        bill.receiptPhoto ?? null,
+        bill.description ?? null,
+        bill.activityLog ? JSON.stringify(bill.activityLog) : null,
       ]
     );
 
@@ -105,8 +117,17 @@ export async function updateBill(bill: Bill): Promise<void> {
   await db.withTransactionAsync(async () => {
     // Update bill
     await db.runAsync(
-      `UPDATE bills SET title = ?, total_amount_paise = ?, updated_at = ? WHERE id = ?`,
-      [bill.title, bill.totalAmountPaise, bill.updatedAt.getTime(), bill.id]
+      `UPDATE bills SET title = ?, total_amount_paise = ?, updated_at = ?, category = ?, receipt_photo = ?, description = ?, activity_log = ? WHERE id = ?`,
+      [
+        bill.title,
+        bill.totalAmountPaise,
+        bill.updatedAt.getTime(),
+        bill.category ?? null,
+        bill.receiptPhoto ?? null,
+        bill.description ?? null,
+        bill.activityLog ? JSON.stringify(bill.activityLog) : null,
+        bill.id,
+      ]
     );
 
     // Delete existing participants

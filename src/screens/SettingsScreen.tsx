@@ -20,14 +20,20 @@ import {
   Switch,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
+import { User, ExternalLink, Info, Mail, FileText, LogOut, Palette } from 'lucide-react-native';
 import { GlassCard } from '@/components/GlassCard';
 import { useSettingsStore } from '@/stores';
 import type { SettingsScreenProps } from '@/navigation/types';
 import { tokens } from '@/theme/ThemeProvider';
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+
   const {
     defaultVPA,
     defaultUPIName,
@@ -46,6 +52,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
     clearError,
     hasDefaultVPA,
   } = useSettingsStore();
+
+  // Helper function to extract initials from name
+  const getInitials = (name?: string): string => {
+    if (!name || !name.trim()) return 'U';
+
+    const words = name.trim().split(/\s+/);
+    if (words.length === 1) {
+      return words[0].charAt(0).toUpperCase();
+    }
+
+    return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+  };
 
   // Local state for form inputs
   const [vpaInput, setVpaInput] = useState('');
@@ -187,7 +205,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
@@ -199,7 +217,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Error Message */}
@@ -208,6 +226,31 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
             <Text style={styles.errorText}>⚠️ {error}</Text>
           </GlassCard>
         )}
+
+        {/* User Profile Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Profile</Text>
+          <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
+            <View style={styles.profileContainer}>
+              <View style={styles.profileAvatar}>
+                <Text style={styles.profileAvatarText}>
+                  {getInitials(defaultUPIName)}
+                </Text>
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>
+                  {defaultUPIName || 'User'}
+                </Text>
+                {defaultVPA && (
+                  <Text style={styles.profileEmail}>{defaultVPA}</Text>
+                )}
+                {!defaultVPA && (
+                  <Text style={styles.profileEmailPlaceholder}>No UPI ID set</Text>
+                )}
+              </View>
+            </View>
+          </GlassCard>
+        </View>
 
         {/* Default VPA Section */}
         <View style={styles.section}>
@@ -408,13 +451,134 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           </GlassCard>
         </View>
 
-        {/* App Info */}
-        <View style={styles.appInfo}>
-          <Text style={styles.appInfoText}>Vasooly v1.0.0</Text>
-          <Text style={styles.appInfoText}>Bill splitting made simple</Text>
+        {/* Theme Toggle (Coming Soon) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Appearance</Text>
+          <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <View style={styles.settingLabelRow}>
+                  <Palette size={16} color={tokens.colors.text.primary} strokeWidth={2} />
+                  <Text style={styles.settingLabel}>Light Theme</Text>
+                  <View style={styles.comingSoonBadge}>
+                    <Text style={styles.comingSoonText}>Default</Text>
+                  </View>
+                </View>
+                <Text style={styles.settingDescription}>
+                  Dark theme coming soon
+                </Text>
+              </View>
+            </View>
+          </GlassCard>
+        </View>
+
+        {/* About Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About</Text>
+
+          {/* App Version */}
+          <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
+            <View style={styles.aboutRow}>
+              <View style={styles.aboutIconContainer}>
+                <Info size={20} color={tokens.colors.brand.primary} strokeWidth={2} />
+              </View>
+              <View style={styles.aboutContent}>
+                <Text style={styles.aboutLabel}>Version</Text>
+                <Text style={styles.aboutValue}>Vasooly v1.0.0</Text>
+              </View>
+            </View>
+          </GlassCard>
+
+          {/* Privacy Policy */}
+          <TouchableOpacity
+            onPress={() => {
+              Linking.openURL('https://vasooly.app/privacy').catch(() => {
+                Alert.alert('Coming Soon', 'Privacy Policy will be available soon.');
+              });
+            }}
+            activeOpacity={0.8}
+          >
+            <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
+              <View style={styles.aboutRow}>
+                <View style={styles.aboutIconContainer}>
+                  <FileText size={20} color={tokens.colors.sage[600]} strokeWidth={2} />
+                </View>
+                <View style={styles.aboutContent}>
+                  <Text style={styles.aboutLabel}>Privacy Policy</Text>
+                </View>
+                <ExternalLink size={16} color={tokens.colors.text.tertiary} strokeWidth={2} />
+              </View>
+            </GlassCard>
+          </TouchableOpacity>
+
+          {/* Terms of Service */}
+          <TouchableOpacity
+            onPress={() => {
+              Linking.openURL('https://vasooly.app/terms').catch(() => {
+                Alert.alert('Coming Soon', 'Terms of Service will be available soon.');
+              });
+            }}
+            activeOpacity={0.8}
+          >
+            <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
+              <View style={styles.aboutRow}>
+                <View style={styles.aboutIconContainer}>
+                  <FileText size={20} color={tokens.colors.sage[600]} strokeWidth={2} />
+                </View>
+                <View style={styles.aboutContent}>
+                  <Text style={styles.aboutLabel}>Terms of Service</Text>
+                </View>
+                <ExternalLink size={16} color={tokens.colors.text.tertiary} strokeWidth={2} />
+              </View>
+            </GlassCard>
+          </TouchableOpacity>
+
+          {/* Contact Support */}
+          <TouchableOpacity
+            onPress={() => {
+              Linking.openURL('mailto:support@vasooly.app?subject=Vasooly Support').catch(() => {
+                Alert.alert('Error', 'Could not open email client.');
+              });
+            }}
+            activeOpacity={0.8}
+          >
+            <GlassCard style={styles.card} borderRadius={tokens.radius.md}>
+              <View style={styles.aboutRow}>
+                <View style={styles.aboutIconContainer}>
+                  <Mail size={20} color={tokens.colors.amber[600]} strokeWidth={2} />
+                </View>
+                <View style={styles.aboutContent}>
+                  <Text style={styles.aboutLabel}>Contact Support</Text>
+                  <Text style={styles.aboutValue}>support@vasooly.app</Text>
+                </View>
+                <ExternalLink size={16} color={tokens.colors.text.tertiary} strokeWidth={2} />
+              </View>
+            </GlassCard>
+          </TouchableOpacity>
+        </View>
+
+        {/* Logout Placeholder */}
+        <View style={styles.section}>
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                'Coming Soon',
+                'Authentication features will be available in a future update.',
+                [{ text: 'OK' }]
+              );
+            }}
+            activeOpacity={0.8}
+          >
+            <GlassCard style={styles.dangerCard} borderRadius={tokens.radius.md}>
+              <View style={styles.logoutRow}>
+                <LogOut size={20} color={tokens.colors.error.main} strokeWidth={2} />
+                <Text style={[styles.settingLabel, styles.dangerText]}>Sign Out</Text>
+              </View>
+            </GlassCard>
+          </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -457,7 +621,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: tokens.spacing.xl,
-    paddingBottom: 120, // Extra padding for bottom tab bar
   },
   errorCard: {
     marginBottom: 16,
@@ -638,13 +801,99 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: tokens.colors.brand.primary,
   },
-  appInfo: {
+  // Profile Section Styles
+  profileContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
+    padding: 14,
+    gap: 12,
+  },
+  profileAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: tokens.colors.brand.primaryLight,
+    borderWidth: 2,
+    borderColor: tokens.colors.brand.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileAvatarText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: tokens.colors.brand.primary,
+  },
+  profileInfo: {
+    flex: 1,
     gap: 4,
   },
-  appInfoText: {
-    fontSize: 12,
+  profileName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: tokens.colors.text.primary,
+  },
+  profileEmail: {
+    fontSize: 13,
+    color: tokens.colors.text.secondary,
+  },
+  profileEmailPlaceholder: {
+    fontSize: 13,
     color: tokens.colors.text.tertiary,
+    fontStyle: 'italic',
+  },
+  // Theme Toggle Styles
+  settingLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  comingSoonBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: tokens.colors.neutral[200],
+    borderRadius: tokens.radius.sm,
+  },
+  comingSoonText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: tokens.colors.text.secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  // About Section Styles
+  aboutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+  aboutIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: tokens.colors.background.subtle,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  aboutContent: {
+    flex: 1,
+    gap: 3,
+  },
+  aboutLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: tokens.colors.text.primary,
+  },
+  aboutValue: {
+    fontSize: 12,
+    color: tokens.colors.text.secondary,
+  },
+  // Logout Styles
+  logoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 10,
+    justifyContent: 'center',
   },
 });

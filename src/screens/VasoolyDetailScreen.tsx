@@ -16,18 +16,26 @@ import {
   Check,
   Lock,
   RotateCcw,
-  Trash2
+  Trash2,
+  Image as ImageIcon,
+  FileText,
+  Edit2,
+  DollarSign,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react-native';
 import { GlassCard, AnimatedGlassCard, AnimatedButton } from '@/components';
 import { formatPaise } from '@/lib/business/splitEngine';
-import { PaymentStatus } from '@/types';
-import type { Participant } from '@/types';
+import { PaymentStatus, ExpenseCategory, ActivityEventType } from '@/types';
+import type { Participant, ActivityEvent } from '@/types';
 import { useBillStore, useSettingsStore } from '@/stores';
 import type { HomeVasoolyDetailScreenProps } from '@/navigation/types';
 import { useHaptics } from '@/hooks';
 import { springConfigs } from '@/utils/animations';
 import { tokens } from '@/theme/ThemeProvider';
 import { sendPaymentRequest, sendPaymentRequestsToAll, isWhatsAppInstalled, showWhatsAppNotInstalledError } from '@/services/whatsappService';
+import { Image, Modal } from 'react-native';
 
 export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ route, navigation }) => {
   const { billId } = route.params;
@@ -53,6 +61,8 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
   };
 
   const [bill, setBill] = useState(getBillById(billId));
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [showActivityLog, setShowActivityLog] = useState(false);
 
   // Animated values for progress bar and celebration
   const progressWidth = useSharedValue(0);
@@ -263,10 +273,89 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
     );
   };
 
+  // Category badge helper
+  const getCategoryInfo = (category?: ExpenseCategory) => {
+    if (!category) return null;
+
+    const categoryMap = {
+      [ExpenseCategory.FOOD]: { label: 'Food & Drinks', icon: '🍽️', color: tokens.colors.amber[600] },
+      [ExpenseCategory.TRAVEL]: { label: 'Travel', icon: '✈️', color: tokens.colors.sage[600] },
+      [ExpenseCategory.SHOPPING]: { label: 'Shopping', icon: '🛍️', color: tokens.colors.terracotta[600] },
+      [ExpenseCategory.ENTERTAINMENT]: { label: 'Entertainment', icon: '🎬', color: tokens.colors.amber[700] },
+      [ExpenseCategory.OTHER]: { label: 'Other', icon: '📌', color: tokens.colors.neutral[600] },
+    };
+
+    return categoryMap[category];
+  };
+
+  // Generate activity log from bill data
+  const getActivityLog = (): ActivityEvent[] => {
+    if (bill.activityLog && bill.activityLog.length > 0) {
+      return bill.activityLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    }
+
+    // Fallback: Generate basic activity log from bill data
+    const events: ActivityEvent[] = [];
+
+    // Bill created event
+    events.push({
+      id: `event-created-${bill.id}`,
+      type: ActivityEventType.BILL_CREATED,
+      timestamp: bill.createdAt,
+    });
+
+    // Payment events (for participants marked as paid)
+    // Use incrementing timestamps based on bill creation + index to ensure chronological order
+    const paidParticipants = bill.participants.filter(p => p.status === PaymentStatus.PAID);
+    paidParticipants.forEach((p, index) => {
+      // Create timestamps after bill creation with increments for each payment
+      const paymentTimestamp = new Date(bill.createdAt.getTime() + (index + 1) * 60000); // 1 minute apart
+      events.push({
+        id: `event-paid-${p.id}`,
+        type: ActivityEventType.PAYMENT_RECEIVED,
+        timestamp: paymentTimestamp,
+        participantName: p.name,
+        amount: p.amountPaise,
+      });
+    });
+
+    // Bill settled event (if all paid)
+    if (bill.participants.every(p => p.status === PaymentStatus.PAID)) {
+      // Settled event comes after all payments
+      const settledTimestamp = new Date(bill.createdAt.getTime() + (paidParticipants.length + 1) * 60000);
+      events.push({
+        id: `event-settled-${bill.id}`,
+        type: ActivityEventType.BILL_SETTLED,
+        timestamp: settledTimestamp,
+      });
+    }
+
+    return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  };
+
+  // Format relative time
+  const formatRelativeTime = (date: Date): string => {
+    const now = new Date();
+    const diff = now.getTime() - new Date(date).getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days}d ago`;
+    return new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  };
+
   const progress = calculateProgress();
   const isFullySettled = progress === 100;
   const progressText = getProgressText();
   const { paid, pending } = getPaymentSummary();
+  const categoryInfo = getCategoryInfo(bill.category);
+  const activityLog = getActivityLog();
 
   // Count pending participants for Share All button
   const pendingCount = bill.participants.filter(p => p.status === PaymentStatus.PENDING).length;
@@ -302,13 +391,23 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>{bill.title}</Text>
-          <Text style={styles.headerDate}>
-            Created {new Date(bill.createdAt).toLocaleDateString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            })}
-          </Text>
+          <View style={styles.headerMeta}>
+            {categoryInfo && (
+              <View style={[styles.categoryBadge, { backgroundColor: `${categoryInfo.color}15` }]}>
+                <Text style={styles.categoryIcon}>{categoryInfo.icon}</Text>
+                <Text style={[styles.categoryText, { color: categoryInfo.color }]}>
+                  {categoryInfo.label}
+                </Text>
+              </View>
+            )}
+            <Text style={styles.headerDate}>
+              {new Date(bill.createdAt).toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -362,6 +461,39 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
           </View>
         </AnimatedGlassCard>
 
+        {/* Receipt Photo Section */}
+        {bill.receiptPhoto && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Receipt</Text>
+            <TouchableOpacity
+              onPress={() => setShowReceiptModal(true)}
+              activeOpacity={0.8}
+            >
+              <GlassCard style={styles.receiptCard} borderRadius={tokens.radius.md}>
+                <Image
+                  source={{ uri: bill.receiptPhoto }}
+                  style={styles.receiptThumbnail}
+                  resizeMode="cover"
+                />
+                <View style={styles.receiptOverlay}>
+                  <ImageIcon size={20} color={tokens.colors.text.inverse} strokeWidth={2} />
+                  <Text style={styles.receiptOverlayText}>Tap to view</Text>
+                </View>
+              </GlassCard>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Bill Description/Notes Section */}
+        {bill.description && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <GlassCard style={styles.descriptionCard} borderRadius={tokens.radius.md}>
+              <Text style={styles.descriptionText}>{bill.description}</Text>
+            </GlassCard>
+          </View>
+        )}
+
         {/* Send WhatsApp to All Pending Button */}
         {pendingCount > 0 && (
           <AnimatedButton
@@ -409,6 +541,9 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
                       <Text style={styles.participantName}>
                         {participant.name.trim() ? `${participant.name}${isCreator ? ' (You)' : ''}` : 'You'}
                       </Text>
+                      {participant.phone && (
+                        <Text style={styles.participantContact}>📱 {participant.phone}</Text>
+                      )}
                       <Text style={styles.participantAmount}>
                         {formatPaise(participant.amountPaise)}
                       </Text>
@@ -476,6 +611,58 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
           })}
         </View>
 
+        {/* Activity Log Section */}
+        {activityLog.length > 0 && (
+          <View style={styles.section}>
+            <TouchableOpacity
+              onPress={() => setShowActivityLog(!showActivityLog)}
+              style={styles.activityHeader}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.sectionTitle}>Activity History</Text>
+              {showActivityLog ? (
+                <ChevronUp size={20} color={tokens.colors.text.secondary} strokeWidth={2} />
+              ) : (
+                <ChevronDown size={20} color={tokens.colors.text.secondary} strokeWidth={2} />
+              )}
+            </TouchableOpacity>
+
+            {showActivityLog && (
+              <View style={styles.activityList}>
+                {activityLog.map((event) => {
+                  const eventIcon = {
+                    [ActivityEventType.BILL_CREATED]: <FileText size={16} color={tokens.colors.neutral[600]} strokeWidth={2} />,
+                    [ActivityEventType.BILL_EDITED]: <Edit2 size={16} color={tokens.colors.amber[600]} strokeWidth={2} />,
+                    [ActivityEventType.PAYMENT_RECEIVED]: <DollarSign size={16} color={tokens.colors.sage[600]} strokeWidth={2} />,
+                    [ActivityEventType.BILL_SETTLED]: <CheckCircle size={16} color={tokens.colors.financial.positive} strokeWidth={2} />,
+                  };
+
+                  const eventText = {
+                    [ActivityEventType.BILL_CREATED]: 'Bill created',
+                    [ActivityEventType.BILL_EDITED]: 'Bill edited',
+                    [ActivityEventType.PAYMENT_RECEIVED]: event.participantName
+                      ? `Payment received from ${event.participantName}${event.amount ? ` (${formatPaise(event.amount)})` : ''}`
+                      : 'Payment received',
+                    [ActivityEventType.BILL_SETTLED]: 'All payments completed - Bill settled',
+                  };
+
+                  return (
+                    <GlassCard key={event.id} style={styles.activityItem} borderRadius={tokens.radius.sm}>
+                      <View style={styles.activityIconContainer}>
+                        {eventIcon[event.type]}
+                      </View>
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityText}>{eventText[event.type]}</Text>
+                        <Text style={styles.activityTime}>{formatRelativeTime(event.timestamp)}</Text>
+                      </View>
+                    </GlassCard>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Actions */}
         <View style={styles.actionsContainer}>
           <AnimatedButton
@@ -515,6 +702,37 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
           </AnimatedButton>
         </View>
       </ScrollView>
+
+      {/* Receipt Photo Modal */}
+      <Modal
+        visible={showReceiptModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReceiptModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowReceiptModal(false)}
+          >
+            <View style={styles.modalContent}>
+              <Image
+                source={{ uri: bill.receiptPhoto }}
+                style={styles.receiptFullImage}
+                resizeMode="contain"
+              />
+              <TouchableOpacity
+                onPress={() => setShowReceiptModal(false)}
+                style={styles.modalCloseButton}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -546,15 +764,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   headerContent: {
-    gap: 2,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: tokens.colors.text.primary,
+    flex: 1,
+  },
+  headerMeta: {
+    alignItems: 'flex-end',
+    gap: 6,
+  },
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: tokens.radius.sm,
+    gap: 4,
+  },
+  categoryIcon: {
+    fontSize: 12,
+  },
+  categoryText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   headerDate: {
-    fontSize: 13,
+    fontSize: 12,
     color: tokens.colors.text.secondary,
   },
   scrollView: {
@@ -700,11 +941,121 @@ const styles = StyleSheet.create({
     color: tokens.colors.text.inverse,
     letterSpacing: 0.3,
   },
+  section: {
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: tokens.colors.text.primary,
-    marginBottom: 4,
+    marginBottom: 8,
+  },
+  // Receipt Photo Styles
+  receiptCard: {
+    width: '100%',
+    height: 120,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  receiptThumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  receiptOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  receiptOverlayText: {
+    color: tokens.colors.text.inverse,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  // Description Styles
+  descriptionCard: {
+    padding: 14,
+  },
+  descriptionText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: tokens.colors.text.secondary,
+  },
+  // Activity Log Styles
+  activityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  activityList: {
+    gap: 8,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 10,
+    gap: 10,
+  },
+  activityIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: tokens.colors.background.subtle,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activityContent: {
+    flex: 1,
+    gap: 3,
+  },
+  activityText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: tokens.colors.text.primary,
+    lineHeight: 18,
+  },
+  activityTime: {
+    fontSize: 11,
+    color: tokens.colors.text.tertiary,
+  },
+  // Receipt Modal Styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: tokens.spacing.xl,
+  },
+  modalContent: {
+    width: '100%',
+    maxHeight: '80%',
+    alignItems: 'center',
+    gap: 16,
+  },
+  receiptFullImage: {
+    width: '100%',
+    height: '100%',
+  },
+  modalCloseButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: tokens.colors.brand.primary,
+    borderRadius: tokens.radius.md,
+  },
+  modalCloseText: {
+    color: tokens.colors.text.inverse,
+    fontSize: 15,
+    fontWeight: '700',
   },
   participantsList: {
     gap: 8,
@@ -754,10 +1105,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: tokens.colors.text.primary,
   },
+  participantContact: {
+    fontSize: 12,
+    color: tokens.colors.text.secondary,
+    marginTop: 2,
+  },
   participantAmount: {
     fontSize: 15,
     fontWeight: '500',
     color: tokens.colors.text.primary,
+    marginTop: 2,
   },
 
   // Divider

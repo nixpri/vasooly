@@ -11,7 +11,7 @@ let db: SQLite.SQLiteDatabase | null = null;
 /**
  * Database schema version for migrations
  */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /**
  * SQL schema definitions
@@ -25,7 +25,11 @@ CREATE TABLE IF NOT EXISTS bills (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
   status TEXT NOT NULL CHECK(status IN ('ACTIVE', 'SETTLED', 'DELETED')),
-  deleted_at INTEGER
+  deleted_at INTEGER,
+  category TEXT,
+  receipt_photo TEXT,
+  description TEXT,
+  activity_log TEXT
 );
 
 -- Participants table

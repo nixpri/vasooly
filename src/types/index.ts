@@ -18,6 +18,8 @@ export interface Bill {
   status: BillStatus;
   category?: ExpenseCategory;
   receiptPhoto?: string;
+  description?: string; // Bill notes/description
+  activityLog?: ActivityEvent[]; // Timeline events
 }
 
 export interface Participant {
@@ -54,6 +56,23 @@ export interface ActivityItem {
   description: string;
 }
 
+// Activity event for bill timeline (internal to VasoolyDetail)
+export enum ActivityEventType {
+  BILL_CREATED = 'BILL_CREATED',
+  BILL_EDITED = 'BILL_EDITED',
+  PAYMENT_RECEIVED = 'PAYMENT_RECEIVED',
+  BILL_SETTLED = 'BILL_SETTLED',
+}
+
+export interface ActivityEvent {
+  id: string;
+  type: ActivityEventType;
+  timestamp: Date;
+  participantName?: string; // For payment events
+  amount?: number; // For payment events (in paise)
+  metadata?: Record<string, any>;
+}
+
 export interface Karzedaar {
   id: string;
   name: string;
@@ -62,4 +81,27 @@ export interface Karzedaar {
   addedAt: Date;
   billCount: number;
   totalAmountPaise: number;
+}
+
+// Settings interface (for SettingsScreen enhancements)
+export interface Settings {
+  // Existing
+  defaultVPA?: string;
+  defaultUPIName?: string;
+  enableHaptics: boolean;
+  autoDeleteDays: number;
+  reminderEnabled: boolean;
+
+  // NEW - User Profile
+  profilePhoto?: string; // URI or base64
+
+  // NEW - Payment Preferences
+  defaultPaymentMethod: 'UPI' | 'Cash' | 'Other';
+  defaultPaymentNote?: string;
+
+  // NEW - Notification Preferences
+  reminderFrequency: 'daily' | 'every3days' | 'weekly' | 'never';
+  reminderTime: string; // HH:MM format (e.g., "10:00")
+  settlementNotifications: boolean;
+  newBillNotifications: boolean;
 }

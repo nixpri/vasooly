@@ -120,6 +120,26 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
   const { addOrUpdateKarzedaar, updateKarzedaarStats } = useKarzedaarsStore();
   const haptics = useHaptics();
 
+  // Helper function to extract phone number from UPI VPA
+  const extractPhoneFromVPA = (vpa?: string): string | undefined => {
+    if (!vpa) return undefined;
+
+    // UPI VPA format is usually: phoneNumber@bank or username@bank
+    // Extract the part before @ and check if it's a 10-digit phone number
+    const parts = vpa.split('@');
+    if (parts.length < 2) return undefined;
+
+    const possiblePhone = parts[0].trim();
+
+    // Check if it's a valid 10-digit Indian phone number
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (phoneRegex.test(possiblePhone)) {
+      return possiblePhone;
+    }
+
+    return undefined;
+  };
+
   // Helper function to check if participant is the current user
   const isCurrentUser = (participantName: string): boolean => {
     const trimmedName = participantName.trim();
@@ -139,6 +159,7 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
 
   // State
   const [billTitle, setBillTitle] = useState(existingBill?.title ?? '');
+  const [description, setDescription] = useState(existingBill?.description ?? '');
   const [amountPaise, setAmountPaise] = useState(existingBill?.totalAmountPaise ?? 0);
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory>(
     existingBill?.category ?? ExpenseCategory.FOOD
@@ -146,8 +167,12 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
   const [receiptPhoto, setReceiptPhoto] = useState<string | null>(null);
   const [participants, setParticipants] = useState<ParticipantInput[]>(
     existingBill
-      ? existingBill.participants.map((p: any) => ({ id: p.id, name: p.name }))
-      : [{ id: 'default-1', name: defaultUPIName || 'You' }]
+      ? existingBill.participants.map((p: any) => ({ id: p.id, name: p.name, phone: p.phone }))
+      : [{
+          id: 'default-1',
+          name: defaultUPIName || 'You',
+          phone: extractPhoneFromVPA(defaultVPA),
+        }]
   );
   const [splitResult, setSplitResult] = useState<DetailedSplitResult | null>(null);
   const [amountError, setAmountError] = useState<string>('');
@@ -418,6 +443,7 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
           participants: participantData,
           category: selectedCategory,
           receiptPhoto: receiptPhoto || undefined,
+          description: description.trim() || undefined,
           updatedAt: now,
         };
 
@@ -435,6 +461,7 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
           participants: participantData,
           category: selectedCategory,
           receiptPhoto: receiptPhoto || undefined,
+          description: description.trim() || undefined,
           createdAt: now,
           updatedAt: now,
         };
@@ -537,6 +564,23 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
                   onChangeText={setBillTitle}
                   placeholder="e.g., Dinner at Taj, Movie tickets..."
                   placeholderTextColor={tokens.colors.text.tertiary}
+                />
+              </View>
+            </View>
+
+            {/* Description/Notes */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Description (Optional)</Text>
+              <View style={styles.descriptionInputContainer}>
+                <TextInput
+                  style={styles.descriptionInput}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="Add notes about this expense..."
+                  placeholderTextColor={tokens.colors.text.tertiary}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
                 />
               </View>
             </View>
@@ -783,6 +827,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: tokens.colors.text.primary,
     fontWeight: '500',
+    padding: 0,
+  },
+  descriptionInputContainer: {
+    backgroundColor: tokens.colors.background.input,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: tokens.colors.border.default,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  descriptionInput: {
+    fontSize: 14,
+    color: tokens.colors.text.primary,
+    fontWeight: '400',
+    minHeight: 70,
     padding: 0,
   },
   categoryList: {
