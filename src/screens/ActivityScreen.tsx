@@ -324,21 +324,24 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) =>
 
         {/* Activity List */}
         <View style={styles.listContainer}>
-          <FlashList
-            data={groupedActivities}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={renderEmpty}
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoading}
-                onRefresh={handleRefresh}
-                tintColor={tokens.colors.sage[500]}
-                colors={[tokens.colors.sage[500]]}
-              />
-            }
-          />
+          {groupedActivities.length === 0 ? (
+            renderEmpty()
+          ) : (
+            <FlashList
+              data={groupedActivities}
+              renderItem={renderItem}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isLoading}
+                  onRefresh={handleRefresh}
+                  tintColor={tokens.colors.sage[500]}
+                  colors={[tokens.colors.sage[500]]}
+                />
+              }
+            />
+          )}
         </View>
       </KeyboardAvoidingView>
     </View>
