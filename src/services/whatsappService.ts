@@ -42,7 +42,13 @@ function formatPhoneNumber(phone: string): string | null {
   if (!phone) return null;
 
   // Remove all non-digit characters
-  const cleaned = phone.replace(/\D/g, '');
+  let cleaned = phone.replace(/\D/g, '');
+
+  // Remove leading 0 if present (common in Indian phone numbers from contacts)
+  // 09409082904 -> 9409082904
+  if (cleaned.startsWith('0') && cleaned.length === 11) {
+    cleaned = cleaned.substring(1);
+  }
 
   // Check if it's a valid Indian phone number (10 digits)
   if (cleaned.length === 10) {
