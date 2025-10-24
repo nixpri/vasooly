@@ -4,7 +4,7 @@
  */
 
 import { getDatabase } from './database';
-import { Bill, Participant, BillStatus, PaymentStatus, ExpenseCategory, ActivityEvent } from '../../types';
+import { Bill, Participant, BillStatus, PaymentStatus, ExpenseCategory } from '../../types';
 
 /**
  * Database row types (snake_case matching DB schema)

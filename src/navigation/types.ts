@@ -12,12 +12,13 @@ import type { StackScreenProps } from '@react-navigation/stack';
 /**
  * Bottom Tab Navigator Params
  *
- * 4 main tabs: Dashboard, Activity, Friends, Profile
+ * 5 main tabs: Dashboard, Activity, Insights, Karzedaars, Profile
  * Add Expense is modal presentation (not in tab bar)
  */
 export type TabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList> | undefined;
   Activity: NavigatorScreenParams<ActivityStackParamList> | undefined;
+  Insights: NavigatorScreenParams<InsightsStackParamList> | undefined;
   Karzedaars: NavigatorScreenParams<KarzedaarsStackParamList> | undefined;
   Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
@@ -41,6 +42,15 @@ export type HomeStackParamList = {
 export type ActivityStackParamList = {
   ActivityScreen: undefined;
   VasoolyDetail: { billId: string };
+};
+
+/**
+ * Insights Stack Navigator Params
+ *
+ * Insights screen only (no nested screens)
+ */
+export type InsightsStackParamList = {
+  InsightsScreen: undefined;
 };
 
 /**
@@ -99,6 +109,9 @@ export type ActivityVasoolyDetailScreenProps = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 
+// Insights Stack
+export type InsightsScreenProps = StackScreenProps<InsightsStackParamList, 'InsightsScreen'>;
+
 // Karzedaars Stack
 export type KarzedaarsListScreenProps = StackScreenProps<KarzedaarsStackParamList, 'KarzedaarsList'>;
 export type KarzedaarDetailScreenProps = StackScreenProps<KarzedaarsStackParamList, 'KarzedaarDetail'>;
@@ -118,6 +131,11 @@ export type HomeTabScreenProps = CompositeScreenProps<
 
 export type ActivityTabScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabParamList, 'Activity'>,
+  StackScreenProps<RootStackParamList>
+>;
+
+export type InsightsTabScreenProps = CompositeScreenProps<
+  BottomTabScreenProps<TabParamList, 'Insights'>,
   StackScreenProps<RootStackParamList>
 >;
 

@@ -25,7 +25,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
-import { User, ExternalLink, Info, Mail, FileText, LogOut, Palette } from 'lucide-react-native';
+import { ExternalLink, Info, Mail, FileText, LogOut, Palette } from 'lucide-react-native';
 import { GlassCard } from '@/components/GlassCard';
 import { useSettingsStore } from '@/stores';
 import type { SettingsScreenProps } from '@/navigation/types';
@@ -54,7 +54,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
   } = useSettingsStore();
 
   // Helper function to extract initials from name
-  const getInitials = (name?: string): string => {
+  const getInitials = (name?: string | null): string => {
     if (!name || !name.trim()) return 'U';
 
     const words = name.trim().split(/\s+/);

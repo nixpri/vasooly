@@ -4,6 +4,7 @@ export { VasoolyDetailScreen } from './VasoolyDetailScreen';
 export { SettingsScreen } from './SettingsScreen';
 export { OnboardingScreen } from './OnboardingScreen';
 export { DashboardScreen } from './DashboardScreen';
+export { InsightsScreen } from './InsightsScreen';
 export { KarzedaarsListScreen } from './KarzedaarsListScreen';
 export { KarzedaarDetailScreen } from './KarzedaarDetailScreen';
 export { SettleUpScreen } from './SettleUpScreen';

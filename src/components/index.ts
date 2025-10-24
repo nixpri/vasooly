@@ -18,3 +18,6 @@ export { ActivityCard } from './ActivityCard';
 export { DateGroupHeader } from './DateGroupHeader';
 export { KarzedaarCard } from './KarzedaarCard';
 export { ScreenHeader } from './ScreenHeader';
+export { ChartCard } from './ChartCard';
+export { SmartSuggestionsPanel } from './SmartSuggestionsPanel';
+export { ReceiptScanner } from './ReceiptScanner';

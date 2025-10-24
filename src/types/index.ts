@@ -105,3 +105,40 @@ export interface Settings {
   settlementNotifications: boolean;
   newBillNotifications: boolean;
 }
+
+// ============================================================================
+// INSIGHTS & ANALYTICS TYPES
+// ============================================================================
+
+export type TimeRange = 'this_month' | 'last_3_months' | 'last_6_months' | 'this_year';
+
+export interface MonthlySpendingData {
+  month: string; // "Jan", "Feb", etc.
+  totalPaise: number;
+  billCount: number;
+}
+
+export interface CategorySpendingData {
+  category: ExpenseCategory;
+  totalPaise: number;
+  billCount: number;
+  percentage: number;
+  color: string; // From design tokens
+}
+
+export interface KarzedaarSpending {
+  karzedaarId: string;
+  name: string;
+  totalPaise: number;
+  billCount: number;
+  settledBills: number;
+}
+
+export interface InsightsMetrics {
+  averageBillSizePaise: number;
+  totalBills: number;
+  settledBills: number;
+  settlementRate: number; // 0-100%
+  spendingTrend: number; // % change vs previous period
+  totalSpentPaise: number;
+}

@@ -47,7 +47,7 @@ import {
   UserPlus,
   X,
 } from 'lucide-react-native';
-import { AnimatedButton, LoadingSpinner } from '@/components';
+import { AnimatedButton, LoadingSpinner, SmartSuggestionsPanel, ReceiptScanner } from '@/components';
 import { BillAmountInput } from '@/components/BillAmountInput';
 import { ParticipantList } from '@/components/ParticipantList';
 import { SplitResultDisplay } from '@/components/SplitResultDisplay';
@@ -60,10 +60,11 @@ import type { DetailedSplitResult } from '@/lib/business/splitEngine';
 import { useBillStore, useSettingsStore, useKarzedaarsStore } from '@/stores';
 import { BillStatus, PaymentStatus, ExpenseCategory } from '@/types';
 import type { Bill, Participant } from '@/types';
-import { useHaptics } from '@/hooks';
+import { useHaptics, useSmartSuggestions } from '@/hooks';
 import { tokens } from '@/theme/ThemeProvider';
 import type { AddVasoolyScreenProps } from '@/navigation/types';
 import { sendPaymentRequestsToAll, isWhatsAppInstalled, showWhatsAppNotInstalledError } from '@/services/whatsappService';
+import { scheduleRemindersForBill } from '@/services/reminderService';
 
 interface ParticipantInput {
   id: string;
@@ -120,8 +121,11 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
   const { addOrUpdateKarzedaar, updateKarzedaarStats } = useKarzedaarsStore();
   const haptics = useHaptics();
 
+  // Smart suggestions
+  const smartSuggestions = useSmartSuggestions(defaultUPIName || undefined);
+
   // Helper function to extract phone number from UPI VPA
-  const extractPhoneFromVPA = (vpa?: string): string | undefined => {
+  const extractPhoneFromVPA = (vpa?: string | null): string | undefined => {
     if (!vpa) return undefined;
 
     // UPI VPA format is usually: phoneNumber@bank or username@bank
@@ -273,6 +277,13 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
     }
   }, [haptics]);
 
+  const handleReceiptScan = useCallback((scannedAmountPaise: number, receiptUri: string) => {
+    // Set both the amount and the receipt photo
+    setAmountPaise(scannedAmountPaise);
+    setReceiptPhoto(receiptUri);
+    haptics.success();
+  }, [haptics]);
+
   const handlePickFromContacts = useCallback(async () => {
     const { status } = await Contacts.requestPermissionsAsync();
     if (status !== 'granted') {
@@ -301,6 +312,54 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
       console.error('Error picking contact:', error);
     }
   }, [haptics]);
+
+  const handleAddSuggestion = useCallback((name: string, phone?: string) => {
+    // Check if participant is already added
+    const alreadyAdded = participants.some(
+      p => p.name.toLowerCase().trim() === name.toLowerCase().trim()
+    );
+
+    if (alreadyAdded) {
+      return;
+    }
+
+    haptics.light();
+    const newParticipant: ParticipantInput = {
+      id: `participant-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      name,
+      phone,
+    };
+    setParticipants((prev) => [...prev, newParticipant]);
+  }, [participants, haptics]);
+
+  const handleUseSameAsLastTime = useCallback(() => {
+    if (!smartSuggestions.hasLastBill || smartSuggestions.lastBillParticipants.length === 0) {
+      return;
+    }
+
+    haptics.medium();
+
+    // Add all last bill participants (excluding already added ones)
+    const newParticipants: ParticipantInput[] = [];
+
+    smartSuggestions.lastBillParticipants.forEach(suggestion => {
+      const alreadyAdded = participants.some(
+        p => p.name.toLowerCase().trim() === suggestion.name.toLowerCase().trim()
+      );
+
+      if (!alreadyAdded) {
+        newParticipants.push({
+          id: `participant-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${newParticipants.length}`,
+          name: suggestion.name,
+          phone: suggestion.phone,
+        });
+      }
+    });
+
+    if (newParticipants.length > 0) {
+      setParticipants((prev) => [...prev, ...newParticipants]);
+    }
+  }, [smartSuggestions, participants, haptics]);
 
   const handleSendPaymentRequests = useCallback(async (bill: Bill) => {
     // Check if UPI ID is configured
@@ -478,6 +537,9 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
           }
         }
 
+        // Schedule payment reminders for pending participants
+        await scheduleRemindersForBill(newBill, defaultUPIName || 'You');
+
         haptics.success();
 
         // Show confirmation dialog to send payment requests via WhatsApp
@@ -637,6 +699,19 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
             {/* Receipt Photo Upload */}
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Receipt (Optional)</Text>
+
+              {/* Receipt Scanner - Smart feature */}
+              {!receiptPhoto && !isEditMode && (
+                <View style={styles.scannerContainer}>
+                  <ReceiptScanner onScanComplete={handleReceiptScan} />
+                  <View style={styles.orDivider}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.orText}>or upload manually</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+                </View>
+              )}
+
               {receiptPhoto ? (
                 <View style={styles.photoPreviewContainer}>
                   {receiptPhoto.endsWith('.pdf') ? (
@@ -695,6 +770,19 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
                 showManualAdd={false}
                 currentUserName={defaultUPIName || 'You'}
               />
+
+              {/* Smart Suggestions */}
+              {!isEditMode && (
+                <SmartSuggestionsPanel
+                  recentParticipants={smartSuggestions.recentParticipants}
+                  frequentParticipants={smartSuggestions.frequentParticipants}
+                  lastBillParticipants={smartSuggestions.lastBillParticipants}
+                  hasLastBill={smartSuggestions.hasLastBill}
+                  currentParticipants={participants}
+                  onAddSuggestion={handleAddSuggestion}
+                  onUseSameAsLastTime={handleUseSameAsLastTime}
+                />
+              )}
 
               {/* Add Participant Actions */}
               <View style={styles.addParticipantActions}>
@@ -786,6 +874,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: tokens.colors.text.secondary,
     marginBottom: 8,
+    fontWeight: '500',
+  },
+  scannerContainer: {
+    marginBottom: 16,
+  },
+  orDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: tokens.colors.border.subtle,
+  },
+  orText: {
+    fontSize: 12,
+    color: tokens.colors.text.tertiary,
     fontWeight: '500',
   },
   addParticipantActions: {

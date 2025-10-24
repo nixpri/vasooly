@@ -22,6 +22,7 @@ import {
   SettleUpScreen,
   ProfileScreen,
   AddVasoolyScreen,
+  InsightsScreen,
 } from '@/screens';
 import { TabBar } from '@/components/TabBar';
 import { useBillStore, useHistoryStore, useSettingsStore } from '@/stores';
@@ -31,6 +32,7 @@ import type {
   TabParamList,
   HomeStackParamList,
   ActivityStackParamList,
+  InsightsStackParamList,
   KarzedaarsStackParamList,
   ProfileStackParamList,
 } from './types';
@@ -39,6 +41,7 @@ const RootStack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 const HomeStack = createStackNavigator<HomeStackParamList>();
 const ActivityStack = createStackNavigator<ActivityStackParamList>();
+const InsightsStack = createStackNavigator<InsightsStackParamList>();
 const KarzedaarsStack = createStackNavigator<KarzedaarsStackParamList>();
 const ProfileStack = createStackNavigator<ProfileStackParamList>();
 
@@ -160,6 +163,25 @@ const ActivityNavigator: React.FC = () => {
 };
 
 /**
+ * Insights Stack Navigator
+ *
+ * Single screen for analytics and insights
+ */
+const InsightsNavigator: React.FC = () => {
+  return (
+    <InsightsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        cardStyle: { backgroundColor: tokens.colors.background.base },
+      }}
+    >
+      <InsightsStack.Screen name="InsightsScreen" component={InsightsScreen} />
+    </InsightsStack.Navigator>
+  );
+};
+
+/**
  * Karzedaars Stack Navigator
  *
  * Karzedaars List → Karzedaar Detail → Settle Up
@@ -275,7 +297,7 @@ const ProfileNavigator: React.FC = () => {
 /**
  * Main Tab Navigator
  *
- * 4 tabs: Home, Activity, Karzedaars, Profile
+ * 5 tabs: Home, Activity, Insights, Karzedaars, Profile
  */
 const MainTabNavigator: React.FC = () => {
   return (
@@ -311,6 +333,21 @@ const MainTabNavigator: React.FC = () => {
             if (route?.state?.index && route.state.index > 0) {
               e.preventDefault();
               navigation.navigate('Activity', { screen: 'ActivityScreen' });
+            }
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Insights"
+        component={InsightsNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Reset to root screen if already on this tab
+            const state = navigation.getState();
+            const route = state.routes.find((r) => r.name === 'Insights');
+            if (route?.state?.index && route.state.index > 0) {
+              e.preventDefault();
+              navigation.navigate('Insights', { screen: 'InsightsScreen' });
             }
           },
         })}
@@ -429,7 +466,7 @@ export const AppNavigator: React.FC = () => {
           )}
         </RootStack.Screen>
 
-        {/* Main Tab Navigator (4 tabs with stacks) */}
+        {/* Main Tab Navigator (5 tabs with stacks) */}
         <RootStack.Screen
           name="MainTabs"
           component={MainTabNavigator}

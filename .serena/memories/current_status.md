@@ -1,24 +1,193 @@
 # Vasooly Project Status
 
 **Last Updated**: 2025-10-24
-**Current Phase**: Phase 2A - UI/UX Revamp + WhatsApp Payment Integration
-**Current Week**: Week 13 (Complete) + Post-Week 13 Features
-**Current Task**: WhatsApp Payment Request UX Improvements ✅
+**Current Phase**: Phase 2A - UI/UX Revamp
+**Current Week**: Week 14 - Premium Features (Day 1-2: Spending Insights)
+**Current Task**: Spending Insights Screen Implementation ✅
 
 ---
 
 ## Quick Status
 
-- **Phase Progress**: Week 13 complete + WhatsApp payment integration complete
+- **Phase Progress**: Week 14 Day 1-2 complete (Spending Insights Screen)
 - **Tests**: 282 passing (12 suites), 100% coverage on critical paths
 - **TypeScript**: 0 errors
-- **ESLint**: 0 errors (15 pre-existing warnings)
+- **ESLint**: 0 errors (20 pre-existing warnings in test files)
 - **Build**: ✅ All validations passing
-- **Git**: Changes ready (WhatsApp integration + UI improvements)
+- **Git**: Changes ready (Insights Screen implementation)
 
 ---
 
 ## Recent Work (Latest Session - 2025-10-24)
+
+### Week 14 Day 1-2: Spending Insights Screen ✅
+
+**Feature**: Complete analytics dashboard with custom visualizations
+
+**Implementation Details**:
+
+1. **Key Metrics Grid (4 cards)**:
+   - Average Bill Size (amber icon)
+   - Total Bills (sage icon)
+   - Settled Bills (terracotta icon)
+   - Settlement Rate % (sage icon)
+   - Each metric has colored icon container + value + label
+
+2. **Monthly Spending Chart - Stacked Bars** ✅:
+   - Custom React Native View-based visualization (Victory Native failed to render)
+   - **Stacked bars showing payment status**:
+     - 🟢 Green section (bottom): Paid amounts
+     - 🟡 Yellow section (top): Pending amounts
+   - Legend positioned on right side of card header
+   - Proportional heights based on actual amounts
+   - Current month uses darker colors for emphasis
+   - Excludes current user from calculations (Vasooly logic)
+   - Shows total amount above each bar
+   - Month label and bill count below bars
+
+3. **Category Breakdown**:
+   - Visual percentage bars for each category
+   - Color-coded dots (Food, Travel, Shopping, Entertainment, Other)
+   - Shows: category name, amount, bill count, percentage
+   - Horizontal progress bars showing relative spending
+
+4. **Top Karzedaars List**:
+   - Ranked list (#1, #2, #3, etc.) with colored badges
+   - Shows: name, bill count, settled count, total amount
+   - Displays top 5 karzedaars by spending
+
+5. **Time Range Filters**:
+   - Horizontal scrollable chips: This Month, Last 3 Months, Last 6 Months, This Year
+   - Active filter highlighted with sage colors
+
+6. **Empty State**:
+   - Shown when < 3 bills exist
+   - Displays current bill count vs minimum (3)
+   - Pull-to-refresh enabled
+
+**Technical Implementation**:
+
+```typescript
+// Monthly spending with payment status breakdown
+const monthlyDataWithPayments = useMemo(() => {
+  return monthlyData.map(monthData => {
+    const monthBills = bills.filter(/* month matching */);
+    
+    let paidPaise = 0;
+    let pendingPaise = 0;
+    
+    monthBills.forEach(bill => {
+      bill.participants.forEach(participant => {
+        // Exclude current user (empty, "you", or matches defaultUPIName)
+        if (!isUser) {
+          if (participant.status === 'PAID') {
+            paidPaise += participant.amountPaise;
+          } else {
+            pendingPaise += participant.amountPaise;
+          }
+        }
+      });
+    });
+    
+    return { ...monthData, paidPaise, pendingPaise };
+  });
+}, [monthlyData, bills, defaultUPIName]);
+```
+
+**Stacked Bar Rendering**:
+```typescript
+<View style={styles.barStack}>
+  {/* Pending section (top) - Yellow */}
+  {item.pendingPaise > 0 && (
+    <View style={[styles.barSection, {
+      height: pendingHeight,
+      backgroundColor: isLast ? amber[500] : amber[400],
+      borderTopLeftRadius: 4,
+      borderTopRightRadius: 4,
+    }]} />
+  )}
+  {/* Paid section (bottom) - Green */}
+  {item.paidPaise > 0 && (
+    <View style={[styles.barSection, {
+      height: paidHeight,
+      backgroundColor: isLast ? financial.positive : financial.positiveLight,
+    }]} />
+  )}
+</View>
+```
+
+**Legend Layout**:
+```typescript
+<View style={styles.cardHeader}>
+  <View style={styles.cardTitleSection}>
+    <Text style={styles.cardTitle}>Monthly Spending</Text>
+    <Text style={styles.cardSubtitle}>Vasooly collections over time</Text>
+  </View>
+  <View style={styles.chartLegend}>
+    <View style={styles.legendItem}>
+      <View style={[styles.legendDot, { backgroundColor: green }]} />
+      <Text style={styles.legendText}>Paid</Text>
+    </View>
+    <View style={styles.legendItem}>
+      <View style={[styles.legendDot, { backgroundColor: yellow }]} />
+      <Text style={styles.legendText}>Pending</Text>
+    </View>
+  </View>
+</View>
+```
+
+**Victory Native Investigation**:
+- Initially implemented with Victory Native XL v41.20.1
+- API migration from v35 (VictoryChart) to v41 (CartesianChart, Bar)
+- Charts rendered blank despite correct data
+- **Solution**: Complete replacement with custom React Native View-based charts
+  - More reliable rendering
+  - Better performance
+  - Full control over styling
+  - Matches earthen design system
+
+**User Behavior Clarification**:
+- Monthly Spending shows **total collection amounts** (when bills are created)
+- Payment status changes affect:
+  - ✅ Settled Bills metric
+  - ✅ Settlement Rate percentage
+  - ✅ Top Karzedaars "settled" count
+  - ✅ Stacked bar sections (paid vs pending)
+- This is correct for a Vasooly (collection) app - you're tracking what's being collected, not received
+
+**Files Modified**:
+1. `src/screens/InsightsScreen.tsx`:
+   - Removed Victory Native imports
+   - Added custom bar chart with stacked sections
+   - Added legend in card header
+   - Implemented monthlyDataWithPayments calculation
+   - Removed Spending Trend card
+   - All metrics cards implemented
+   - Category breakdown with visual bars
+   - Top Karzedaars list
+
+2. `src/lib/data/billRepository.ts`:
+   - Removed unused `ActivityEvent` import (ESLint fix)
+
+3. `src/screens/SettingsScreen.tsx`:
+   - Removed unused `User` import (ESLint fix)
+   - Fixed `getInitials` signature to accept `string | null`
+
+4. `src/screens/AddVasoolyScreen.tsx`:
+   - Fixed `extractPhoneFromVPA` signature to accept `string | null`
+
+**Design Patterns**:
+- Glass-morphism cards with earthen color palette
+- Color coding: amber (average), sage (counts), terracotta (settled), green (paid), yellow (pending)
+- Custom visualizations using View + flexbox + calculated heights
+- Proportional bar heights: `(value / maxValue) * 150`
+- Current month emphasis with darker colors
+- 10x10 legend dots with 4px gap to text
+- Compact legend on right side of card header
+
+---
+
+## Previous Session Work (2025-10-24 Earlier)
 
 ### WhatsApp Payment Request Integration ✅
 
@@ -70,119 +239,6 @@
    - Better pacing: 1 second delay between sends
    - Only shows completion alert (removed individual message confirmations)
 
-3. **Files Modified**:
-   - `src/services/whatsappService.ts`: Added haptic feedback throughout
-   - `src/services/urlShortenerService.ts`: Complete rewrite with redirect wrapper
-   - `redirect-service/index.html`: Created redirect page
-   - `redirect-service/vercel.json`: Vercel configuration
-   - `redirect-service/README.md`: Deployment instructions
-
-### Previous Work in Session
-
-**VasoolyDetailScreen UI Polish**:
-- Added left accent colors (green for paid, yellow for pending)
-- Reduced spacing for more compact cards
-- Refined typography (amounts less dominant)
-- Fixed navigation: "View All" now always shows ActivityScreen
-
-**Other UI Improvements**:
-- Removed "Coming Soon" text from Dashboard
-- Fixed "Add Vasooly" button positioning (no longer hidden by tab bar)
-- Consolidated receipt buttons (Camera, Gallery, PDF) into single row
-- Removed empty state card from SplitResultDisplay
-
----
-
-## New Services Architecture
-
-### URL Shortening Flow
-
-```
-UPI URL (upi://pay?pa=...) 
-  → Wrap in HTTP (https://redirect.vercel.app/?to=upi://...&x-vercel-protection-bypass=secret)
-  → Shorten with is.gd (https://is.gd/abc123)
-  → User clicks short link
-  → Redirect page opens
-  → UPI app launches
-```
-
-### WhatsApp Messaging Flow
-
-```
-sendPaymentRequest()
-  → Generate UPI link
-  → Shorten URL (with redirect wrapper)
-  → Create message with shortened URL
-  → Haptic feedback (Medium impact)
-  → Open WhatsApp with pre-filled message
-  → User taps Send in WhatsApp
-```
-
-### Batch Send Flow
-
-```
-sendPaymentRequestsToAll()
-  → Haptic feedback (Notification - Start)
-  → For each participant:
-     → Send payment request
-     → Haptic feedback (Light for success, Error for failure)
-     → Progress callback with status
-     → 1 second delay
-  → Haptic feedback (Notification - Complete)
-  → Show completion summary alert
-```
-
----
-
-## File Changes Summary
-
-### New Files Created
-- `redirect-service/index.html` - Redirect wrapper page
-- `redirect-service/vercel.json` - Vercel deployment config
-- `redirect-service/README.md` - Deployment instructions
-- `src/services/urlShortenerService.ts` - URL shortening with redirect wrapper
-- `src/services/whatsappService.ts` - WhatsApp messaging with haptics
-
-### Files Deleted
-- `src/lib/business/qrCodeGenerator.ts` - Replaced by WhatsApp approach
-- `src/lib/business/__tests__/qrCodeGenerator.test.ts` - No longer needed
-- `src/services/qrCodeService.ts` - Replaced by WhatsApp approach
-- `src/services/__tests__/qrCodeService.test.ts` - No longer needed
-- `src/services/shareService.ts` - Replaced by WhatsApp-specific service
-- `src/services/__tests__/shareService.test.ts` - No longer needed
-
-### Files Modified
-- `src/services/index.ts` - Updated exports (removed QR/share, added WhatsApp)
-- `src/screens/VasoolyDetailScreen.tsx` - UI improvements
-- `src/screens/DashboardScreen.tsx` - Navigation fixes
-- `src/screens/KarzedaarDetailScreen.tsx` - Navigation updates
-- `src/screens/AddVasoolyScreen.tsx` - Button positioning fixes
-- `docs/IMPLEMENTATION_PLAN.md` - Updated with WhatsApp integration notes
-
----
-
-## Technical Configuration
-
-### Redirect Service
-- **URL**: `https://vasooly-redirect-q2639ymjm-nikunjs-projects-129287b3.vercel.app`
-- **Bypass Secret**: `nikunjtest123nikunjtest123nikunj`
-- **Platform**: Vercel (free tier)
-- **Purpose**: Wrap UPI URLs in HTTP for shortening
-
-### URL Shortener
-- **Service**: is.gd only
-- **Retries**: 2 attempts
-- **Timeout**: 10 seconds per attempt
-- **Fallback**: Wrapped redirect URL if shortening fails
-
-### Haptic Feedback
-- **Library**: expo-haptics (already in dependencies)
-- **Types Used**:
-  - ImpactFeedbackStyle.Medium - Opening WhatsApp
-  - ImpactFeedbackStyle.Light - Each successful batch send
-  - NotificationFeedbackType.Success - Batch start/complete
-  - NotificationFeedbackType.Error - Failed sends
-
 ---
 
 ## Phase 2A Progress (Weeks 10.5-16.5)
@@ -193,7 +249,8 @@ sendPaymentRequestsToAll()
 | Week 12 | Core Screens Design | ✅ COMPLETE |
 | Week 13 | UI Polish & Consistency | ✅ COMPLETE |
 | Week 13+ | WhatsApp Integration | ✅ COMPLETE |
-| Week 14 | Premium Features | ⏳ PENDING |
+| Week 14 | Premium Features (Days 1-2) | ✅ COMPLETE |
+| Week 14 | Premium Features (Days 3-5) | ⏳ PENDING |
 | Week 15 | Polish & Refinement | ⏳ PENDING |
 | Week 16 | Integration Testing | ⏳ PENDING |
 
@@ -203,10 +260,11 @@ sendPaymentRequestsToAll()
 
 - **Total Tests**: 282 passing (12 suites)
 - **Test Coverage**: 98.52% on split engine, 100% on critical paths
-- **Production Code**: ~12,000 lines (+500 from WhatsApp integration)
+- **Production Code**: ~12,500 lines (+500 from Insights Screen)
 - **Components**: 15 reusable components
-- **Screens**: 10 screens (all using ScreenHeader)
-- **Services**: 6 services (added urlShortener + whatsapp)
+- **Screens**: 11 screens (added InsightsScreen)
+- **Services**: 6 services
+- **Utilities**: Added insightsCalculator.ts for analytics
 
 ---
 
@@ -214,32 +272,42 @@ sendPaymentRequestsToAll()
 
 - **Branch**: main
 - **Remote**: origin/main
-- **Status**: Working tree has changes (WhatsApp integration + UI improvements)
-- **Last Commit**: Week 13 completion + Karzedaars rebrand
-- **Next**: Commit WhatsApp integration changes
-- **Untracked**: redirect-service/ directory, new service files
+- **Status**: Working tree has changes (Insights Screen complete)
+- **Last Commit**: Week 13 completion + WhatsApp integration
+- **Next**: Week 14 Days 3-5 (Reminders & Notifications)
+- **Changes**: InsightsScreen.tsx, billRepository.ts, SettingsScreen.tsx, AddVasoolyScreen.tsx
 
 ---
 
 ## Session Context
 
 ### Current Session Status
-- **Focus**: WhatsApp payment integration + UX improvements ✅
-- **Research**: Comprehensive WhatsApp auto-send investigation ✅
-- **Implementation**: Haptic feedback + batch send enhancements ✅
-- **Duration**: ~2 hours
-- **Productivity**: Excellent (full feature implementation + research)
+- **Focus**: Week 14 Day 1-2 Spending Insights Screen ✅
+- **Implementation**: Custom stacked bar charts with payment status ✅
+- **Victory Native**: Investigated and replaced with custom solution ✅
+- **UX**: Legend repositioning and color visibility fixes ✅
+- **Duration**: ~1.5 hours
+- **Productivity**: Excellent (complete feature with custom charts)
+
+### Technical Learnings
+1. **Victory Native XL v41**: Different API from v35, but unreliable rendering in our environment
+2. **Custom Charts**: React Native View + flexbox + calculated heights = better control
+3. **Stacked Bars**: Use `flexDirection: 'column-reverse'` to stack sections properly
+4. **Legend UX**: Position on right side of header, not below title
+5. **Payment Status**: Total amounts don't change, only paid/pending breakdown changes
+6. **Vasooly Logic**: Always exclude current user from collection calculations
 
 ### Ready to Continue
 - All tests passing (282 tests)
-- All validations clean (TypeScript + ESLint)
-- WhatsApp integration complete and working
-- UX improvements implemented
+- All validations clean (TypeScript 0 errors, ESLint 0 errors)
+- Insights Screen complete and working
+- Custom visualizations rendering properly
+- Stacked bars showing payment status correctly
 - Build compiling successfully
-- Code ready to commit
+- Code ready to commit or continue to Week 14 Days 3-5
 
 ---
 
-**Status**: ✅ WhatsApp Integration Complete
+**Status**: ✅ Week 14 Day 1-2 Complete (Spending Insights Screen)
 **Health**: 🟢 Excellent - all systems operational
-**Next Session**: Continue with Week 14 Premium Features or commit current work
+**Next Session**: Week 14 Days 3-5 (Reminders & Notifications) or commit current work

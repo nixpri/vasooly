@@ -1,552 +1,746 @@
-# Session Checkpoint - WhatsApp Payment Integration & UX Improvements
+# Session Checkpoint - Week 14 Spending Insights Screen
 
 **Session Date**: 2025-10-24
-**Session Focus**: WhatsApp-first payment requests with URL shortening + UX enhancements
-**Session Duration**: ~2 hours
+**Session Focus**: Week 14 Day 1-2 - Spending Insights Screen with Custom Visualizations
+**Session Duration**: ~1.5 hours
 **Status**: ✅ COMPLETE
 
 ---
 
 ## Session Summary
 
-Implemented complete WhatsApp-first payment request system with UPI URL shortening via redirect wrapper service. Conducted comprehensive research on WhatsApp auto-send solutions and implemented UX improvements with haptic feedback and batch send enhancements.
+Implemented complete Spending Insights Screen (Week 14 Day 1-2) with custom React Native visualizations featuring stacked bars showing paid vs pending amounts. Victory Native XL was investigated but ultimately replaced with custom View-based charts for better reliability and control.
 
 ---
 
-## Part 1: URL Shortening Problem & Solution
+## Feature Implementation
 
-### Problem
-UPI URLs (upi://) were being rejected by is.gd with error:
+### Spending Insights Screen Components
+
+**1. Key Metrics Grid (4 Cards)**
+```typescript
+// Metrics displayed:
+- Average Bill Size (amber icon, IndianRupee)
+- Total Bills (sage icon, FileText)
+- Settled Bills (terracotta icon, CheckCircle)
+- Settlement Rate % (sage icon, Percent)
+
+// Each card structure:
+<View style={styles.metricCard}>
+  <View style={styles.metricIconContainer}>
+    <Icon size={20} color={color[600]} strokeWidth={2} />
+  </View>
+  <Text style={styles.metricValue}>{value}</Text>
+  <Text style={styles.metricLabel}>{label}</Text>
+</View>
 ```
-Sorry, this URL doesn't seem to be of a type we recognise. 
-We check URL schemes against a whitelist...
+
+**2. Monthly Spending Chart - Stacked Bars** ⭐
+```typescript
+// Legend positioned on right side of card header
+<View style={styles.cardHeader}>
+  <View style={styles.cardTitleSection}>
+    <Text>Monthly Spending</Text>
+    <Text>Vasooly collections over time</Text>
+  </View>
+  <View style={styles.chartLegend}>
+    <View style={styles.legendItem}>
+      <View style={[styles.legendDot, { backgroundColor: green }]} />
+      <Text>Paid</Text>
+    </View>
+    <View style={styles.legendItem}>
+      <View style={[styles.legendDot, { backgroundColor: yellow }]} />
+      <Text>Pending</Text>
+    </View>
+  </View>
+</View>
+
+// Stacked bar rendering
+<View style={styles.barStack}>
+  {/* Pending section (top) - Yellow/Amber */}
+  {item.pendingPaise > 0 && (
+    <View style={[styles.barSection, {
+      height: (item.pendingPaise / maxMonthlyValue) * 150,
+      backgroundColor: isLast ? amber[500] : amber[400],
+      borderTopLeftRadius: 4,
+      borderTopRightRadius: 4,
+    }]} />
+  )}
+  {/* Paid section (bottom) - Green */}
+  {item.paidPaise > 0 && (
+    <View style={[styles.barSection, {
+      height: (item.paidPaise / maxMonthlyValue) * 150,
+      backgroundColor: isLast ? financial.positive : financial.positiveLight,
+    }]} />
+  )}
+</View>
 ```
 
-**Root Cause**: URL shorteners only accept http:// and https:// protocols, not custom protocols like upi://
+**Payment Status Calculation**:
+```typescript
+const monthlyDataWithPayments = useMemo(() => {
+  return monthlyData.map(monthData => {
+    // Filter bills for this month
+    const monthBills = bills.filter(bill => {
+      const billDate = bill.createdAt instanceof Date 
+        ? bill.createdAt 
+        : new Date(bill.createdAt);
+      const monthKey = `${billDate.toLocaleString('default', { month: 'short' })} ${billDate.getFullYear()}`;
+      return monthKey === monthData.month;
+    });
 
-### Solution: HTTP Redirect Wrapper
+    // Calculate paid and pending amounts
+    let paidPaise = 0;
+    let pendingPaise = 0;
+
+    monthBills.forEach(bill => {
+      bill.participants.forEach(participant => {
+        // Exclude current user (Vasooly logic)
+        const isUser = participant.name.trim() === '' ||
+                       participant.name.toLowerCase() === 'you' ||
+                       (defaultUPIName && participant.name.toLowerCase() === defaultUPIName.toLowerCase());
+
+        if (!isUser) {
+          if (participant.status === 'PAID') {
+            paidPaise += participant.amountPaise;
+          } else {
+            pendingPaise += participant.amountPaise;
+          }
+        }
+      });
+    });
+
+    return { ...monthData, paidPaise, pendingPaise };
+  });
+}, [monthlyData, bills, defaultUPIName]);
+```
+
+**3. Category Breakdown**
+```typescript
+<View style={styles.categoryItemWrapper}>
+  <View style={styles.categoryItemHeader}>
+    <View style={styles.categoryLeft}>
+      <View style={[styles.categoryDot, { backgroundColor: item.color }]} />
+      <Text style={styles.categoryName}>{getCategoryName(item.category)}</Text>
+    </View>
+    <Text style={styles.categoryAmount}>{formatPaise(item.totalPaise)}</Text>
+  </View>
+
+  {/* Visual percentage bar */}
+  <View style={styles.categoryBarContainer}>
+    <View style={[styles.categoryBar, {
+      width: `${item.percentage}%`,
+      backgroundColor: item.color,
+    }]} />
+  </View>
+
+  <View style={styles.categoryItemFooter}>
+    <Text style={styles.categoryCount}>{item.billCount} bills</Text>
+    <Text style={styles.categoryPercentage}>{Math.round(item.percentage)}%</Text>
+  </View>
+</View>
+```
+
+**4. Top Karzedaars List**
+```typescript
+{topKarzedaars.map((karzedaar, index) => (
+  <View style={styles.karzedaarItem}>
+    <View style={styles.karzedaarRank}>
+      <Text style={styles.karzedaarRankText}>#{index + 1}</Text>
+    </View>
+    <View style={styles.karzedaarInfo}>
+      <Text style={styles.karzedaarName}>{karzedaar.name}</Text>
+      <Text style={styles.karzedaarStats}>
+        {karzedaar.billCount} bills • {karzedaar.settledBills} settled
+      </Text>
+    </View>
+    <Text style={styles.karzedaarAmount}>{formatPaise(karzedaar.totalPaise)}</Text>
+  </View>
+))}
+```
+
+**5. Time Range Filters**
+```typescript
+// Horizontal scrollable chips
+const timeRangeOptions = [
+  { value: 'this_month', label: 'This Month' },
+  { value: 'last_3_months', label: 'Last 3 Months' },
+  { value: 'last_6_months', label: 'Last 6 Months' },
+  { value: 'this_year', label: 'This Year' },
+];
+
+<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+  {timeRangeOptions.map(option => (
+    <Pressable
+      onPress={() => setSelectedTimeRange(option.value)}
+      style={[
+        styles.filterChip,
+        selectedTimeRange === option.value && styles.filterChipActive,
+      ]}
+    >
+      <Text>{option.label}</Text>
+    </Pressable>
+  ))}
+</ScrollView>
+```
+
+**6. Empty State**
+```typescript
+if (hasInsufficientData) {
+  return (
+    <ScrollView refreshControl={<RefreshControl />}>
+      <TrendingUp size={64} color={tertiary} strokeWidth={1.5} />
+      <Text>Not Enough Data</Text>
+      <Text>Add at least 3 vasoolys to see spending insights and analytics.</Text>
+      <Text>Current vasoolys: {bills.length}/3</Text>
+    </ScrollView>
+  );
+}
+```
+
+---
+
+## Victory Native Investigation
+
+### Initial Approach (Failed)
+
+**Installed**: Victory Native XL v41.20.1
+```bash
+npx expo install victory-native
+```
+
+**API Changes v35 → v41**:
+```typescript
+// Old v35 API (not working)
+import { VictoryChart, VictoryBar } from 'victory-native';
+
+// New v41 API (attempted)
+import { CartesianChart, Bar, useChartPressState } from 'victory-native';
+import { Circle, useFont } from '@shopify/react-native-skia';
+```
+
+**Implementation Attempt**:
+```typescript
+const { state: barChartState, isActive: barChartActive } = useChartPressState({
+  x: '',
+  y: { value: 0 },
+});
+
+<CartesianChart
+  data={barChartData}
+  xKey="month"
+  yKeys={["value"]}
+  chartPressState={barChartState}
+>
+  {({ points, chartBounds }) => (
+    <Bar
+      points={points.value}
+      chartBounds={chartBounds}
+      color={tokens.colors.brand.primary}
+      roundedCorners={{ topLeft: 4, topRight: 4 }}
+    />
+  )}
+</CartesianChart>
+```
+
+**Problem**: Chart rendered completely blank despite correct data
+
+**User Feedback**: "Monthly Spending Card is blank, doesnt show anything. I have 4 vasoolies added and some of them are settled, still."
+
+**Debug Output**:
+```
+Monthly Data: 3 bills across 1 month
+Total amount: ₹5,095.73
+Categories: 2 (FOOD: ₹3,445.73, SHOPPING: ₹1,650.00)
+```
+
+### Final Solution: Custom React Native Views
 
 **Architecture**:
 ```
-UPI URL → HTTP Wrapper → Shortened URL → User Click → Redirect Page → UPI App
+View (barChartContainer)
+  → View (barWrapper) for each month
+    → View (barColumn)
+      → Text (barValue: total amount)
+      → View (barContainer: fixed 150px height)
+        → View (barStack: calculated height)
+          → View (barSection: pending - yellow, top)
+          → View (barSection: paid - green, bottom)
+      → Text (barLabel: month name)
+      → Text (barSubLabel: bill count)
 ```
+
+**Height Calculation**:
+```typescript
+const maxMonthlyValue = Math.max(...monthlyData.map(d => d.totalPaise));
+const totalHeight = (item.totalPaise / maxMonthlyValue) * 150;
+const paidHeight = (item.paidPaise / maxMonthlyValue) * 150;
+const pendingHeight = (item.pendingPaise / maxMonthlyValue) * 150;
+```
+
+**Stacked Bar Layout**:
+```typescript
+barStack: {
+  width: '100%',
+  flexDirection: 'column-reverse', // Paid on bottom, pending on top
+  justifyContent: 'flex-end',
+}
+```
+
+**Benefits**:
+- ✅ Reliable rendering (no blank charts)
+- ✅ Full control over styling
+- ✅ Better performance (native Views)
+- ✅ Matches earthen design system
+- ✅ No external dependencies needed
+
+---
+
+## User Clarifications & Design Decisions
+
+### Monthly Spending Behavior
+
+**User Question**: "When I marked some participants vasoolies as unpaid, it doesnt change the Monthly Spending Chart at all. Should it?"
+
+**Clarification**:
+- Monthly Spending shows **total collection amounts** (when bills are created)
+- This is correct for a Vasooly (collection) app
+- You're tracking what's being **collected**, not what's **received**
+
+**What DOES change with payment status**:
+- ✅ Settled Bills metric
+- ✅ Settlement Rate percentage
+- ✅ Top Karzedaars "settled" count
+- ✅ Stacked bar sections (paid vs pending breakdown)
+
+**What DOESN'T change**:
+- ❌ Total bar heights (total collection amounts)
+- ❌ Monthly total amounts shown above bars
+
+### Stacked Bar Enhancement
+
+**User Request**: "Maybe the same bar should have yellow and green sections depicting how much is pending and how much is paid"
 
 **Implementation**:
+- 🟢 Green section (bottom): Paid amounts
+- 🟡 Yellow section (top): Pending amounts
+- Legend on right side of card header
+- Current month uses darker colors (amber[500], financial.positive)
+- Other months use lighter colors (amber[400], financial.positiveLight)
 
-1. **Created Redirect Service** (`redirect-service/`)
-   - `index.html` - Auto-redirect page with fallback button
-   - `vercel.json` - Vercel static deployment config
-   - `README.md` - Deployment instructions
+### Legend Positioning
 
-2. **Redirect Page Features**:
-   - Gradient purple background (matches app theme)
-   - Auto-redirect to UPI URL on load
-   - Fallback "Tap here to pay" button after 2 seconds
-   - Error handling with user feedback
-   - Mobile-optimized responsive design
+**Initial Issue**: "The Paid and Pending legends arent shown properly, no color beside the texts."
 
-3. **Deployed to Vercel**:
-   - URL: `https://vasooly-redirect-q2639ymjm-nikunjs-projects-129287b3.vercel.app`
-   - Free tier (unlimited deployments, auto HTTPS, global CDN)
-   - No credit card required
+**Problem**: Legend was below subtitle, dots weren't visible
 
----
-
-## Part 2: Vercel Protection Bypass
-
-### Problem
-After deployment, links required Vercel login when opened from WhatsApp.
-
-### Solution
-User provided bypass secret: `nikunjtest123nikunjtest123nikunj`
-
-**Implementation**:
+**Solution**:
 ```typescript
-const CONFIG = {
-  redirectServiceUrl: 'https://vasooly-redirect-q2639ymjm-nikunjs-projects-129287b3.vercel.app',
-  vercelBypassSecret: 'nikunjtest123nikunjtest123nikunj',
-};
+// Moved legend to right side of header
+cardHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+}
 
-// Append to all redirect URLs
-if (CONFIG.vercelBypassSecret) {
-  urlToShorten += `&x-vercel-protection-bypass=${CONFIG.vercelBypassSecret}`;
+// Made dots smaller and more visible
+legendDot: {
+  width: 10,
+  height: 10,
+  borderRadius: tokens.radius.full,
+}
+
+// Tighter spacing
+legendItem: {
+  gap: 4, // 4px between dot and text
 }
 ```
 
-**Result**: Public access without disabling deployment protection
+### Removed Features
 
----
+**User Request**: "LEts remove the Spending Trend card"
 
-## Part 3: URL Shortener Service Simplification
+**Removed**:
+- Spending Trend card component
+- TrendingDown icon import
+- Associated styles
 
-### User Request
-"Remove all other fallback url shorteners that we have, only keep gd"
-
-### Changes Made
-
-**Removed** (~130 lines):
-- `shortenWithTinyUrl()` function
-- `shortenWithUrlfy()` function
-- Service array loop logic
-- `'tinyurl' | 'urlfy'` from type definitions
-
-**Simplified to**:
-- Single `shortenWithIsGd()` function with 2 retries
-- Direct function call (no service loop)
-- Cleaner error messages
-- Faster execution
-
-**Type Updates**:
-```typescript
-// Before
-service?: 'is.gd' | 'tinyurl' | 'urlfy' | 'none';
-
-// After
-service?: 'is.gd' | 'none';
-```
-
----
-
-## Part 4: WhatsApp Auto-Send Research
-
-### User Request
-"Still the problem is that whatsapp messages dont go directly, everytime it opens whatsapp and I need to manually send them. Is there any way that these messages can go directly? Do Deep research and find a solution to do this which can be free"
-
-### Research Conducted
-
-**Approaches Investigated**:
-
-1. **React Native WhatsApp Automation Libraries**
-   - react-native-whatsapp
-   - react-native-share-whatsapp
-   - **Finding**: Only open WhatsApp with pre-filled message, cannot auto-send
-
-2. **WhatsApp Business API**
-   - Official Meta API for automated messaging
-   - **Free Tier**: Exists (1000 conversations/month)
-   - **Requirements**: 
-     - Business verification (weeks/months)
-     - Only B2C use cases (not P2P)
-     - Only pre-approved templates
-     - Complex setup
-   - **Conclusion**: Not suitable for P2P payments
-
-3. **Third-Party WhatsApp APIs**
-   - AiSensy, DoubleTick, 360dialog, Twilio, Interakt
-   - **Cost**: ₹1000-5000/month
-   - **Conclusion**: Not free
-
-4. **Android Accessibility Service**
-   - Can automate UI interactions
-   - **Issues**: 
-     - Unethical
-     - Violates WhatsApp ToS
-     - Can get account banned
-     - Platform-specific (Android only)
-   - **Conclusion**: Not viable
-
-5. **SMS as Alternative**
-   - Can auto-send SMS
-   - **Issues**: 
-     - Less engagement than WhatsApp in India
-     - No delivery confirmation
-     - Cost per SMS
-   - **Conclusion**: Not preferred in Indian market
-
-### Research Conclusion
-
-**No free auto-send solution exists** for WhatsApp from mobile apps for P2P use cases.
-
-**Industry Standard**: Current implementation (open WhatsApp with pre-filled message) is what all major apps use:
-- Splitwise
-- Tricount  
-- Settle Up
-- Venmo (for sharing)
-
-**Recommendation**: Accept current UX and improve it with better feedback
-
----
-
-## Part 5: WhatsApp UX Improvements
-
-### User Acceptance
-User requested: "Yes implement all 3" (haptic feedback, toast notifications, batch send improvements)
-
-### Implementation
-
-#### 1. Haptic Feedback
-
-**Added to `whatsappService.ts`**:
-```typescript
-import * as Haptics from 'expo-haptics';
-```
-
-**Haptic Points**:
-
-| Action | Haptic Type | Purpose |
-|--------|-------------|---------|
-| Opening WhatsApp (single) | ImpactFeedbackStyle.Medium | Confirm action |
-| Batch send start | NotificationFeedbackType.Success | Signal start |
-| Each successful send | ImpactFeedbackStyle.Light | Progress feedback |
-| Failed send | NotificationFeedbackType.Error | Alert to issue |
-| Batch complete | NotificationFeedbackType.Success | Completion signal |
-
-#### 2. Batch Send Enhancements
-
-**Progress Callback Enhanced**:
-```typescript
-// Before
-onProgress?: (current: number, total: number, participantName: string) => void
-
-// After
-onProgress?: (current: number, total: number, participantName: string, status?: 'sending' | 'success' | 'failed') => void
-```
-
-**Completion Summary**:
-```typescript
-Alert.alert(
-  totalFailed === 0 ? '✓ Batch Send Complete' : '⚠️ Batch Send Completed',
-  totalFailed === 0
-    ? `All ${totalSent} payment requests sent successfully! 🎉`
-    : `Sent ${totalSent} requests. ${totalFailed} failed - check phone numbers and try again.`,
-  [{ text: 'OK', style: 'default' }],
-  { cancelable: true }
-);
-```
-
-**Better Pacing**:
-- Delay between sends: 500ms → 1000ms (1 second)
-- Gives user time to process each WhatsApp open
-
-#### 3. Toast Notifications (Simplified)
-
-**User Feedback**: "Remove the first dialog Message Ready WhatsApp opened with payment request Tap send to complete"
-
-**Final Implementation**:
-- Removed individual message confirmation dialogs
-- Kept only batch completion summary
-- Haptic feedback provides immediate tactile confirmation
-
----
-
-## Part 6: WhatsApp Message Templates
-
-### Payment Request Message
-```
-Hi {name}! 💸
-Pay ₹{amount} for {bill_title}
-
-👉 Tap here to pay instantly:
-{shortened_url}
-
-- Vasooly
-```
-
-### Reminder Message
-```
-Hi {name}! 🔔
-{count} pending payment(s) (₹{total}):
-
-• {bill_title}: ₹{amount}
-👉 Pay now: {shortened_url}
-
-• {bill_title}: ₹{amount}
-👉 Pay now: {shortened_url}
-
-- Vasooly
-```
-
-**Features**:
-- Bill title truncation (30 chars for payment, 20 for reminder)
-- Emoji indicators (💸, 🔔, 👉)
-- Clean formatting with line breaks
-- App signature at end
-
----
-
-## Files Created
-
-### redirect-service/index.html (114 lines)
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Vasooly Payment Redirect</title>
-    <style>
-        /* Purple gradient background */
-        /* Centered container with spinner */
-        /* Professional styling */
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="logo">💸</div>
-        <h1>Redirecting to Payment...</h1>
-        <p>Opening your UPI app</p>
-        <div class="spinner"></div>
-        <a id="manualLink" class="manual-link" style="display: none;">
-            Tap here to pay
-        </a>
-    </div>
-    <script>
-        const redirectTo = urlParams.get('to');
-        const decodedUrl = decodeURIComponent(redirectTo);
-        window.location.href = decodedUrl;
-        // Fallback button after 2 seconds
-    </script>
-</body>
-</html>
-```
-
-### redirect-service/vercel.json (16 lines)
-```json
-{
-  "version": 2,
-  "name": "vasooly-redirect",
-  "builds": [
-    { "src": "index.html", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
-}
-```
-
-### redirect-service/README.md (105 lines)
-- Explanation of why redirect service is needed
-- Step-by-step Vercel deployment (CLI and dashboard)
-- Testing procedures
-- Cost information (100% free)
-- Custom domain setup (optional)
-
-### src/services/urlShortenerService.ts (334 lines)
-```typescript
-// Configuration with redirect wrapper and bypass secret
-const CONFIG = {
-  timeout: 10000,
-  maxRetries: 2,
-  redirectServiceUrl: 'https://vasooly-redirect-q2639ymjm-nikunjs-projects-129287b3.vercel.app',
-  vercelBypassSecret: 'nikunjtest123nikunjtest123nikunj',
-};
-
-// Main function
-export async function shortenUrl(longUrl: string): Promise<ShortenUrlResult> {
-  // Detect non-web protocols (upi://)
-  // Wrap with redirect service + bypass secret
-  // Shorten with is.gd
-  // Return shortened URL or wrapped fallback
-}
-
-// Batch function
-export async function shortenUrlBatch(urls: string[]): Promise<ShortenUrlResult[]>
-
-// Health check
-export async function isServiceAvailable(): Promise<boolean>
-```
-
-### src/services/whatsappService.ts (438 lines)
-```typescript
-import * as Haptics from 'expo-haptics';
-
-// Phone number validation and formatting
-function formatPhoneNumber(phone: string): string | null
-
-// Message generation
-function generatePaymentMessage(...)
-function generateReminderMessage(...)
-
-// Core functions
-export async function isWhatsAppInstalled(): Promise<boolean>
-
-export async function sendPaymentRequest(
-  participant: Participant,
-  bill: Bill,
-  upiVPA: string,
-  upiName: string
-): Promise<WhatsAppResult>
-
-export async function sendPaymentRequestsToAll(
-  participants: Participant[],
-  bill: Bill,
-  upiVPA: string,
-  upiName: string,
-  onProgress?: (current, total, participantName, status?) => void
-): Promise<BatchSendResult>
-
-export async function sendPaymentReminder(...)
-```
-
----
-
-## Files Deleted
-
-### QR Code System (Replaced by WhatsApp)
-- `src/lib/business/qrCodeGenerator.ts`
-- `src/lib/business/__tests__/qrCodeGenerator.test.ts`
-- `src/services/qrCodeService.ts`
-- `src/services/__tests__/qrCodeService.test.ts`
-
-### Generic Share Service (Replaced by WhatsApp-specific)
-- `src/services/shareService.ts`
-- `src/services/__tests__/shareService.test.ts`
-
-**Rationale**: WhatsApp-first approach is more streamlined and better for Indian market
+**Reason**: Focus on more actionable insights (stacked bars show trend implicitly)
 
 ---
 
 ## Files Modified
 
-### src/services/index.ts
-```typescript
-// Removed exports
-export * from './qrCodeService';
-export * from './shareService';
+### src/screens/InsightsScreen.tsx (Complete Rewrite)
 
-// Added exports
-export * from './urlShortenerService';
-export * from './whatsappService';
+**Structure**:
+```typescript
+// Imports
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable, Dimensions } from 'react-native';
+import { TrendingUp, IndianRupee, FileText, CheckCircle, Percent } from 'lucide-react-native';
+
+// Component
+export const InsightsScreen: React.FC = () => {
+  // State
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('this_month');
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Data calculations
+  const monthlyData = useMemo(() => calculateMonthlySpending(...), [...]);
+  const categoryData = useMemo(() => calculateCategoryBreakdown(...), [...]);
+  const topKarzedaars = useMemo(() => getTopKarzedaars(...), [...]);
+  const metrics = useMemo(() => calculateKeyMetrics(...), [...]);
+  
+  // Payment status breakdown
+  const monthlyDataWithPayments = useMemo(() => {
+    // Calculate paidPaise and pendingPaise for each month
+  }, [monthlyData, bills, defaultUPIName]);
+
+  // Empty state (< 3 bills)
+  if (hasInsufficientData) return <EmptyState />;
+
+  // Main UI
+  return (
+    <ScrollView refreshControl={<RefreshControl />}>
+      {/* Time Range Filters */}
+      {/* Key Metrics Grid */}
+      {/* Monthly Spending Stacked Bar Chart */}
+      {/* Category Breakdown */}
+      {/* Top Karzedaars */}
+    </ScrollView>
+  );
+};
+
+// Styles (710 lines total)
+const styles = StyleSheet.create({
+  // 30+ style definitions
+});
 ```
 
-### Other Modified Files
-- `src/screens/VasoolyDetailScreen.tsx` - UI improvements
-- `src/screens/DashboardScreen.tsx` - Navigation fixes
-- `src/screens/KarzedaarDetailScreen.tsx` - Navigation updates
-- `src/screens/AddVasoolyScreen.tsx` - Button fixes
-- `docs/IMPLEMENTATION_PLAN.md` - Updated notes
+**Key Styles Added**:
+```typescript
+cardHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  marginBottom: tokens.spacing.lg,
+}
+
+chartLegend: {
+  flexDirection: 'row',
+  gap: tokens.spacing.sm,
+  alignItems: 'center',
+}
+
+legendDot: {
+  width: 10,
+  height: 10,
+  borderRadius: tokens.radius.full,
+}
+
+barStack: {
+  width: '100%',
+  flexDirection: 'column-reverse', // Paid on bottom, pending on top
+  justifyContent: 'flex-end',
+}
+
+barSection: {
+  width: '100%',
+}
+```
+
+### src/lib/data/billRepository.ts (Minor Fix)
+
+**Change**: Removed unused `ActivityEvent` import
+```typescript
+// Before
+import { Bill, Participant, BillStatus, PaymentStatus, ExpenseCategory, ActivityEvent } from '../../types';
+
+// After
+import { Bill, Participant, BillStatus, PaymentStatus, ExpenseCategory } from '../../types';
+```
+
+### src/screens/SettingsScreen.tsx (Type Fix)
+
+**Change**: Fixed `getInitials` function signature
+```typescript
+// Before
+const getInitials = (name?: string): string => {
+  // ...
+}
+
+// After
+const getInitials = (name?: string | null): string => {
+  if (!name || !name.trim()) return 'U';
+  // ...
+}
+```
+
+**Reason**: Zustand stores return `string | null`, not `string | undefined`
+
+### src/screens/AddVasoolyScreen.tsx (Type Fix)
+
+**Change**: Fixed `extractPhoneFromVPA` function signature
+```typescript
+// Before
+const extractPhoneFromVPA = (vpa?: string): string | undefined => {
+  // ...
+}
+
+// After
+const extractPhoneFromVPA = (vpa?: string | null): string | undefined => {
+  if (!vpa) return undefined;
+  // ...
+}
+```
 
 ---
 
-## Technical Decisions
+## Technical Patterns & Learnings
 
-### Why HTTP Redirect Wrapper?
-- **Problem**: URL shorteners reject custom protocols
-- **Solution**: Wrap in HTTP before shortening
-- **Benefit**: UPI URLs become shortenable
-- **Cost**: Free (Vercel free tier)
-- **Maintenance**: Zero (static page)
+### Custom Chart Implementation
 
-### Why Only is.gd?
-- **User Request**: Simplify codebase
-- **Benefit**: Faster execution, cleaner code
-- **Risk**: Single point of failure
-- **Mitigation**: Redirect wrapper URL serves as fallback
+**Pattern**: Proportional height calculation
+```typescript
+const maxValue = Math.max(...data.map(d => d.value));
+const height = (itemValue / maxValue) * MAX_HEIGHT;
+```
 
-### Why Haptic Feedback?
-- **User Feedback**: Manual tap feels unresponsive
-- **Solution**: Tactile confirmation at each step
-- **Library**: expo-haptics (already in dependencies)
-- **Cost**: Zero (built into React Native/Expo)
+**Pattern**: Stacked sections with column-reverse
+```typescript
+<View style={{ flexDirection: 'column-reverse' }}>
+  {/* First child renders at bottom */}
+  <View style={{ height: paidHeight, backgroundColor: green }} />
+  {/* Second child renders on top */}
+  <View style={{ height: pendingHeight, backgroundColor: yellow }} />
+</View>
+```
 
-### Why Remove Individual Toast?
-- **User Feedback**: "Remove the first dialog"
-- **Reasoning**: Haptic provides immediate feedback
-- **Keep**: Batch completion summary (useful for tracking)
+**Pattern**: Current item emphasis
+```typescript
+const isLast = index === data.length - 1;
+const color = isLast ? darkColor : lightColor;
+```
+
+### Vasooly Business Logic
+
+**Pattern**: Current user detection
+```typescript
+const isUser = participant.name.trim() === '' ||
+               participant.name.toLowerCase() === 'you' ||
+               (defaultUPIName && participant.name.toLowerCase() === defaultUPIName.toLowerCase());
+```
+
+**Pattern**: Exclude current user from calculations
+```typescript
+bill.participants.forEach(participant => {
+  if (!isUser) {
+    // Include in calculations
+  }
+});
+```
+
+### Legend Positioning
+
+**Pattern**: Header with title section and legend
+```typescript
+<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+  <View style={{ flex: 1 }}>
+    <Text>Title</Text>
+    <Text>Subtitle</Text>
+  </View>
+  <View style={{ flexDirection: 'row' }}>
+    {/* Legend items */}
+  </View>
+</View>
+```
 
 ---
 
 ## Validation Results
 
-- ✅ **TypeScript**: 0 errors
-- ✅ **Build**: Compiles successfully
-- ✅ **URL Shortening**: Working with redirect wrapper
-- ✅ **Vercel Bypass**: Public access without login
-- ✅ **Haptic Feedback**: Implemented throughout
-- ✅ **Batch Send**: Enhanced with progress and summary
+### TypeScript
+```bash
+npm run typecheck
+# Output: 0 errors ✅
+```
+
+### ESLint
+```bash
+npm run lint
+# Output: 0 errors, 20 warnings (all in test files) ✅
+```
+
+**Warnings**: Pre-existing `@typescript-eslint/no-explicit-any` in test files only
 
 ---
 
-## Design Patterns Used
+## Design System Compliance
 
-### Service Layer Pattern
-```
-whatsappService.ts
-  ↓ calls
-urlShortenerService.ts
-  ↓ calls
-is.gd API
+### Color Usage
+
+| Element | Color Token | Hex Value |
+|---------|-------------|-----------|
+| Paid bars (current) | `tokens.colors.financial.positive` | Green dark |
+| Paid bars (other) | `tokens.colors.financial.positiveLight` | Green light |
+| Pending bars (current) | `tokens.colors.amber[500]` | Amber dark |
+| Pending bars (other) | `tokens.colors.amber[400]` | Amber medium |
+| Average icon bg | `tokens.colors.amber[100]` | Amber light |
+| Bills icon bg | `tokens.colors.sage[100]` | Sage light |
+| Settled icon bg | `tokens.colors.terracotta[100]` | Terracotta light |
+
+### Typography
+
+| Element | Style | Font Weight |
+|---------|-------|-------------|
+| Card title | `tokens.typography.h3` | 600 |
+| Card subtitle | `tokens.typography.caption` | normal |
+| Metric value | `tokens.typography.h2` | normal |
+| Metric label | `tokens.typography.caption` | normal |
+| Bar value | `tokens.typography.caption` | 600 |
+| Bar label | `tokens.typography.caption` | 600 |
+| Legend text | `tokens.typography.caption` | 500 |
+
+### Spacing
+
+| Element | Token | Value |
+|---------|-------|-------|
+| Card padding | `tokens.spacing.lg` | 16px |
+| Content gap | `tokens.spacing.lg` | 16px |
+| Metrics grid gap | `tokens.spacing.md` | 12px |
+| Filter chip gap | `tokens.spacing.sm` | 8px |
+| Legend gap | `tokens.spacing.sm` | 8px |
+| Legend item gap | 4px | Fixed |
+
+---
+
+## Performance Considerations
+
+### useMemo Optimization
+```typescript
+// Expensive calculations memoized
+const monthlyData = useMemo(() => calculateMonthlySpending(...), [bills, selectedTimeRange, defaultUPIName]);
+const categoryData = useMemo(() => calculateCategoryBreakdown(...), [bills, selectedTimeRange, defaultUPIName]);
+const topKarzedaars = useMemo(() => getTopKarzedaars(...), [bills, selectedTimeRange, defaultUPIName]);
+const metrics = useMemo(() => calculateKeyMetrics(...), [bills, selectedTimeRange, defaultUPIName]);
+const monthlyDataWithPayments = useMemo(() => { /* ... */ }, [monthlyData, bills, defaultUPIName]);
 ```
 
-### Fallback Chain
-```
-UPI URL → Wrap in HTTP → Shorten → Success?
-                            ↓ No
-                    Return wrapped URL (still works)
-```
+**Dependencies**: Only recalculate when bills, time range, or user name changes
 
-### Progressive Enhancement
-```
-Basic: Open WhatsApp with message
-Enhanced: + Haptic feedback
-Advanced: + Progress tracking + Completion summary
+### Pull-to-Refresh
+```typescript
+const handleRefresh = useCallback(async () => {
+  setRefreshing(true);
+  try {
+    await loadAllBills();
+  } catch (error) {
+    console.error('Failed to refresh insights:', error);
+  } finally {
+    setRefreshing(false);
+  }
+}, [loadAllBills]);
 ```
 
 ---
 
 ## User Experience Flow
 
-### Single Payment Request
+### Initial Load
 ```
-1. User taps "Send Payment Request" button
-2. Haptic feedback (Medium impact) - tactile confirmation
-3. WhatsApp opens with pre-filled message containing shortened URL
-4. User taps Send in WhatsApp
-5. Recipient clicks shortened URL
-6. Redirect page opens and auto-launches UPI app
-7. Recipient completes payment in UPI app
+1. Screen mounts
+2. Check bill count (< 3 bills?)
+3a. YES → Show empty state
+3b. NO → Calculate all insights data (useMemo)
+4. Render metrics, charts, categories, karzedaars
+5. Apply selected time range filter (default: This Month)
 ```
 
-### Batch Payment Requests
+### Time Range Change
 ```
-1. User taps "Send to All" button
-2. Haptic feedback (Notification - Start)
-3. For each participant:
-   a. Send payment request
-   b. WhatsApp opens with message
-   c. Haptic feedback (Light for success, Error for failure)
-   d. Progress callback updates UI
-   e. 1 second delay
-4. Haptic feedback (Notification - Complete)
-5. Completion summary alert shows results
+1. User taps filter chip (e.g., "Last 3 Months")
+2. setSelectedTimeRange('last_3_months')
+3. All useMemo calculations re-run with new filter
+4. UI updates with new data
+```
+
+### Payment Status Change (External)
+```
+1. User marks participant as paid (in VasoolyDetailScreen)
+2. Bill store updates
+3. InsightsScreen re-renders (bills dependency changed)
+4. monthlyDataWithPayments recalculates
+5. Stacked bars update: green grows, yellow shrinks
+6. Settled Bills metric increments
+7. Settlement Rate % increases
+```
+
+### Pull-to-Refresh
+```
+1. User pulls down on scroll view
+2. Refreshing spinner shows
+3. loadAllBills() fetches from database
+4. Bills store updates
+5. All insights recalculate
+6. UI updates with latest data
+7. Refreshing spinner hides
 ```
 
 ---
 
-## Key Learnings
+## Key Insights & Decisions
 
-### WhatsApp Auto-Send Research
-- No free solution exists for P2P auto-send
-- WhatsApp Business API not suitable for this use case
-- Current implementation is industry standard
-- Better UX improvement > trying to force automation
+### Why Custom Charts Over Victory Native?
+1. **Reliability**: Victory Native rendered blank in our environment
+2. **Control**: Full styling control with native Views
+3. **Performance**: Native Views are faster than canvas rendering
+4. **Maintainability**: Simpler code, easier to debug
+5. **Design System**: Better integration with earthen tokens
 
-### URL Shortening
-- Custom protocols need HTTP wrapper
-- Vercel free tier perfect for redirect services
-- Protection bypass allows public access without security compromise
+### Why Stacked Bars?
+1. **User Request**: "Maybe the same bar should have yellow and green sections"
+2. **Information Density**: Shows total AND breakdown in one visual
+3. **At-a-Glance**: Immediately see payment status distribution
+4. **Space Efficient**: No need for separate paid/pending charts
 
-### User Feedback
-- User rejected "skip shortening" approach
-- User accepted UX improvements over auto-send
-- User wanted simplification (remove fallback services)
-- User refined toast behavior (remove individual, keep batch summary)
+### Why Legend on Right Side?
+1. **User Feedback**: Dots weren't visible when legend was below subtitle
+2. **Professional**: Common pattern in dashboards (Tableau, PowerBI)
+3. **Space Efficient**: Utilizes horizontal space better
+4. **Alignment**: Naturally aligns with card title
+
+### Why Exclude Current User?
+1. **Vasooly Logic**: App is for tracking collections from others
+2. **Consistency**: Same pattern used in split engine calculations
+3. **User Context**: defaultUPIName represents current user
+4. **Business Meaning**: Only track what you're collecting, not what you owe yourself
 
 ---
 
 ## Next Steps
 
-**Immediate**: 
-- Ready to commit WhatsApp integration changes
-- Redirect service deployed and working
-- All validations passing
+**Immediate**:
+- ✅ Insights Screen complete and validated
+- ✅ All TypeScript/ESLint checks passing
+- Ready to commit or continue to Week 14 Days 3-5
+
+**Week 14 Days 3-5** (Next):
+- Reminders & Notifications system
+- Push notification infrastructure
+- Reminder scheduling logic
+- Notification preferences UI
 
 **Future Enhancements** (if needed):
-- Add payment confirmation webhooks (when UPI provider supports)
-- Track payment status updates
-- Add retry mechanism for failed sends
-- Analytics on payment request engagement
+- Export insights as PDF/image
+- Custom date range picker
+- More chart types (pie charts for categories)
+- Comparative period analysis (MoM, YoY)
+- Drill-down into specific months/categories
 
 ---
 
 **Status**: ✅ Complete and Production-Ready
-**User Impact**: Seamless WhatsApp payment requests with professional UX
-**Deployment**: redirect-service deployed to Vercel, code ready to commit
+**Feature**: Week 14 Day 1-2 Spending Insights Screen
+**User Impact**: Comprehensive analytics with visual payment status tracking
+**Code Quality**: TypeScript 0 errors, ESLint clean, useMemo optimized
