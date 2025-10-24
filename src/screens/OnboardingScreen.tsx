@@ -77,11 +77,6 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
     }
   };
 
-  const handleSkip = async () => {
-    await setOnboardingCompleted(true);
-    onComplete();
-  };
-
   const handleNext = () => {
     // Allow navigation to the 4th screen (UPI setup)
     if (currentIndex < 3) {
@@ -135,23 +130,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
     }
   };
 
-  const isLastInfoScreen = currentIndex === ONBOARDING_SCREENS.length - 1;
   const isUpiScreen = currentIndex === 3;
 
   return (
     <View style={styles.container}>
-      {/* Skip Button - Hide on last info screen and UPI screen */}
-      {!isLastInfoScreen && !isUpiScreen && (
-        <Animated.View
-          entering={FadeInDown.duration(300)}
-          style={styles.skipContainer}
-        >
-          <Pressable onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>Skip</Text>
-          </Pressable>
-        </Animated.View>
-      )}
-
       {/* Horizontal Scrolling Screens */}
       <ScrollView
         ref={scrollViewRef}
@@ -294,21 +276,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: tokens.colors.background.base,
-  },
-  skipContainer: {
-    position: 'absolute',
-    top: 60,
-    right: tokens.spacing.xl,
-    zIndex: 10,
-  },
-  skipButton: {
-    paddingHorizontal: tokens.spacing.md,
-    paddingVertical: tokens.spacing.sm,
-  },
-  skipText: {
-    fontSize: tokens.typography.body.fontSize,
-    fontWeight: tokens.typography.fontWeight.medium,
-    color: tokens.colors.text.secondary,
   },
   scrollView: {
     flex: 1,
