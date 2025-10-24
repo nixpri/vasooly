@@ -45,7 +45,7 @@ function formatPhoneNumber(phone: string): string | null {
   let cleaned = phone.replace(/\D/g, '');
 
   // Remove leading 0 if present (common in Indian phone numbers from contacts)
-  // 09409082904 -> 9409082904
+  // 0XXXXXXXXXX -> XXXXXXXXXX
   if (cleaned.startsWith('0') && cleaned.length === 11) {
     cleaned = cleaned.substring(1);
   }

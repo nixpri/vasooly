@@ -1,7 +1,34 @@
 # Vasooly Development Guide
 
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-10-25
 **Purpose**: Quick reference for common development patterns and decisions
+
+---
+
+## 🚨 CRITICAL: GIT COMMIT POLICY
+
+**NEVER COMMIT OR PUSH UNLESS USER EXPLICITLY ASKS**
+
+- DO NOT auto-commit after completing tasks
+- DO NOT auto-push after making changes
+- ONLY commit when user says "commit" or "commit and push"
+- ONLY push when user says "push" or "commit and push"
+- User gets frustrated with unsolicited commits
+- Always validate code first, then WAIT for user instruction
+
+### When User Says to Commit
+
+```bash
+npm run validate                    # Always validate first
+git add -A                          # Stage all changes
+git commit -m "type: description    # Follow commit format below
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+"
+# STOP - DO NOT PUSH unless user asks
+```
 
 ---
 
@@ -380,7 +407,7 @@ git commit -m "chore(deps): update expo-sdk to 54.0.0"
 git commit -m "chore(lint): fix ESLint warnings"
 ```
 
-### Before Committing
+### Before Committing (When User Asks)
 
 **Checklist**:
 ```bash
@@ -393,11 +420,22 @@ npm test          # All tests passing
 git status         # Review changed files
 git diff          # Review actual changes
 
-# 3. Stage and commit
-git add .
-git commit -m "feat(scope): description"
+# 3. STOP - Wait for user to ask to commit
+# DO NOT proceed without explicit user instruction
 
-# 4. Push to remote
+# 4. When user asks to commit
+git add .
+git commit -m "feat(scope): description
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+"
+
+# 5. STOP - Wait for user to ask to push
+# DO NOT push without explicit user instruction
+
+# 6. When user asks to push
 git push origin main
 ```
 
@@ -447,6 +485,6 @@ npx react-native log-ios     # iOS logs
 
 ---
 
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-10-25
 **Status**: Active development guide
 **Next Update**: When new patterns emerge

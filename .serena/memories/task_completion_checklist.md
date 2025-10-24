@@ -48,9 +48,18 @@ This runs: `typecheck && lint && test:coverage`
 - [ ] Breaking changes noted
 - [ ] Examples provided for new features
 
-### 5. Git Hygiene
+### 5. Git Hygiene ⚠️ CRITICAL
 
-#### Before Commit
+#### COMMIT POLICY
+**🚨 DO NOT COMMIT AND PUSH UNLESS EXPLICITLY ASKED BY USER 🚨**
+
+- User will tell you when to commit
+- User will tell you when to push
+- DO NOT auto-commit after completing tasks
+- DO NOT auto-push after making changes
+- ONLY commit/push when user specifically asks
+
+#### Before Commit (When Asked)
 ```bash
 git status                  # Check what's staged
 git diff                    # Review changes
@@ -67,6 +76,10 @@ Detailed explanation if needed (wrap at 72 chars)
 
 - Bullet points for details
 - What changed and why
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Types**: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
@@ -127,13 +140,26 @@ Detailed explanation if needed (wrap at 72 chars)
 - [ ] Native modules work
 - [ ] Back button behavior correct
 
-## Quick Checklist (Every Commit)
+## Quick Checklist (Every Task Completion)
 
 ```bash
 npm run validate     # ← MANDATORY
+# STOP HERE - DO NOT COMMIT/PUSH UNLESS USER ASKS
+```
+
+## When User Asks to Commit
+
+```bash
 git status           # ← Verify changes
 git add .            # ← Stage files
-git commit -m "..."  # ← Descriptive message
+git commit -m "..."  # ← Descriptive message with co-author
+# STOP - DO NOT PUSH UNLESS USER ASKS
+```
+
+## When User Asks to Push
+
+```bash
+git push             # ← Only after explicit user request
 ```
 
 ## Pre-Release Checklist (Phase Completion)
