@@ -1,5 +1,60 @@
 # Design System Decisions & Patterns
 
+## Empty State Centering Pattern (NEW - Week 14)
+
+**Problem**: Empty states appearing in lower 60% of screen instead of true center
+
+**Root Cause**: 
+- ScreenHeader consumes ~100px at top (paddingTop: 52px + content + paddingBottom: 16px)
+- Search/Filters consume additional 50-210px depending on screen
+- `flex: 1 + justifyContent: 'center'` centers in REMAINING space after header, not full viewport
+
+**Solution Pattern**:
+```typescript
+emptyContainer: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingHorizontal: tokens.spacing['3xl'],  // NOT padding (adds top/bottom)
+  gap: tokens.spacing.md,  // Use gap, NOT marginTop on children
+  marginTop: -80,  // Offset to account for header space (~100px)
+}
+
+emptyTitle: {
+  ...tokens.typography.h2,  // NOT individual properties
+  color: tokens.colors.text.primary,
+  textAlign: 'center',
+  // NO marginTop - gap handles spacing
+}
+
+emptyText: {
+  ...tokens.typography.body,
+  color: tokens.colors.text.secondary,
+  textAlign: 'center',
+  maxWidth: 280,
+  // NO marginTop - gap handles spacing
+}
+```
+
+**Why marginTop: -80 Works**:
+- ScreenHeader = ~100px
+- Offset of -80px shifts content up
+- Visually centers in full viewport accounting for header
+- Consistent across all three screens
+
+**Applied To**:
+- ActivityScreen empty state
+- InsightsScreen empty state  
+- KarzedaarsListScreen empty state
+
+**Critical Rules**:
+1. Use `paddingHorizontal`, NEVER `padding` (adds unwanted top/bottom)
+2. Use `gap` on container, NEVER `marginTop` on children (causes double spacing)
+3. Add `marginTop: -80` to offset header space
+4. Children should have NO margin properties
+
+**File**: This pattern documented after Week 14 empty state alignment fix
+
 ## Earthen Color Strategy
 
 **Decision**: Replace generic purple theme with earthen color palette (Terracotta + Olive Green)
@@ -473,9 +528,11 @@ Each tab has Stack Navigator:
 - Minimal text (2-3 lines max per screen)
 - Clear CTAs ("Next" → "Next" → "Get Started")
 
+**Week 14 Update**: Mandatory UPI setup - removed skip button entirely
+
 **File**: `src/screens/OnboardingScreen.tsx`
 
-## UI Consistency Checklist (Week 13)
+## UI Consistency Checklist (Week 13-14)
 
 **Applied to All Screens**:
 - ✅ All titles use h2 typography (24px, bold)
@@ -488,15 +545,21 @@ Each tab has Stack Navigator:
 - ✅ All spacing uses tokens (tokens.spacing.*)
 - ✅ All grid calculations match actual padding
 - ✅ All Vasooly calculations exclude user's share
+- ✅ All empty states use Lucide icons (NOT emoji)
+- ✅ All empty states use gap spacing (NOT marginTop on children)
+- ✅ All empty states use paddingHorizontal (NOT padding)
+- ✅ All empty states use marginTop: -80 offset for visual centering
 
 **Screens Audited**:
 1. DashboardScreen ✅
-2. ActivityScreen ✅
+2. ActivityScreen ✅ (Week 14: empty state fix)
 3. ProfileScreen ✅
 4. FriendsListScreen ✅
 5. BillDetailScreen ✅
 6. BillCreateScreen ✅
 7. SettingsScreen ✅
-8. OnboardingScreen ✅
+8. OnboardingScreen ✅ (Week 14: mandatory UPI)
+9. InsightsScreen ✅ (Week 14: empty state fix)
+10. KarzedaarsListScreen ✅ (Week 14: empty state fix)
 
-**Total Issues Fixed**: 28
+**Total Issues Fixed**: 35+

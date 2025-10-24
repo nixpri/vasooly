@@ -440,18 +440,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: tokens.spacing['3xl'],
+    gap: tokens.spacing.md,
+    marginTop: -80,
   },
   emptyStateTitle: {
     ...tokens.typography.h2,
     color: tokens.colors.text.primary,
-    marginTop: tokens.spacing.lg,
     textAlign: 'center',
   },
   emptyStateText: {
     ...tokens.typography.body,
     color: tokens.colors.text.secondary,
     textAlign: 'center',
-    marginTop: tokens.spacing.sm,
     maxWidth: 280,
   },
   emptyStateHint: {

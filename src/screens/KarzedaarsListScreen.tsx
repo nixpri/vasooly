@@ -281,6 +281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: tokens.spacing.xl,
     gap: tokens.spacing.md,
+    marginTop: -80,
   },
   emptyTitle: {
     ...tokens.typography.h2,
