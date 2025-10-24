@@ -416,20 +416,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: tokens.spacing['3xl'],
+    padding: tokens.spacing['3xl'],
     gap: tokens.spacing.md,
   },
   emptyTitle: {
     ...tokens.typography.h2,
     color: tokens.colors.text.primary,
     textAlign: 'center',
-    marginTop: tokens.spacing.lg,
   },
   emptyText: {
     ...tokens.typography.body,
     color: tokens.colors.text.secondary,
     textAlign: 'center',
-    marginTop: tokens.spacing.sm,
     maxWidth: 280,
   },
 });
