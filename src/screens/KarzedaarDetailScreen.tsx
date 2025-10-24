@@ -39,10 +39,11 @@ import {
 import type { KarzedaarDetailScreenProps } from '@/navigation/types';
 import { tokens } from '@/theme/ThemeProvider';
 import { GlassCard, LoadingSpinner, ScreenHeader, AnimatedButton } from '@/components';
-import { useKarzedaarsStore, useBillStore } from '@/stores';
+import { useKarzedaarsStore, useBillStore, useSettingsStore } from '@/stores';
 import { formatPaise } from '@/lib/business/splitEngine';
 import type { Bill } from '@/types';
 import { BillStatus, PaymentStatus } from '@/types';
+import { sendPaymentReminder, isWhatsAppInstalled, showWhatsAppNotInstalledError } from '@/services/whatsappService';
 
 export const KarzedaarDetailScreen: React.FC<KarzedaarDetailScreenProps> = ({ route, navigation }) => {
   const { karzedaarId } = route.params;
@@ -50,6 +51,7 @@ export const KarzedaarDetailScreen: React.FC<KarzedaarDetailScreenProps> = ({ ro
   // State
   const { karzedaars, loadKarzedaars } = useKarzedaarsStore();
   const { bills, loadAllBills, isLoading } = useBillStore();
+  const { defaultVPA, defaultUPIName } = useSettingsStore();
   const hasNavigatedRef = useRef(false);
 
   // Reload data when screen gains focus
@@ -132,19 +134,76 @@ export const KarzedaarDetailScreen: React.FC<KarzedaarDetailScreenProps> = ({ ro
   }, [karzedaar, navigation]);
 
   // Handle remind
-  const handleRemind = useCallback(() => {
+  const handleRemind = useCallback(async () => {
     if (!karzedaar) return;
 
-    // TODO: Integrate with reminder/share service
-    Alert.alert(
-      'Send Reminder',
-      `Send a payment reminder to ${karzedaar.name}?\n\nReminder functionality coming soon!`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Send', onPress: () => console.log('Send reminder') },
-      ]
+    // Check if UPI ID is configured
+    if (!defaultVPA || !defaultUPIName) {
+      Alert.alert(
+        'UPI ID Required',
+        'Please configure your UPI ID in Settings before sending payment requests.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Get pending bills for this karzedaar
+    const pendingBills = karzedaarBills.filter((bill) => {
+      const participant = bill.participants.find(
+        (p) => p.name.toLowerCase() === karzedaar.name.toLowerCase()
+      );
+      return participant?.status === PaymentStatus.PENDING;
+    });
+
+    if (pendingBills.length === 0) {
+      Alert.alert(
+        'No Pending Payments',
+        `${karzedaar.name} has no pending payments.`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Check if WhatsApp is installed
+    const whatsappAvailable = await isWhatsAppInstalled();
+    if (!whatsappAvailable) {
+      showWhatsAppNotInstalledError();
+      return;
+    }
+
+    // Check if phone number is available
+    if (!karzedaar.phone) {
+      Alert.alert(
+        'Phone Number Required',
+        `No phone number found for ${karzedaar.name}. Please add their phone number from contacts.`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Send reminder
+    const result = await sendPaymentReminder(
+      karzedaar.name,
+      karzedaar.phone,
+      pendingBills,
+      defaultVPA,
+      defaultUPIName
     );
-  }, [karzedaar]);
+
+    if (result.success) {
+      Alert.alert(
+        'Reminder Sent',
+        `Payment reminder sent to ${karzedaar.name} via WhatsApp`,
+        [{ text: 'OK' }]
+      );
+    } else {
+      Alert.alert(
+        'Failed to Send',
+        result.error || 'Could not send payment reminder',
+        [{ text: 'OK' }]
+      );
+    }
+  }, [karzedaar, karzedaarBills, defaultVPA, defaultUPIName]);
 
   // Handle bill press (cross-tab navigation)
   const handleBillPress = useCallback(
@@ -309,7 +368,7 @@ export const KarzedaarDetailScreen: React.FC<KarzedaarDetailScreenProps> = ({ ro
                           styles.billCard,
                           (isPaid || isSettled) && styles.billCardPaid,
                           !isPaid && !isSettled && styles.billCardPending,
-                        ]}
+                        ] as any}
                       >
                         <View style={styles.billContent}>
                           {/* Left Side - Bill Info */}

@@ -63,6 +63,7 @@ import type { Bill, Participant } from '@/types';
 import { useHaptics } from '@/hooks';
 import { tokens } from '@/theme/ThemeProvider';
 import type { AddVasoolyScreenProps } from '@/navigation/types';
+import { sendPaymentRequestsToAll, isWhatsAppInstalled, showWhatsAppNotInstalledError } from '@/services/whatsappService';
 
 interface ParticipantInput {
   id: string;
@@ -115,7 +116,7 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
   const isEditMode = !!existingBill;
 
   const { createBill: createBillInStore, updateBill: updateBillInStore } = useBillStore();
-  const { defaultUPIName } = useSettingsStore();
+  const { defaultUPIName, defaultVPA } = useSettingsStore();
   const { addOrUpdateKarzedaar, updateKarzedaarStats } = useKarzedaarsStore();
   const haptics = useHaptics();
 
@@ -145,7 +146,7 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
   const [receiptPhoto, setReceiptPhoto] = useState<string | null>(null);
   const [participants, setParticipants] = useState<ParticipantInput[]>(
     existingBill
-      ? existingBill.participants.map((p) => ({ id: p.id, name: p.name }))
+      ? existingBill.participants.map((p: any) => ({ id: p.id, name: p.name }))
       : [{ id: 'default-1', name: defaultUPIName || 'You' }]
   );
   const [splitResult, setSplitResult] = useState<DetailedSplitResult | null>(null);
@@ -276,6 +277,76 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
     }
   }, [haptics]);
 
+  const handleSendPaymentRequests = useCallback(async (bill: Bill) => {
+    // Check if UPI ID is configured
+    if (!defaultVPA || !defaultUPIName) {
+      Alert.alert(
+        'UPI ID Required',
+        'Please set up your UPI ID in Settings to send payment requests',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Check if WhatsApp is installed
+    const whatsappAvailable = await isWhatsAppInstalled();
+    if (!whatsappAvailable) {
+      showWhatsAppNotInstalledError();
+      return;
+    }
+
+    // Get participants who need to pay (excluding current user)
+    const pendingParticipants = bill.participants.filter(
+      (p) => p.status === PaymentStatus.PENDING && !isCurrentUser(p.name)
+    );
+
+    if (pendingParticipants.length === 0) {
+      Alert.alert(
+        'No Pending Payments',
+        'There are no participants who need to pay',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    try {
+      // Send payment requests to all pending participants
+      const result = await sendPaymentRequestsToAll(
+        pendingParticipants,
+        bill,
+        defaultVPA,
+        defaultUPIName
+      );
+
+      // Show results
+      if (result.totalSent > 0) {
+        haptics.success();
+        Alert.alert(
+          'Payment Requests Sent',
+          `Successfully sent ${result.totalSent} payment request${result.totalSent > 1 ? 's' : ''} via WhatsApp!${
+            result.totalFailed > 0 ? `\n\n${result.totalFailed} request${result.totalFailed > 1 ? 's' : ''} failed.` : ''
+          }`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        haptics.warning();
+        Alert.alert(
+          'Failed to Send',
+          'Could not send payment requests. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      haptics.error();
+      Alert.alert(
+        'Error',
+        'Failed to send payment requests. Please try again.',
+        [{ text: 'OK' }]
+      );
+      console.error('Error sending payment requests:', error);
+    }
+  }, [defaultVPA, defaultUPIName, isCurrentUser, haptics]);
+
   const handleSaveBill = async () => {
     // Validation
     if (!billTitle.trim()) {
@@ -315,7 +386,7 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
       const participantData: Participant[] = splitResult.splits.map((split, index) => {
         const existingParticipant =
           isEditMode && existingBill
-            ? existingBill.participants.find((p) => p.name === split.participantName)
+            ? existingBill.participants.find((p: any) => p.name === split.participantName)
             : undefined;
 
         // Find phone from current participants input
@@ -381,7 +452,34 @@ export const AddVasoolyScreen: React.FC<AddVasoolyScreenProps> = ({ navigation, 
         }
 
         haptics.success();
-        navigation.goBack();
+
+        // Show confirmation dialog to send payment requests via WhatsApp
+        const pendingCount = participantData.filter(
+          (p) => p.status === PaymentStatus.PENDING && !isCurrentUser(p.name)
+        ).length;
+
+        if (pendingCount > 0) {
+          Alert.alert(
+            'Send Payment Requests?',
+            `Send payment requests via WhatsApp to ${pendingCount} friend${pendingCount > 1 ? 's' : ''}?`,
+            [
+              {
+                text: 'Skip',
+                style: 'cancel',
+                onPress: () => navigation.goBack(),
+              },
+              {
+                text: 'Send Now',
+                onPress: async () => {
+                  await handleSendPaymentRequests(newBill);
+                  navigation.goBack();
+                },
+              },
+            ]
+          );
+        } else {
+          navigation.goBack();
+        }
       }
     } catch (error) {
       haptics.error();

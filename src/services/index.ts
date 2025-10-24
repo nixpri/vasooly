@@ -5,6 +5,6 @@
  */
 
 export * from './contactsService';
-export * from './shareService';
-export * from './qrCodeService';
+export * from './whatsappService';
+export * from './urlShortenerService';
 export * from './filePickerService';

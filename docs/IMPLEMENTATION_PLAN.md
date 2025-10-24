@@ -524,6 +524,107 @@ Modal Screens (within stacks)
 
 **Status**: ✅ COMPLETE (2025-10-23)
 
+#### Day 3.5: WhatsApp-First Payment Requests ✅ COMPLETE
+**Files Created**:
+- `src/services/urlShortenerService.ts` (164 lines) - is.gd URL shortening integration
+- `src/services/whatsappService.ts` (421 lines) - WhatsApp deep linking for payment requests
+
+**Files Modified**:
+- `src/screens/OnboardingScreen.tsx` - Added mandatory 4th screen for UPI ID collection
+- `src/screens/AddVasoolyScreen.tsx` - Added confirmation dialog for auto-send
+- `src/screens/VasoolyDetailScreen.tsx` - Replaced share with WhatsApp-only
+- `src/screens/KarzedaarDetailScreen.tsx` - Implemented WhatsApp remind
+- `src/services/index.ts` - Updated exports
+
+**Files Deleted**:
+- `src/services/shareService.ts` (384 lines) - Generic share deprecated
+- `src/services/qrCodeService.ts` (291 lines) - QR code generation deprecated
+- `src/lib/business/qrCodeGenerator.ts` - QR code generation deprecated
+
+**Features Implemented**:
+- ✅ **Mandatory UPI ID Onboarding**:
+  - 4th screen in onboarding (3 feature screens → UPI setup)
+  - UPI ID validation with `validateVPA()` from upiGenerator
+  - UPI Name collection (both required)
+  - Changed final button: "Get Started" → "Complete Setup"
+  - Saved to settingsStore (defaultVPA, defaultUPIName)
+  - Error messages and help text with examples
+- ✅ **URL Shortening Service**:
+  - is.gd integration (free, no API key)
+  - 5-second timeout on API calls
+  - Automatic fallback to long URL on failure
+  - Batch shortening support
+  - Service health check
+- ✅ **WhatsApp Deep Linking**:
+  - `whatsapp://send?phone={+91number}&text={message}` format
+  - Phone validation with auto +91 prefix
+  - Sequential sending (500ms delay between participants)
+  - WhatsApp availability check
+  - Message template: "Hi {name}! 💸\nPay ₹{amount} for {title}\n{url}\n- Vasooly"
+  - Bill title truncation (30 chars for single, 20 for reminders)
+- ✅ **Auto-send Payment Requests**:
+  - AddVasoolyScreen: Confirmation dialog after creating new vasooly
+  - VasoolyDetailScreen: "Send" button (individual participant)
+  - VasoolyDetailScreen: "Send to All" button (all pending participants)
+  - KarzedaarDetailScreen: "Remind" button (sends reminder for all pending bills)
+  - All buttons check UPI ID configured and WhatsApp installed
+  - Success/failure alerts with proper error handling
+- ✅ **Payment Reminders**:
+  - Multi-bill reminder support (all pending bills for karzedaar)
+  - Total amount calculation across bills
+  - Individual bill breakdown with URLs
+  - Format: "{count} pending payments (₹{total}):\n• {title}: ₹{amount}\n{url}"
+- ✅ **UI Updates**:
+  - Replaced Share2 icon with Send icon
+  - Changed button text: "Share" → "Send"
+  - Removed all references to share service and QR codes
+  - Updated service exports
+
+**Phone Number Handling**:
+- Auto-adds +91 prefix for Indian numbers
+- Validates 10-digit format
+- Supports existing contact picker (phone already mandatory)
+- Clear error messages for invalid formats
+
+**Technical Implementation**:
+- WhatsApp availability check: `Linking.canOpenURL('whatsapp://send')`
+- Deep link opening: `Linking.openURL(whatsappUrl)`
+- Message encoding: `encodeURIComponent()` for URL safety
+- UPI link generation: Existing `generateUPILink()` from upiGenerator
+- Transaction ID format: `BILL-{billId}-{participantId}-{timestamp}`
+- Reminder transaction ID: `REMIND-{billId}-{participantId}-{timestamp}`
+
+**Error Handling**:
+- WhatsApp not installed → Alert with install instructions
+- No phone number → Skip participant with error result
+- Invalid phone format → Clear error message
+- URL shortening failure → Fallback to long URL
+- No UPI ID configured → Alert prompting setup
+- Network failures → Graceful degradation
+
+**Validation**:
+- TypeScript: ✅ 0 errors
+- ESLint: ✅ 0 errors
+- Tests: ✅ 282 passing (no test updates needed)
+- Build: ✅ Successful
+- Design Tokens: ✅ 100% compliance
+
+**User Experience Flow**:
+1. **First-time user**: Onboarding → UPI setup (mandatory) → Dashboard
+2. **Creating vasooly**: Add participants → Create → Confirmation dialog → Auto-send via WhatsApp
+3. **Individual payment**: VasoolyDetail → Tap "Send" on participant → WhatsApp opens
+4. **Bulk send**: VasoolyDetail → "Send to All" → Sequential WhatsApp messages (user controls pace)
+5. **Reminders**: KarzedaarDetail → "Remind" → Multi-bill reminder via WhatsApp
+
+**Performance Considerations**:
+- Sequential sending prevents overwhelming user
+- 500ms delay between participants
+- is.gd shortening with timeout
+- Fallback to long URL preserves functionality
+- All operations non-blocking
+
+**Status**: ✅ COMPLETE (2025-10-24)
+
 #### Day 4-5: Enhanced Vasooly Detail & Settings
 - [ ] Enhance `VasoolyDetailScreen.tsx`:
   - Add receipt photo display (if uploaded)

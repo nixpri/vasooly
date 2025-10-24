@@ -6,15 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Share as RNShare,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
 import {
   ChevronLeft,
   PartyPopper,
-  IndianRupee,
-  Share2,
+  Send,
   Check,
   Lock,
   RotateCcw,
@@ -22,7 +20,6 @@ import {
 } from 'lucide-react-native';
 import { GlassCard, AnimatedGlassCard, AnimatedButton } from '@/components';
 import { formatPaise } from '@/lib/business/splitEngine';
-import { generateUPILink } from '@/lib/business/upiGenerator';
 import { PaymentStatus } from '@/types';
 import type { Participant } from '@/types';
 import { useBillStore, useSettingsStore } from '@/stores';
@@ -30,6 +27,7 @@ import type { HomeVasoolyDetailScreenProps } from '@/navigation/types';
 import { useHaptics } from '@/hooks';
 import { springConfigs } from '@/utils/animations';
 import { tokens } from '@/theme/ThemeProvider';
+import { sendPaymentRequest, sendPaymentRequestsToAll, isWhatsAppInstalled, showWhatsAppNotInstalledError } from '@/services/whatsappService';
 
 export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ route, navigation }) => {
   const { billId } = route.params;
@@ -73,8 +71,6 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
       setBill(updatedBill);
     }, [billId, getBillById])
   );
-
-  const vpaToUse = defaultVPA || 'merchant@paytm'; // Fallback VPA
 
   if (!bill) {
     // Bill not found, navigate back
@@ -124,53 +120,120 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
     }
   };
 
-  const handleGenerateUPILink = (participant: Participant): string => {
-    const result = generateUPILink({
-      pa: vpaToUse,
-      pn: 'Vasooly',
-      am: participant.amountPaise / 100, // Convert paise to rupees
-      tn: `Payment for ${bill.title} - ${participant.name}`,
-    });
-    return result.standardUri;
-  };
+  const handleSendWhatsAppPayment = async (participant: Participant) => {
+    // Check if UPI ID is configured
+    if (!defaultVPA || !defaultUPIName) {
+      haptics.warning();
+      Alert.alert(
+        'UPI ID Required',
+        'Please set up your UPI ID in Settings to send payment requests',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
 
-  const handleShareUPILink = async (participant: Participant) => {
+    // Check if WhatsApp is installed
+    const whatsappAvailable = await isWhatsAppInstalled();
+    if (!whatsappAvailable) {
+      showWhatsAppNotInstalledError();
+      return;
+    }
+
     try {
-      const upiLink = handleGenerateUPILink(participant);
-      await RNShare.share({
-        message: `Hi ${participant.name}! 👋\n\nPayment request for: ${bill.title}\nAmount: ${formatPaise(participant.amountPaise)}\n\nPay via UPI: ${upiLink}\n\nPowered by Vasooly 💜`,
-      });
+      haptics.light();
+      const result = await sendPaymentRequest(
+        participant,
+        bill,
+        defaultVPA,
+        defaultUPIName
+      );
+
+      if (result.success) {
+        haptics.success();
+        // WhatsApp will open automatically, no need for additional success message
+      } else {
+        haptics.error();
+        Alert.alert(
+          'Failed to Send',
+          result.error || 'Could not send payment request. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
     } catch (error) {
-      console.error('Failed to share UPI link:', error);
+      haptics.error();
+      Alert.alert(
+        'Error',
+        'Failed to send payment request. Please try again.',
+        [{ text: 'OK' }]
+      );
+      console.error('Failed to send WhatsApp payment request:', error);
     }
   };
 
-  const handleShareAllPending = async () => {
+  const handleSendWhatsAppToAll = async () => {
+    // Check if UPI ID is configured
+    if (!defaultVPA || !defaultUPIName) {
+      haptics.warning();
+      Alert.alert(
+        'UPI ID Required',
+        'Please set up your UPI ID in Settings to send payment requests',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    const pendingParticipants = bill.participants.filter(
+      p => p.status === PaymentStatus.PENDING && !isCurrentUser(p.name)
+    );
+
+    if (pendingParticipants.length === 0) {
+      haptics.warning();
+      Alert.alert('All Paid! 🎉', 'All participants have already paid.');
+      return;
+    }
+
+    // Check if WhatsApp is installed
+    const whatsappAvailable = await isWhatsAppInstalled();
+    if (!whatsappAvailable) {
+      showWhatsAppNotInstalledError();
+      return;
+    }
+
     try {
-      const pendingParticipants = bill.participants.filter(
-        p => p.status === PaymentStatus.PENDING
+      haptics.light();
+      const result = await sendPaymentRequestsToAll(
+        pendingParticipants,
+        bill,
+        defaultVPA,
+        defaultUPIName
       );
 
-      if (pendingParticipants.length === 0) {
-        Alert.alert('All Paid! 🎉', 'All participants have already paid.');
-        return;
+      // Show results
+      if (result.totalSent > 0) {
+        haptics.success();
+        Alert.alert(
+          'Payment Requests Sent',
+          `Successfully sent ${result.totalSent} payment request${result.totalSent > 1 ? 's' : ''} via WhatsApp!${
+            result.totalFailed > 0 ? `\n\n${result.totalFailed} request${result.totalFailed > 1 ? 's' : ''} failed.` : ''
+          }`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        haptics.warning();
+        Alert.alert(
+          'Failed to Send',
+          'Could not send payment requests. Please try again.',
+          [{ text: 'OK' }]
+        );
       }
-
-      // Generate message with all payment links
-      let message = `💸 Payment Request: ${bill.title}\n\n`;
-
-      pendingParticipants.forEach((p, index) => {
-        const upiLink = handleGenerateUPILink(p);
-        message += `${index + 1}. ${p.name} - ${formatPaise(p.amountPaise)}\n`;
-        message += `   Pay: ${upiLink}\n\n`;
-      });
-
-      message += `Powered by Vasooly 💜`;
-
-      await RNShare.share({ message });
-      haptics.success();
     } catch (error) {
-      console.error('Failed to share all pending links:', error);
+      haptics.error();
+      Alert.alert(
+        'Error',
+        'Failed to send payment requests. Please try again.',
+        [{ text: 'OK' }]
+      );
+      console.error('Failed to send WhatsApp payment requests:', error);
     }
   };
 
@@ -299,19 +362,16 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
           </View>
         </AnimatedGlassCard>
 
-        {/* Share All Pending Button */}
+        {/* Send WhatsApp to All Pending Button */}
         {pendingCount > 0 && (
           <AnimatedButton
-            onPress={() => {
-              haptics.light();
-              handleShareAllPending();
-            }}
+            onPress={handleSendWhatsAppToAll}
             style={styles.shareAllButton}
             haptic
             hapticIntensity="light"
           >
             <View style={styles.shareAllButtonContent}>
-              <Share2 size={20} color={tokens.colors.text.inverse} strokeWidth={2.5} />
+              <Send size={20} color={tokens.colors.text.inverse} strokeWidth={2.5} />
               <Text style={styles.shareAllButtonText}>
                 Send Vasoolis to All Pending ({pendingCount})
               </Text>
@@ -334,7 +394,7 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
                 style={[
                   styles.participantCard,
                   isPaid ? styles.participantCardPaid : styles.participantCardPending
-                ]}
+                ] as any}
                 borderRadius={tokens.radius.md}
               >
                 <View style={styles.participantContent}>
@@ -396,17 +456,14 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
 
                         {!isPaid && (
                           <AnimatedButton
-                            onPress={() => {
-                              haptics.light();
-                              handleShareUPILink(participant);
-                            }}
+                            onPress={() => handleSendWhatsAppPayment(participant)}
                             style={styles.actionButtonShare}
                             haptic
                             hapticIntensity="light"
                           >
                             <View style={styles.actionButtonContent}>
-                              <Share2 size={16} color={tokens.colors.text.inverse} strokeWidth={2.5} />
-                              <Text style={styles.actionButtonShareText}>Share</Text>
+                              <Send size={16} color={tokens.colors.text.inverse} strokeWidth={2.5} />
+                              <Text style={styles.actionButtonShareText}>Send</Text>
                             </View>
                           </AnimatedButton>
                         )}

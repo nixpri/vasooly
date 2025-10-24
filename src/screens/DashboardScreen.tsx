@@ -34,7 +34,7 @@ import type { DashboardScreenProps } from '@/navigation/types';
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   // Zustand stores
-  const { bills, loadAllBills, isLoading } = useBillStore();
+  const { bills, loadAllBills } = useBillStore();
   const { defaultUPIName } = useSettingsStore();
 
   // Separate refreshing state for pull-to-refresh (don't show spinner for automatic background refreshes)

@@ -23,7 +23,6 @@ import {
   StyleSheet,
   TextInput,
   Pressable,
-  Alert,
   RefreshControl,
   SafeAreaView,
   StatusBar,
