@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: tokens.spacing['3xl'],
+    paddingHorizontal: tokens.spacing['3xl'],
     gap: tokens.spacing.md,
   },
   emptyTitle: {

@@ -155,6 +155,7 @@ export const InsightsScreen: React.FC = () => {
       <View style={styles.container}>
         <ScreenHeader title="Insights" />
         <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.emptyStateContainer}
           refreshControl={
             <RefreshControl
@@ -438,7 +439,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: tokens.spacing['3xl'],
+    paddingHorizontal: tokens.spacing['3xl'],
   },
   emptyStateTitle: {
     ...tokens.typography.h2,
