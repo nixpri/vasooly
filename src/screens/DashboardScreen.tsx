@@ -11,7 +11,7 @@
  * Design: Earthen color palette with glass-morphism cards
  */
 
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,15 +20,14 @@ import {
   RefreshControl,
   Pressable,
   Image,
+  InteractionManager,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { ChevronRight, ClipboardList } from 'lucide-react-native';
 import { useBillStore } from '../stores/billStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { tokens } from '../theme/tokens';
 import { BalanceCard } from '../components/BalanceCard';
 import { TransactionCard } from '../components/TransactionCard';
-import { AnimatedButton } from '../components/AnimatedButton';
 import { PaymentStatus } from '../types';
 import type { DashboardScreenProps } from '@/navigation/types';
 
@@ -39,21 +38,31 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
   // Separate refreshing state for pull-to-refresh (don't show spinner for automatic background refreshes)
   const [refreshing, setRefreshing] = useState(false);
+  const scrollViewRef = React.useRef<any>(null);
+  const lastFocusTime = React.useRef<number>(0);
 
-  // Load data on mount
+  // Listen for focus - refresh data and scroll to top when screen comes into focus
   useEffect(() => {
-    loadAllBills();
-  }, [loadAllBills]);
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Only scroll to top if focus happened within last 100ms (indicating tab press)
+      // This prevents scrolling on back navigation
+      const now = Date.now();
+      const timeSinceLastFocus = now - lastFocusTime.current;
+      lastFocusTime.current = now;
 
-  // Refresh when screen gains focus (after settling bills, etc.)
-  useFocusEffect(
-    useCallback(() => {
-      // Sync refresh on focus to ensure fresh data
+      // Refresh data
       loadAllBills().catch((error) => {
-        console.error('Failed to refresh dashboard on focus:', error);
+        console.error('Failed to refresh dashboard:', error);
       });
-    }, [loadAllBills])
-  );
+
+      // Scroll to top only if this is a fresh focus (tab press, not back navigation)
+      if (timeSinceLastFocus > 500 && scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 0, animated: true });
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, loadAllBills]);
 
   // Pull-to-refresh handler
   const handleRefresh = useCallback(async () => {
@@ -68,7 +77,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   }, [loadAllBills]);
 
   // Get recent bills (most recent 5 by updatedAt)
-  // Using useMemo with proper date handling
   const recentBills = React.useMemo(() => {
     if (!bills || bills.length === 0) return [];
 
@@ -159,6 +167,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         refreshControl={
@@ -170,6 +179,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           />
         }
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
+        scrollEventThrottle={16}
       >
 
         {/* Balance Card */}
@@ -185,7 +196,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
         {/* Quick Actions - Hero CTA */}
         <View style={styles.quickActionsSection}>
-          <AnimatedButton onPress={handleAddVasooly} style={styles.heroActionButton} haptic>
+          <Pressable onPress={handleAddVasooly} style={styles.heroActionButton}>
             <View style={styles.heroActionContent}>
               <View style={styles.heroIconContainer}>
                 <Text style={styles.heroIcon}>₹</Text>
@@ -196,7 +207,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               </View>
               <ChevronRight size={24} color="rgba(255, 255, 255, 0.8)" strokeWidth={2.5} />
             </View>
-          </AnimatedButton>
+          </Pressable>
         </View>
 
         {/* Recent Activity */}

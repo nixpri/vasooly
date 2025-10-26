@@ -13,7 +13,6 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, Pressable } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
 import { Bill, BillStatus } from '../types';
@@ -74,20 +73,7 @@ const getStatusInfo = (status: BillStatus) => {
   };
 };
 
-export const TransactionCard: React.FC<TransactionCardProps> = ({ bill, onPress, style }) => {
-  const [pressed, setPressed] = React.useState(false);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: withSpring(pressed ? 0.98 : 1, {
-          damping: 15,
-          stiffness: 150,
-        }),
-      },
-    ],
-  }));
-
+export const TransactionCard: React.FC<TransactionCardProps> = React.memo(({ bill, onPress, style }) => {
   const statusInfo = getStatusInfo(bill.status);
   const totalAmount = bill.totalAmountPaise;
   const participantCount = bill.participants.length;
@@ -95,14 +81,11 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ bill, onPress,
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}
-      style={style}
+      style={({ pressed }) => [style, pressed && styles.pressed]}
       accessibilityLabel={`Bill: ${bill.title}`}
       accessibilityHint="Double tap to view details"
       accessibilityRole="button"
     >
-      <Animated.View style={animatedStyle}>
         <GlassCard
           borderRadius={tokens.radius.md}
           style={
@@ -150,12 +133,14 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ bill, onPress,
             </View>
           </View>
         </GlassCard>
-      </Animated.View>
     </Pressable>
   );
-};
+});
 
 const styles = StyleSheet.create({
+  pressed: {
+    opacity: 0.7,
+  },
   container: {
     padding: tokens.spacing.lg,
   },

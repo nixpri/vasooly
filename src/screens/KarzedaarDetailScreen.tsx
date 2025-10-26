@@ -25,6 +25,7 @@ import {
   Alert,
   SafeAreaView,
   StatusBar,
+  InteractionManager,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import {
@@ -54,13 +55,21 @@ export const KarzedaarDetailScreen: React.FC<KarzedaarDetailScreenProps> = ({ ro
   const { defaultVPA, defaultUPIName } = useSettingsStore();
   const hasNavigatedRef = useRef(false);
 
-  // Reload data when screen gains focus
-  useFocusEffect(
-    useCallback(() => {
+  // Load data on mount only (not on focus) - deferred after animations complete
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
       loadKarzedaars();
       loadAllBills();
-      hasNavigatedRef.current = false; // Reset on focus
-    }, [loadKarzedaars, loadAllBills])
+    });
+
+    return () => task.cancel();
+  }, []); // Run once on mount
+
+  // Reset navigation ref on focus (for back navigation logic)
+  useFocusEffect(
+    useCallback(() => {
+      hasNavigatedRef.current = false;
+    }, [])
   );
 
   // Find karzedaar

@@ -25,7 +25,7 @@ import {
   InsightsScreen,
 } from '@/screens';
 import { TabBar } from '@/components/TabBar';
-import { useBillStore, useHistoryStore, useSettingsStore } from '@/stores';
+import { useBillStore, useHistoryStore, useSettingsStore, useKarzedaarsStore } from '@/stores';
 import { tokens } from '@/theme/ThemeProvider';
 import type {
   RootStackParamList,
@@ -57,6 +57,7 @@ const HomeNavigator: React.FC = () => {
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
+        detachInactiveScreens: false,
       }}
     >
       <HomeStack.Screen name="Dashboard" component={DashboardScreen} />
@@ -64,25 +65,7 @@ const HomeNavigator: React.FC = () => {
         name="VasoolyDetail"
         component={VasoolyDetailScreen}
         options={{
-          cardStyleInterpolator: ({ current, layouts }) => ({
-            cardStyle: {
-              transform: [
-                {
-                  translateX: current.progress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [layouts.screen.width, 0],
-                  }),
-                },
-              ],
-            },
-            overlayStyle: {
-              opacity: current.progress.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 0.3],
-              }),
-            },
-          }),
-          cardOverlayEnabled: true,
+          animationEnabled: true,
         }}
       />
       <HomeStack.Screen
@@ -90,18 +73,7 @@ const HomeNavigator: React.FC = () => {
         component={AddVasoolyScreen}
         options={{
           presentation: 'modal',
-          cardStyleInterpolator: ({ current, layouts }) => ({
-            cardStyle: {
-              transform: [
-                {
-                  translateY: current.progress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [layouts.screen.height, 0],
-                  }),
-                },
-              ],
-            },
-          }),
+          animation: 'slide_from_bottom',
         }}
       />
     </HomeStack.Navigator>
@@ -120,42 +92,18 @@ const ActivityNavigator: React.FC = () => {
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
+        detachInactiveScreens: false,
       }}
     >
       <ActivityStack.Screen
         name="ActivityScreen"
         component={ActivityScreen}
-        options={{
-          cardStyleInterpolator: ({ current }) => ({
-            cardStyle: {
-              opacity: current.progress,
-            },
-          }),
-        }}
       />
       <ActivityStack.Screen
         name="VasoolyDetail"
         component={VasoolyDetailScreen}
         options={{
-          cardStyleInterpolator: ({ current, layouts }) => ({
-            cardStyle: {
-              transform: [
-                {
-                  translateX: current.progress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [layouts.screen.width, 0],
-                  }),
-                },
-              ],
-            },
-            overlayStyle: {
-              opacity: current.progress.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 0.3],
-              }),
-            },
-          }),
-          cardOverlayEnabled: true,
+          animationEnabled: true,
         }}
       />
     </ActivityStack.Navigator>
@@ -193,6 +141,7 @@ const KarzedaarsNavigator: React.FC = () => {
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
+        detachInactiveScreens: false,
       }}
     >
       <KarzedaarsStack.Screen name="KarzedaarsList" component={KarzedaarsListScreen} />
@@ -200,50 +149,14 @@ const KarzedaarsNavigator: React.FC = () => {
         name="KarzedaarDetail"
         component={KarzedaarDetailScreen}
         options={{
-          cardStyleInterpolator: ({ current, layouts }) => ({
-            cardStyle: {
-              transform: [
-                {
-                  translateX: current.progress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [layouts.screen.width, 0],
-                  }),
-                },
-              ],
-            },
-            overlayStyle: {
-              opacity: current.progress.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 0.3],
-              }),
-            },
-          }),
-          cardOverlayEnabled: true,
+          animationEnabled: true,
         }}
       />
       <KarzedaarsStack.Screen
         name="SettleUp"
         component={SettleUpScreen}
         options={{
-          cardStyleInterpolator: ({ current, layouts }) => ({
-            cardStyle: {
-              transform: [
-                {
-                  translateX: current.progress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [layouts.screen.width, 0],
-                  }),
-                },
-              ],
-            },
-            overlayStyle: {
-              opacity: current.progress.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 0.3],
-              }),
-            },
-          }),
-          cardOverlayEnabled: true,
+          animationEnabled: true,
         }}
       />
     </KarzedaarsStack.Navigator>
@@ -262,6 +175,7 @@ const ProfileNavigator: React.FC = () => {
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
+        detachInactiveScreens: false,
       }}
     >
       <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
@@ -269,25 +183,7 @@ const ProfileNavigator: React.FC = () => {
         name="Settings"
         component={SettingsScreen}
         options={{
-          cardStyleInterpolator: ({ current, layouts }) => ({
-            cardStyle: {
-              transform: [
-                {
-                  translateX: current.progress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [layouts.screen.width, 0],
-                  }),
-                },
-              ],
-            },
-            overlayStyle: {
-              opacity: current.progress.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 0.3],
-              }),
-            },
-          }),
-          cardOverlayEnabled: true,
+          animationEnabled: true,
         }}
       />
     </ProfileStack.Navigator>
@@ -390,6 +286,7 @@ export const AppNavigator: React.FC = () => {
   const { loadAllBills } = useBillStore();
   const { loadBills } = useHistoryStore();
   const { loadSettings, onboardingCompleted } = useSettingsStore();
+  const { loadKarzedaars } = useKarzedaarsStore();
 
   // Load initial data on mount
   useEffect(() => {
@@ -399,6 +296,7 @@ export const AppNavigator: React.FC = () => {
           loadAllBills(),
           loadBills(),
           loadSettings(),
+          loadKarzedaars(),
         ]);
       } catch (error) {
         console.error('Failed to initialize stores:', error);
@@ -406,7 +304,7 @@ export const AppNavigator: React.FC = () => {
     };
 
     initializeStores();
-  }, [loadAllBills, loadBills, loadSettings]);
+  }, [loadAllBills, loadBills, loadSettings, loadKarzedaars]);
 
   // Earthen theme for navigation
   const navigationTheme = {
@@ -453,11 +351,7 @@ export const AppNavigator: React.FC = () => {
         <RootStack.Screen
           name="Onboarding"
           options={{
-            cardStyleInterpolator: ({ current }) => ({
-              cardStyle: {
-                opacity: current.progress,
-              },
-            }),
+            animation: 'fade',
             gestureEnabled: false,
           }}
         >
@@ -471,11 +365,7 @@ export const AppNavigator: React.FC = () => {
           name="MainTabs"
           component={MainTabNavigator}
           options={{
-            cardStyleInterpolator: ({ current }) => ({
-              cardStyle: {
-                opacity: current.progress,
-              },
-            }),
+            animation: 'fade',
           }}
         />
       </RootStack.Navigator>

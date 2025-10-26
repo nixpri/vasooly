@@ -11,7 +11,7 @@
  * - Empty state for insufficient data
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import {
   Pressable,
   Dimensions,
 } from 'react-native';
+import type { InsightsScreenProps } from '@/navigation/types';
 import {
   TrendingUp,
   IndianRupee,
@@ -43,11 +44,22 @@ import { formatPaise } from '@/lib/business/splitEngine';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-export const InsightsScreen: React.FC = () => {
+export const InsightsScreen: React.FC<InsightsScreenProps> = ({ navigation }) => {
   const { bills, loadAllBills } = useBillStore();
   const { defaultUPIName } = useSettingsStore();
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('this_month');
   const [refreshing, setRefreshing] = useState(false);
+  const scrollViewRef = React.useRef<any>(null);
+
+  // Listen for tab press - scroll to top
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('tabPress', (e) => {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 0, animated: true });
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   // Time range filter options
   const timeRangeOptions: { value: TimeRange; label: string }[] = [
@@ -155,6 +167,7 @@ export const InsightsScreen: React.FC = () => {
       <View style={styles.container}>
         <ScreenHeader title="Insights" />
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.emptyStateContainer}
           refreshControl={
@@ -188,6 +201,7 @@ export const InsightsScreen: React.FC = () => {
       <ScreenHeader title="Insights" />
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         refreshControl={

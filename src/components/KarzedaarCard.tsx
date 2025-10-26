@@ -12,7 +12,6 @@
 
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle, Pressable } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { User, Phone } from 'lucide-react-native';
 import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
@@ -49,9 +48,7 @@ const formatCurrency = (paise: number): string => {
   return `₹${rupees.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 };
 
-export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, bills, onPress, style }) => {
-  const [pressed, setPressed] = React.useState(false);
-
+export const KarzedaarCard: React.FC<KarzedaarCardProps> = React.memo(({ karzedaar, bills, onPress, style }) => {
   // Calculate pending amount from bills
   const pendingAmountPaise = useMemo(() => {
     let pending = 0;
@@ -67,33 +64,18 @@ export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, bills, 
   }, [bills, karzedaar.name]);
 
   const hasPending = pendingAmountPaise > 0;
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: withSpring(pressed ? 0.98 : 1, {
-          damping: 15,
-          stiffness: 150,
-        }),
-      },
-    ],
-  }));
-
   const initials = getInitials(karzedaar.name);
   const hasContactInfo = karzedaar.phone || karzedaar.upiId;
 
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}
-      style={style}
+      style={({ pressed }) => [style, pressed && styles.pressed]}
       accessibilityLabel={`Karzedaar: ${karzedaar.name}`}
       accessibilityHint="Double tap to view details"
       accessibilityRole="button"
     >
-      <Animated.View style={animatedStyle}>
-        <GlassCard borderRadius={tokens.radius.md} style={hasPending ? styles.cardPending : styles.cardSettled}>
+      <GlassCard borderRadius={tokens.radius.md} style={hasPending ? styles.cardPending : styles.cardSettled}>
           <View style={styles.container}>
             {/* Horizontal Layout: Avatar Left, Info Right */}
             <View style={styles.contentRow}>
@@ -160,12 +142,14 @@ export const KarzedaarCard: React.FC<KarzedaarCardProps> = ({ karzedaar, bills, 
             </View>
           </View>
         </GlassCard>
-      </Animated.View>
     </Pressable>
   );
-};
+});
 
 const styles = StyleSheet.create({
+  pressed: {
+    opacity: 0.7,
+  },
   cardPending: {
     borderLeftWidth: 3,
     borderLeftColor: tokens.colors.amber[500],

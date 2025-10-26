@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
 import {
   ChevronLeft,
@@ -69,18 +68,10 @@ export const VasoolyDetailScreen: React.FC<HomeVasoolyDetailScreenProps> = ({ ro
   const celebrationScale = useSharedValue(1);
   const celebrationRotation = useSharedValue(0);
 
-  // Update local state when store changes (initial load)
+  // Update local state when store changes (initial load only)
   useEffect(() => {
     setBill(getBillById(billId));
   }, [billId, getBillById]);
-
-  // Auto-refresh bill when screen gains focus (e.g., after updating payment status)
-  useFocusEffect(
-    useCallback(() => {
-      const updatedBill = getBillById(billId);
-      setBill(updatedBill);
-    }, [billId, getBillById])
-  );
 
   if (!bill) {
     // Bill not found, navigate back

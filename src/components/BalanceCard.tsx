@@ -12,7 +12,6 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, Pressable } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ChevronRight } from 'lucide-react-native';
 import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
@@ -55,10 +54,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   loading: _loading = false,
 }) => {
   return (
-    <Animated.View
-      entering={FadeInDown.springify().damping(15).stiffness(150)}
-      style={style}
-    >
+    <View style={style}>
       <GlassCard borderRadius={tokens.radius.lg}>
         <View style={styles.container}>
           {/* Title */}
@@ -109,7 +105,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
           </Pressable>
         </View>
       </GlassCard>
-    </Animated.View>
+    </View>
   );
 };
 

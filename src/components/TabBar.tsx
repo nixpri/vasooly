@@ -96,7 +96,7 @@ const TabButton: React.FC<TabButtonProps> = ({ route, isFocused, onPress, onLong
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        scale: withSpring(isFocused ? 1 : 1, tokens.animation.spring.gentle),
+        scale: withSpring(isFocused ? 1 : 0.95, tokens.animation.spring.gentle),
       },
     ],
   }));

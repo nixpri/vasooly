@@ -26,8 +26,8 @@ import {
   RefreshControl,
   SafeAreaView,
   StatusBar,
+  InteractionManager,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { Search, X, Users } from 'lucide-react-native';
 import type { KarzedaarsListScreenProps } from '@/navigation/types';
@@ -43,50 +43,21 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = ({ navi
   const { defaultUPIName } = useSettingsStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const listRef = React.useRef<any>(null);
 
-  // Load karzedaars when screen gains focus (to pick up changes from bill deletion, etc.)
-  useFocusEffect(
-    useCallback(() => {
-      loadKarzedaars();
-    }, [loadKarzedaars])
-  );
-
-  // Clean up current user entries on mount
+  // Listen for tab press - refresh data and scroll to top
   useEffect(() => {
-    // Clean up any existing current user entries (including legacy "You" entries)
-    const currentUserKarzedaars = karzedaars.filter(k => {
-      const trimmedName = k.name.trim();
-      return (
-        trimmedName === '' ||
-        trimmedName.toLowerCase() === 'you' ||
-        (defaultUPIName && trimmedName.toLowerCase() === defaultUPIName.toLowerCase())
-      );
-    });
-
-    // Remove all current user karzedaars
-    currentUserKarzedaars.forEach(k => {
-      console.log('Removing current user from karzedaars:', k.name);
-      removeKarzedaar(k.id);
-    });
-  }, [karzedaars.length]); // Run when karzedaars list changes
-
-  // Clean up karzedaars with zero bills (orphaned from bill deletions)
-  useEffect(() => {
-    karzedaars.forEach((karzedaar) => {
-      // Count bills for this karzedaar
-      const karzedaarBillCount = bills.filter((bill) =>
-        bill.participants.some(
-          (p) => p.name.toLowerCase() === karzedaar.name.toLowerCase()
-        )
-      ).length;
-
-      // Remove karzedaar if they have no bills
-      if (karzedaarBillCount === 0) {
-        console.log(`Removing karzedaar ${karzedaar.name} with zero bills`);
-        removeKarzedaar(karzedaar.id);
+    const unsubscribe = navigation.addListener('tabPress', (e) => {
+      // Refresh data when tab is pressed (includes cleanup)
+      handleRefresh();
+      // Scroll to top
+      if (listRef.current) {
+        listRef.current.scrollToOffset({ offset: 0, animated: true });
       }
     });
-  }, [karzedaars.length, bills.length]); // Run when counts change
+
+    return unsubscribe;
+  }, [navigation]);
 
   // Filter karzedaars based on search query AND exclude current user
   const filteredKarzedaars = useMemo(() => {
@@ -112,7 +83,7 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = ({ navi
     );
   }, [karzedaars, searchQuery, defaultUPIName]);
 
-  // Handle refresh
+  // Handle refresh - reload only, no cleanup
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadKarzedaars();
@@ -206,6 +177,7 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = ({ navi
           <SearchEmptyState />
         ) : (
           <FlashList
+            ref={listRef}
             data={filteredKarzedaars}
             renderItem={({ item }) => (
               <KarzedaarCard
@@ -216,6 +188,7 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = ({ navi
               />
             )}
             keyExtractor={(item) => item.id}
+            estimatedItemSize={120}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             refreshControl={

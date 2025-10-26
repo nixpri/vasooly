@@ -31,6 +31,17 @@ import { tokens } from '@/theme/ThemeProvider';
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { bills, getSettledBills } = useBillStore();
   const { defaultUPIName, defaultVPA } = useSettingsStore();
+  const scrollViewRef = React.useRef<any>(null);
+
+  // Listen for tab press - scroll to top
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('tabPress', (e) => {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 0, animated: true });
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   // Helper function to check if participant is the current user
   const isCurrentUser = (participantName: string): boolean => {
@@ -93,6 +104,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <ScreenHeader title="Profile" />
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}

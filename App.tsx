@@ -6,12 +6,16 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { initializeDatabase } from './src/lib/data/database';
 import { ThemeProvider, tokens } from './src/theme/ThemeProvider';
+import { logDeviceCapabilities } from './src/utils/deviceCapabilities';
 
 export default function App() {
   const [isDbReady, setIsDbReady] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Log device capabilities for animation performance debugging
+    logDeviceCapabilities();
+
     initializeDatabase()
       .then(() => {
         console.log('✅ Database initialized successfully');

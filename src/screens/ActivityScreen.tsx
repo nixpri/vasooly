@@ -10,7 +10,7 @@
  * - Search functionality
  */
 
-import React, { useEffect, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,16 +20,16 @@ import {
   RefreshControl,
   KeyboardAvoidingView,
   ScrollView,
+  InteractionManager,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { useFocusEffect } from '@react-navigation/native';
 import { Search, X, FileText } from 'lucide-react-native';
 import { GlassCard, ScreenHeader } from '@/components';
 import { ActivityCard } from '@/components/ActivityCard';
 import { DateGroupHeader } from '@/components/DateGroupHeader';
 import { ActivityType } from '@/types';
 import type { Bill } from '@/types';
-import { useHistoryStore } from '@/stores';
+import { useBillStore } from '@/stores';
 import type { ActivityScreenProps } from '@/navigation/types';
 import { tokens } from '@/theme/ThemeProvider';
 
@@ -44,31 +44,45 @@ interface GroupedActivity {
 }
 
 export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) => {
-  const {
-    filteredBills,
-    searchQuery,
-    isLoading,
-    loadBills,
-    refreshBills,
-    setSearchQuery,
-  } = useHistoryStore();
+  const { bills, loadAllBills, isLoading } = useBillStore();
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const listRef = React.useRef<any>(null);
 
-  // Load bills on mount
+  // Listen for tab press - refresh data and scroll to top
   useEffect(() => {
-    loadBills();
-  }, [loadBills]);
+    const unsubscribe = navigation.addListener('tabPress', (e) => {
+      // Refresh data when tab is pressed
+      loadAllBills();
+      // Scroll to top
+      if (listRef.current) {
+        listRef.current.scrollToOffset({ offset: 0, animated: true });
+      }
+    });
 
-  // Auto-refresh bills when screen gains focus
-  useFocusEffect(
-    useCallback(() => {
-      refreshBills();
-    }, [refreshBills])
-  );
+    return unsubscribe;
+  }, [navigation, loadAllBills]);
+
+  // Local search/filter implementation
+  const filteredBills = useMemo(() => {
+    let filtered = bills;
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(bill =>
+        bill.title.toLowerCase().includes(query) ||
+        bill.description?.toLowerCase().includes(query) ||
+        bill.participants.some(p => p.name.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  }, [bills, searchQuery]);
 
   const handleRefresh = async () => {
-    await refreshBills();
+    await loadAllBills();
   };
 
   const handleActivityPress = useCallback(
@@ -78,8 +92,8 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) =>
     [navigation]
   );
 
-  // Determine activity type based on bill state
-  const getActivityType = (bill: Bill): ActivityType => {
+  // Determine activity type based on bill state (memoized to avoid recalculation)
+  const getActivityType = useCallback((bill: Bill): ActivityType => {
     if (bill.status === 'SETTLED') return ActivityType.BILL_SETTLED;
 
     const paidCount = bill.participants.filter((p) => p.status === 'PAID').length;
@@ -101,7 +115,7 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) =>
     }
 
     return ActivityType.BILL_CREATED;
-  };
+  }, []);
 
   // Group bills by date
   const groupedActivities = useMemo((): GroupedActivity[] => {
@@ -328,8 +342,10 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) =>
             renderEmpty()
           ) : (
             <FlashList
+              ref={listRef}
               data={groupedActivities}
               renderItem={renderItem}
+              estimatedItemSize={100}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               refreshControl={

@@ -16,7 +16,7 @@ interface DateGroupHeaderProps {
   label: string;
 }
 
-export const DateGroupHeader: React.FC<DateGroupHeaderProps> = ({ label }) => {
+export const DateGroupHeader: React.FC<DateGroupHeaderProps> = React.memo(({ label }) => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -26,7 +26,7 @@ export const DateGroupHeader: React.FC<DateGroupHeaderProps> = ({ label }) => {
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

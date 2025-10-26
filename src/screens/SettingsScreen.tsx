@@ -53,6 +53,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
     hasDefaultVPA,
   } = useSettingsStore();
 
+  const scrollViewRef = React.useRef<any>(null);
+
   // Helper function to extract initials from name
   const getInitials = (name?: string | null): string => {
     if (!name || !name.trim()) return 'U';
@@ -65,35 +67,46 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
     return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
   };
 
-  // Local state for form inputs
-  const [vpaInput, setVpaInput] = useState('');
-  const [nameInput, setNameInput] = useState('');
+  // Initialize local state from store values (Fabric-compatible - no complex refs)
+  const [vpaInput, setVpaInput] = useState(defaultVPA || '');
+  const [nameInput, setNameInput] = useState(defaultUPIName || '');
   const [isEditingVPA, setIsEditingVPA] = useState(false);
 
-  // Local state for toggles to prevent jitter
+  // Local state for toggles - initialize from store
   const [localHaptics, setLocalHaptics] = useState(enableHaptics);
   const [localReminders, setLocalReminders] = useState(reminderEnabled);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+  // No data loading on mount - store is already populated at app initialization
+  // Pure store read pattern like VasoolyDetailScreen for smooth animations
 
-  // Update local state when store values change
+  // Listen for tab press - scroll to top
   useEffect(() => {
-    if (defaultVPA) setVpaInput(defaultVPA);
-    if (defaultUPIName) setNameInput(defaultUPIName);
-  }, [defaultVPA, defaultUPIName]);
+    const unsubscribe = navigation.addListener('tabPress', (e) => {
+      // Scroll to top when tab is pressed
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 0, animated: true });
+      }
+    });
 
-  // Sync local toggle states with store
+    return unsubscribe;
+  }, [navigation]);
+
+  // Sync form inputs when store values change
+  useEffect(() => {
+    if (defaultVPA && vpaInput !== defaultVPA) {
+      setVpaInput(defaultVPA);
+    }
+    if (defaultUPIName && nameInput !== defaultUPIName) {
+      setNameInput(defaultUPIName);
+    }
+  }, [defaultVPA, defaultUPIName, vpaInput, nameInput]);
+
+  // Sync toggle states when store values change
   useEffect(() => {
     setLocalHaptics(enableHaptics);
-  }, [enableHaptics]);
-
-  useEffect(() => {
     setLocalReminders(reminderEnabled);
-  }, [reminderEnabled]);
+  }, [enableHaptics, reminderEnabled]);
 
   // Clear error after 3 seconds
   useEffect(() => {
@@ -216,6 +229,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
         showsVerticalScrollIndicator={false}

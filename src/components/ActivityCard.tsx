@@ -91,7 +91,7 @@ const formatRelativeTime = (date: Date): string => {
   });
 };
 
-export const ActivityCard: React.FC<ActivityCardProps> = ({ bill, activityType, onPress }) => {
+export const ActivityCard: React.FC<ActivityCardProps> = React.memo(({ bill, activityType, onPress }) => {
   const Icon = getActivityIcon(activityType);
   const iconColor = getActivityColor(activityType);
   const description = getActivityDescription(activityType, bill);
@@ -135,7 +135,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ bill, activityType, 
       </GlassCard>
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
