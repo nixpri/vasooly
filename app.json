@@ -15,8 +15,12 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "CADisableMinimumFrameDurationOnPhone": true
-      }
+        "CADisableMinimumFrameDurationOnPhone": true,
+        "LSApplicationQueriesSchemes": [
+          "whatsapp"
+        ]
+      },
+      "bundleIdentifier": "com.anonymous.vasooly"
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +38,26 @@
     "plugins": [
       "expo-sqlite",
       "expo-secure-store",
-      "./plugins/withAndroidHighRefreshRate"
-    ]
+      "./plugins/withAndroidHighRefreshRate",
+      [
+        "react-native-share",
+        {
+          "ios": [
+            "whatsapp"
+          ],
+          "android": [
+            "com.whatsapp",
+            "com.whatsapp.w4b"
+          ],
+          "enableBase64ShareAndroid": true
+        }
+      ],
+      "expo-build-properties"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9c76610f-8704-417b-af9b-a2e141d32ce3"
+      }
+    }
   }
 }

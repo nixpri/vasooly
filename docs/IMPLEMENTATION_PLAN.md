@@ -526,8 +526,8 @@ Modal Screens (within stacks)
 
 #### Day 3.5: WhatsApp-First Payment Requests ✅ COMPLETE
 **Files Created**:
-- `src/services/urlShortenerService.ts` (164 lines) - is.gd URL shortening integration
-- `src/services/whatsappService.ts` (421 lines) - WhatsApp deep linking for payment requests
+- `src/services/whatsappService.ts` (421 lines) - WhatsApp deep linking for payment requests with QR codes
+- `src/services/upiQRCodeService.ts` - UPI QR code generation service
 
 **Files Modified**:
 - `src/screens/OnboardingScreen.tsx` - Added mandatory 4th screen for UPI ID collection

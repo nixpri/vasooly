@@ -7,6 +7,7 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 import { initializeDatabase } from './src/lib/data/database';
 import { ThemeProvider, tokens } from './src/theme/ThemeProvider';
 import { logDeviceCapabilities } from './src/utils/deviceCapabilities';
+import { QRCodeManager } from './src/components/QRCodeManager';
 
 export default function App() {
   const [isDbReady, setIsDbReady] = useState(false);
@@ -57,6 +58,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <AppNavigator />
+        <QRCodeManager />
       </ThemeProvider>
     </GestureHandlerRootView>
   );
