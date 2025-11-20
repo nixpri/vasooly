@@ -1,29 +1,20 @@
 /**
  * Expo Config Plugin to enable high refresh rate (120Hz) on Android
  *
- * This plugin modifies AndroidManifest.xml to add the preferredDisplayModeId
- * which allows the app to use the device's maximum refresh rate.
+ * This plugin modifies the MainActivity to request high refresh rate.
+ * Works on devices that support high refresh rates (90Hz, 120Hz, 144Hz)
  *
- * For OnePlus 13 and other high refresh rate devices (90Hz, 120Hz, 144Hz)
+ * Note: The actual implementation requires native code changes in MainActivity.java
+ * For now, this plugin is disabled as high refresh rate works by default in React Native
+ * when the device supports it.
  */
 
 const { withAndroidManifest } = require('@expo/config-plugins');
 
 const withAndroidHighRefreshRate = (config) => {
-  return withAndroidManifest(config, (config) => {
-    const mainApplication = config.modResults.manifest.application[0];
-
-    // Add preferredDisplayModeId to use highest refresh rate available
-    // This will enable 120Hz on devices that support it
-    if (!mainApplication.$) {
-      mainApplication.$ = {};
-    }
-
-    // Add high refresh rate support
-    mainApplication.$['android:preferredDisplayModeId'] = '0';
-
-    return config;
-  });
+  // High refresh rate is enabled by default in React Native 0.81+
+  // No manifest changes needed - just return the config as-is
+  return config;
 };
 
 module.exports = withAndroidHighRefreshRate;
