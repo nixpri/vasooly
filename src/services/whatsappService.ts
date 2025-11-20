@@ -22,6 +22,7 @@
 
 import { Linking, Alert, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import * as FileSystem from 'expo-file-system/legacy';
 import Share from 'react-native-share';
 import type { Bill, Participant } from '../types';
 import {
@@ -92,7 +93,8 @@ function formatPhoneNumber(phone: string): string | null {
 function generatePaymentMessage(
   participantName: string,
   billTitle: string,
-  amountPaise: number
+  amountPaise: number,
+  upiVPA: string
 ): string {
   const amount = (amountPaise / 100).toFixed(2);
 
@@ -105,9 +107,22 @@ function generatePaymentMessage(
 
 Pay ₹${amount} for ${truncatedTitle}
 
-📷 Scan the QR code to pay instantly with any UPI app
+*How to pay:*
 
-Works with GPay, PhonePe, Paytm, BHIM & all UPI apps
+📱 *Option 1 - Save & Upload QR* (Easiest)
+1. Save the QR image below
+2. Open GPay/PhonePe/Paytm
+3. Tap 'Scan QR Code'
+4. Tap gallery icon 📁
+5. Select saved QR → Pay ✅
+
+📷 *Option 2 - Scan from Another Device*
+Ask someone to show this QR on their screen
+Scan with your phone's UPI app
+
+✍️ *Option 3 - Manual Payment*
+Pay to: *${upiVPA}*
+Amount: *₹${amount}*
 
 - Vasooly`;
 }
@@ -154,16 +169,24 @@ function generateReminderMessage(
  * Uses react-native-qrcode-svg to generate base64 PNG data
  *
  * @param upiString - UPI payment string to encode
- * @returns Promise<string> - Base64 PNG data of QR code
+ * @returns Promise<string> - Base64 PNG data of QR code (raw base64, no prefix)
  */
 async function generateQRCodeBase64(upiString: string): Promise<string> {
   try {
+    console.log('Generating QR code for UPI string:', upiString.substring(0, 50) + '...');
+
     // Use QR code service which works with QRCodeManager component
     const base64Data = await qrCodeService.generateQRCode(upiString, getOptimalQRSize());
+
+    if (!base64Data || base64Data.length === 0) {
+      throw new Error('QR code generation returned empty data');
+    }
+
+    console.log('QR code generated successfully, base64 length:', base64Data.length);
     return base64Data;
   } catch (error) {
     console.error('Error generating QR code:', error);
-    throw new Error('Failed to generate QR code');
+    throw new Error('Failed to generate QR code: ' + (error instanceof Error ? error.message : 'Unknown error'));
   }
 }
 
@@ -177,7 +200,7 @@ async function generateQRCodeBase64(upiString: string): Promise<string> {
  * - Android: Shows both message and QR image in single message ✅
  * - iOS: Shows message in caption and QR image ✅
  *
- * @param qrCodeBase64 - Base64 PNG data of QR code
+ * @param qrCodeBase64 - Base64 PNG data of QR code (WITHOUT data:image prefix)
  * @param phone - Phone number with country code (e.g., "+919876543210")
  * @param message - Payment context message
  * @returns Promise<boolean> - Success status
@@ -187,37 +210,134 @@ async function shareQRCodeViaWhatsApp(
   phone: string,
   message: string
 ): Promise<boolean> {
+  let fileUri: string | null = null;
+
   try {
+    // Validate inputs
+    if (!qrCodeBase64 || qrCodeBase64.length === 0) {
+      throw new Error('QR code base64 data is empty');
+    }
+
+    if (!phone || phone.length === 0) {
+      throw new Error('Phone number is empty');
+    }
+
+    // Clean phone number - remove all non-digits
+    const cleanPhone = phone.replace(/\D/g, '');
+
+    if (cleanPhone.length < 10) {
+      throw new Error('Phone number too short: ' + cleanPhone);
+    }
+
+    console.log('Preparing WhatsApp share:', {
+      phone: cleanPhone,
+      messageLength: message.length,
+      base64Length: qrCodeBase64.length,
+    });
+
+    // Android react-native-share doesn't handle data URIs well
+    // Solution: Save base64 to file first, then share the file URI
+    const fileName = `qr_${Date.now()}.png`;
+    fileUri = FileSystem.cacheDirectory + fileName;
+
+    console.log('Saving QR to file:', fileUri);
+
+    // Write base64 to file
+    await FileSystem.writeAsStringAsync(fileUri, qrCodeBase64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    console.log('QR file saved, preparing share...');
+
+    // Prepare share options with file:// URI (works on Android)
     const shareOptions: any = {
       title: 'Payment Request',
       message: message,
-      url: `data:image/png;base64,${qrCodeBase64}`,
+      url: fileUri, // Use file:// URI instead of data URI
       social: Share.Social.WHATSAPP,
-      whatsAppNumber: phone.replace(/\D/g, ''), // Remove non-digits
-      filename: 'payment_qr.png',
+      whatsAppNumber: cleanPhone, // Just digits: "919876543210"
+      type: 'image/png',
     };
 
-    // iOS uses message as image caption in WhatsApp
-    // Both platforms work with message included
+    console.log('Sharing to WhatsApp with file URI');
+
+    // Share to WhatsApp with image + message
     await Share.shareSingle(shareOptions);
+
+    console.log('WhatsApp share successful');
+
+    // Clean up file after successful share (with delay)
+    setTimeout(async () => {
+      if (fileUri) {
+        try {
+          await FileSystem.deleteAsync(fileUri);
+          console.log('Temp QR file cleaned up');
+        } catch (cleanupError) {
+          console.warn('Failed to clean up QR file:', cleanupError);
+        }
+      }
+    }, 5000);
+
     return true;
   } catch (error: any) {
+    // Clean up file if share failed
+    if (fileUri) {
+      try {
+        await FileSystem.deleteAsync(fileUri);
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+    }
+
     // User cancelled the share
     if (error.message && error.message.indexOf('User did not share') !== -1) {
-      console.log('User cancelled share');
+      console.log('User cancelled WhatsApp share');
       return false;
     }
 
     console.error('Error sharing to WhatsApp:', error);
 
-    // Show error to user
-    Alert.alert(
-      'Share Failed',
-      'Could not share to WhatsApp. Please make sure WhatsApp is installed.',
-      [{ text: 'OK' }]
-    );
+    // If WhatsApp sharing fails, try fallback to regular share
+    try {
+      console.log('Trying fallback share with file URI...');
 
-    return false;
+      // Try saving to file again for fallback
+      const fallbackFileName = `qr_fallback_${Date.now()}.png`;
+      const fallbackFileUri = FileSystem.cacheDirectory + fallbackFileName;
+
+      await FileSystem.writeAsStringAsync(fallbackFileUri, qrCodeBase64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      await Share.open({
+        title: 'Payment Request',
+        message: message,
+        url: fallbackFileUri,
+        type: 'image/png',
+      });
+
+      // Clean up fallback file
+      setTimeout(async () => {
+        try {
+          await FileSystem.deleteAsync(fallbackFileUri);
+        } catch (cleanupError) {
+          // Ignore
+        }
+      }, 5000);
+
+      return true;
+    } catch (fallbackError: any) {
+      console.error('Fallback share also failed:', fallbackError);
+
+      // Show error to user
+      Alert.alert(
+        'Share Failed',
+        'Could not share to WhatsApp. Please make sure:\n\n1. WhatsApp is installed\n2. Contact is saved in your phone\n3. You have an active internet connection',
+        [{ text: 'OK' }]
+      );
+
+      return false;
+    }
   }
 }
 
@@ -295,7 +415,8 @@ export async function sendPaymentRequest(
     const message = generatePaymentMessage(
       participant.name,
       bill.title,
-      participant.amountPaise
+      participant.amountPaise,
+      upiVPA
     );
 
     // Generate QR code as base64

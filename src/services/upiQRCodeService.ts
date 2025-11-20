@@ -96,18 +96,23 @@ export function isValidUPIVPA(vpa: string): boolean {
  * Get optimal QR code size for mobile devices
  *
  * Returns size that:
- * - Fits well in WhatsApp image preview
- * - Is large enough to scan easily
- * - Loads quickly
+ * - Survives WhatsApp image compression
+ * - Works with gallery upload in UPI apps
+ * - Is large enough for reliable scanning
+ * - Loads reasonably fast
  *
  * @returns QR code size in pixels
  */
 export function getOptimalQRSize(): number {
-  // 280x280 is optimal for:
-  // - WhatsApp image preview (shows full QR without cropping)
-  // - Easy scanning (large enough for camera focus)
-  // - Quick generation/transmission
-  return 280;
+  // 512x512 is optimal for:
+  // - Gallery upload recognition in GPay/PhonePe (higher resolution needed)
+  // - Survives WhatsApp compression without quality loss
+  // - Camera scanning works perfectly at this size
+  // - Still fast to generate/transmit (~50KB)
+  //
+  // Note: 280x280 was too small - caused "unable to recognize" errors
+  // when uploaded from gallery in UPI apps
+  return 512;
 }
 
 /**

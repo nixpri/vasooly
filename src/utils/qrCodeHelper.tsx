@@ -64,6 +64,8 @@ export const QRCodeCapture: React.FC<QRCodeCaptureProps> = ({
         size={size}
         color="#000000"
         backgroundColor="#FFFFFF"
+        ecl="H" // Highest error correction (30% damage tolerance)
+        quietZone={10} // White border around QR for better recognition
         getRef={(ref) => (qrRef.current = ref)}
       />
     </View>
