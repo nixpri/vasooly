@@ -1,13 +1,20 @@
 /**
  * Animation utilities for Reanimated worklet animations
  * Provides spring configurations and timing presets for consistent animations
+ *
+ * Performance optimizations:
+ * - overshootClamping prevents bounce-back (smoother on Android)
+ * - Platform-specific configs for cross-platform consistency
+ * - Decay animations for momentum/flick gestures
  */
 
-import { withSpring, withTiming, Easing } from 'react-native-reanimated';
-import type { WithSpringConfig, WithTimingConfig } from 'react-native-reanimated';
+import { Platform } from 'react-native';
+import { withSpring, withTiming, withDecay, Easing } from 'react-native-reanimated';
+import type { WithSpringConfig, WithTimingConfig, WithDecayConfig } from 'react-native-reanimated';
 
 /**
  * Spring animation configurations
+ * Updated with overshootClamping for smoother Android performance
  */
 export const springConfigs = {
   /**
@@ -18,6 +25,7 @@ export const springConfigs = {
     damping: 15,
     stiffness: 150,
     mass: 0.5,
+    overshootClamping: false,  // Allow natural bounce
   } as WithSpringConfig,
 
   /**
@@ -28,6 +36,7 @@ export const springConfigs = {
     damping: 10,
     stiffness: 100,
     mass: 0.3,
+    overshootClamping: false,  // Allow playful bounce
   } as WithSpringConfig,
 
   /**
@@ -38,6 +47,7 @@ export const springConfigs = {
     damping: 20,
     stiffness: 300,
     mass: 0.4,
+    overshootClamping: true,   // Prevent overshoot for crisp stops
   } as WithSpringConfig,
 
   /**
@@ -48,11 +58,13 @@ export const springConfigs = {
     damping: 18,
     stiffness: 180,
     mass: 0.6,
+    overshootClamping: true,   // Smooth, controlled motion
   } as WithSpringConfig,
 } as const;
 
 /**
  * Timing animation configurations
+ * Platform-optimized for consistent cross-platform performance
  */
 export const timingConfigs = {
   /**
@@ -60,7 +72,7 @@ export const timingConfigs = {
    * Use for: Button feedback, instant responses
    */
   quick: {
-    duration: 150,
+    duration: Platform.select({ ios: 150, android: 120 }),  // Faster on Android
     easing: Easing.out(Easing.ease),
   } as WithTimingConfig,
 
@@ -69,7 +81,7 @@ export const timingConfigs = {
    * Use for: Most UI transitions, modal presentations
    */
   standard: {
-    duration: 250,
+    duration: Platform.select({ ios: 250, android: 220 }),  // Slightly faster on Android
     easing: Easing.inOut(Easing.ease),
   } as WithTimingConfig,
 
@@ -91,6 +103,61 @@ export const timingConfigs = {
     easing: Easing.linear,
   } as WithTimingConfig,
 } as const;
+
+/**
+ * Decay animation configurations for momentum/flick gestures
+ * Creates natural deceleration with optional rubber-banding at boundaries
+ */
+export const decayConfigs = {
+  /**
+   * Flick decay - High velocity, natural deceleration
+   * Use for: Swipe-to-dismiss, flick gestures, momentum scrolling
+   */
+  flick: {
+    deceleration: 0.998,      // Very gradual slowdown
+    velocityFactor: 1,         // Full velocity applied
+    rubberBandEffect: true,    // Bounce at boundaries
+    rubberBandFactor: 0.6,     // Moderate bounce strength
+    clamp: undefined,          // No boundaries (set per-use)
+  } as WithDecayConfig,
+
+  /**
+   * Scroll decay - Moderate velocity, controlled deceleration
+   * Use for: Custom scroll views, pan gestures with momentum
+   */
+  scroll: {
+    deceleration: 0.995,       // Faster slowdown than flick
+    velocityFactor: 0.8,       // Slightly reduced velocity
+    rubberBandEffect: true,
+    rubberBandFactor: 0.4,     // Subtle bounce
+    clamp: undefined,
+  } as WithDecayConfig,
+
+  /**
+   * Snap decay - Quick settling, snaps to position
+   * Use for: Carousel items, swipeable cards with snap points
+   */
+  snap: {
+    deceleration: 0.99,        // Fast deceleration
+    velocityFactor: 0.6,       // Reduced velocity
+    rubberBandEffect: false,   // No bounce, crisp snap
+    clamp: undefined,
+  } as WithDecayConfig,
+} as const;
+
+/**
+ * Platform-specific spring configs
+ * Android benefits from overshootClamping, iOS handles bounces better
+ */
+export const platformSpringConfigs = Platform.select({
+  ios: springConfigs,
+  android: {
+    gentle: { ...springConfigs.gentle, overshootClamping: true },
+    bouncy: { ...springConfigs.bouncy, overshootClamping: true, damping: 12 },
+    snappy: { ...springConfigs.snappy, overshootClamping: true },
+    smooth: { ...springConfigs.smooth, overshootClamping: true },
+  },
+}) as typeof springConfigs;
 
 /**
  * Animation value presets
@@ -214,3 +281,106 @@ export const createCelebrationAnimation = () => {
     }),
   };
 };
+
+/**
+ * Platform-specific hardware acceleration props
+ * Optimizes rendering performance for animated components
+ */
+export const platformHardwareProps = Platform.select({
+  ios: {
+    shouldRasterizeIOS: true,  // Cache layer for better performance
+  },
+  android: {
+    renderToHardwareTextureAndroid: true,  // Enable hardware texture
+    needsOffscreenAlphaCompositing: false, // Disable unless needed for opacity
+  },
+}) as const;
+
+/**
+ * Get platform-optimized text props for animated text
+ * Android requires hardware texture for smooth animated text
+ */
+export const getAnimatedTextProps = () => ({
+  ...Platform.select({
+    android: {
+      renderToHardwareTextureAndroid: true,
+    },
+    ios: {
+      shouldRasterizeIOS: true,
+    },
+  }),
+});
+
+/**
+ * Transform helpers for GPU-accelerated animations
+ * Always use transforms instead of layout properties for best performance
+ */
+export const createTransform = {
+  /**
+   * Translate helper - Use instead of left/right/top/bottom
+   */
+  translate: (x: number, y: number = 0) => [
+    { translateX: x },
+    { translateY: y },
+  ],
+
+  /**
+   * Scale helper - Use instead of width/height changes
+   */
+  scale: (scale: number) => [{ scale }],
+
+  /**
+   * Rotate helper - Degrees to transform
+   */
+  rotate: (degrees: number) => [{ rotate: `${degrees}deg` }],
+
+  /**
+   * Combined transform - All transformations in order
+   */
+  combined: (x: number, y: number, scale: number, rotation: number) => [
+    { translateX: x },
+    { translateY: y },
+    { scale },
+    { rotate: `${rotation}deg` },
+  ],
+};
+
+/**
+ * Memory optimization - Use for gesture memoization
+ * Prevents re-creating gesture objects on every render
+ *
+ * Usage:
+ * ```typescript
+ * const gesture = useMemo(
+ *   () => createGesture(dependencies),
+ *   [dependencies]
+ * );
+ * ```
+ */
+export const gestureConfig = {
+  /**
+   * Standard pan gesture config
+   */
+  pan: {
+    activeOffsetX: [-10, 10],
+    activeOffsetY: [-10, 10],
+    failOffsetX: [-5, 5],
+    failOffsetY: [-5, 5],
+  },
+
+  /**
+   * Horizontal-only pan
+   */
+  panHorizontal: {
+    activeOffsetX: [-10, 10],
+    failOffsetY: [-10, 10],
+  },
+
+  /**
+   * Vertical-only pan
+   */
+  panVertical: {
+    activeOffsetY: [-10, 10],
+    failOffsetX: [-10, 10],
+  },
+} as const;

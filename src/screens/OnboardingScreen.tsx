@@ -16,7 +16,6 @@ import {
   Image,
   TextInput,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSettingsStore } from '@/stores';
 import {
   OnboardingPagination,
@@ -147,10 +146,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
       >
         {ONBOARDING_SCREENS.map((screen, index) => (
           <View key={screen.id} style={styles.screenContainer}>
-            <Animated.View
-              entering={FadeInDown.delay(index * 100).duration(600)}
-              style={styles.contentContainer}
-            >
+            <View style={styles.contentContainer}>
               {/* Illustration */}
               <View style={styles.illustrationContainer}>
                 <screen.Illustration size={340} />
@@ -169,16 +165,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                 )}
                 <Text style={styles.description}>{screen.description}</Text>
               </View>
-            </Animated.View>
+            </View>
           </View>
         ))}
 
         {/* 4th Screen - UPI Setup */}
         <View key="upi-setup" style={styles.screenContainer}>
-          <Animated.View
-            entering={FadeInDown.delay(300).duration(600)}
-            style={styles.contentContainer}
-          >
+          <View style={styles.contentContainer}>
             {/* UPI Icon/Title */}
             <View style={styles.upiHeaderContainer}>
               <Text style={styles.upiEmoji}>💳</Text>
@@ -232,7 +225,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                 </Text>
               </View>
             </View>
-          </Animated.View>
+          </View>
         </View>
       </ScrollView>
 

@@ -9,19 +9,20 @@
  * Uses Reanimated 3 Gesture Handler
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ViewStyle, Pressable, Alert } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withDecay,
   runOnJS,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { User, Phone, Send } from 'lucide-react-native';
 import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
-import { springConfigs } from '../utils/animations';
+import { springConfigs, decayConfigs, platformHardwareProps } from '../utils/animations';
 import type { Karzedaar, Bill } from '../types';
 import { PaymentStatus } from '../types';
 import * as Haptics from 'expo-haptics';
@@ -94,14 +95,14 @@ export const SwipeableKarzedaarCard: React.FC<SwipeableKarzedaarCardProps> = ({
 
   const hasPending = pendingAmountPaise > 0;
 
-  const triggerHaptic = () => {
+  const triggerHaptic = useCallback(() => {
     if (hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-  };
+  }, [hapticsEnabled]);
 
-  const handleRemind = () => {
-    // Reset position
+  const handleRemind = useCallback(() => {
+    // Reset position with smooth spring
     translateX.value = withSpring(0, springConfigs.smooth);
     setRemindRevealed(false);
 
@@ -120,57 +121,89 @@ export const SwipeableKarzedaarCard: React.FC<SwipeableKarzedaarCardProps> = ({
           {
             text: 'Send',
             onPress: () => {
-              // Handle reminder sending
               console.log('Sending reminder to', karzedaar.name);
             },
           },
         ]
       );
     }
-  };
+  }, [karzedaar.name, onRemind, translateX, triggerHaptic]);
 
-  const gestureHandler = (event: any) => {
-    'worklet';
-    const { translationX, state } = event.nativeEvent;
+  // Memoized Pan gesture with improved performance
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .enabled(hasPending)
+        .activeOffsetX([-10, 10])
+        .failOffsetY([-10, 10])
+        .maxPointers(1)
+        .onBegin(() => {
+          'worklet';
+          hasTriggeredHaptic.value = false;
+        })
+        .onUpdate((event) => {
+          'worklet';
+          const translationX = event.translationX;
 
-    if (state === 2) { // ACTIVE
-      // Only allow left swipe (negative values) and cap at MAX_SWIPE
-      if (translationX < 0) {
-        translateX.value = Math.max(translationX, MAX_SWIPE);
+          // Only allow left swipe (negative values) and cap at MAX_SWIPE
+          if (translationX < 0) {
+            translateX.value = Math.max(translationX, MAX_SWIPE);
 
-        // Trigger haptic ONCE at threshold crossing
-        if (translationX < SWIPE_THRESHOLD && !hasTriggeredHaptic.value && hapticsEnabled) {
-          hasTriggeredHaptic.value = true;
-          runOnJS(triggerHaptic)();
-        }
-      } else {
-        translateX.value = 0;
-      }
-    } else if (state === 5) { // END
-      // Reset haptic trigger
-      hasTriggeredHaptic.value = false;
+            // Trigger haptic ONCE at threshold crossing
+            if (
+              translationX < SWIPE_THRESHOLD &&
+              !hasTriggeredHaptic.value &&
+              hapticsEnabled
+            ) {
+              hasTriggeredHaptic.value = true;
+              runOnJS(triggerHaptic)();
+            }
+          } else {
+            translateX.value = 0;
+          }
+        })
+        .onEnd((event) => {
+          'worklet';
+          // Reset haptic trigger
+          hasTriggeredHaptic.value = false;
 
-      // If swiped past threshold, snap to reveal state
-      if (translateX.value < SWIPE_THRESHOLD) {
-        translateX.value = withSpring(SNAP_POINT, {
-          ...springConfigs.smooth,
-          overshootClamping: true,
-        });
-        runOnJS(setRemindRevealed)(true);
-      } else {
-        // Otherwise snap back
-        translateX.value = withSpring(0, {
-          ...springConfigs.smooth,
-          overshootClamping: true,
-        });
-        runOnJS(setRemindRevealed)(false);
-      }
-    } else if (state === 1) { // BEGIN
-      // Reset haptic trigger when gesture starts
-      hasTriggeredHaptic.value = false;
-    }
-  };
+          // If swiped past threshold, snap to reveal state
+          if (translateX.value < SWIPE_THRESHOLD) {
+            // Add momentum if velocity is high
+            if (event.velocityX < -500) {
+              translateX.value = withDecay({
+                ...decayConfigs.snap,
+                velocity: event.velocityX,
+                clamp: [SNAP_POINT, 0],
+              });
+            } else {
+              translateX.value = withSpring(SNAP_POINT, {
+                ...springConfigs.smooth,
+                overshootClamping: true,
+              });
+            }
+            runOnJS(setRemindRevealed)(true);
+          } else {
+            // Snap back with momentum if flicking
+            if (event.velocityX > 500) {
+              translateX.value = withDecay({
+                ...decayConfigs.snap,
+                velocity: event.velocityX,
+                clamp: [0, 100],
+              });
+            } else {
+              translateX.value = withSpring(0, {
+                ...springConfigs.smooth,
+                overshootClamping: true,
+              });
+            }
+            runOnJS(setRemindRevealed)(false);
+          }
+        }),
+    [hasPending, hapticsEnabled, triggerHaptic, hasTriggeredHaptic, translateX]
+  );
 
+  // Memoized animated styles for performance
   const cardAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
     return {
@@ -179,7 +212,7 @@ export const SwipeableKarzedaarCard: React.FC<SwipeableKarzedaarCardProps> = ({
         { scale: withSpring(pressed ? 0.98 : 1, springConfigs.gentle) },
       ],
     };
-  });
+  }, [translateX, pressed]);
 
   const actionAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
@@ -187,7 +220,7 @@ export const SwipeableKarzedaarCard: React.FC<SwipeableKarzedaarCardProps> = ({
     return {
       opacity: withSpring(opacity, springConfigs.snappy),
     };
-  });
+  }, [translateX]);
 
   const initials = getInitials(karzedaar.name);
   const hasContactInfo = karzedaar.phone || karzedaar.upiId;
@@ -208,15 +241,12 @@ export const SwipeableKarzedaarCard: React.FC<SwipeableKarzedaarCardProps> = ({
         </Animated.View>
       </View>
 
-      {/* Swipeable Card */}
-      <PanGestureHandler
-        onGestureEvent={gestureHandler}
-        enabled={hasPending}
-        activeOffsetX={[-10, 10]}
-        failOffsetY={[-10, 10]}
-        maxPointers={1}
-      >
-        <Animated.View style={cardAnimatedStyle}>
+      {/* Swipeable Card with optimized gesture handler */}
+      <GestureDetector gesture={panGesture}>
+        <Animated.View
+          style={cardAnimatedStyle}
+          {...platformHardwareProps}
+        >
           <Pressable
             onPress={onPress}
             onPressIn={() => setPressed(true)}
@@ -301,7 +331,7 @@ export const SwipeableKarzedaarCard: React.FC<SwipeableKarzedaarCardProps> = ({
             </GlassCard>
           </Pressable>
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 };

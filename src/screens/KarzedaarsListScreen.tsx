@@ -26,7 +26,6 @@ import {
   RefreshControl,
   SafeAreaView,
   StatusBar,
-  InteractionManager,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Search, X, Users } from 'lucide-react-native';
@@ -35,6 +34,7 @@ import { tokens } from '@/theme/ThemeProvider';
 import { KarzedaarCard, GlassCard, LoadingSpinner, ScreenHeader } from '@/components';
 import { useKarzedaarsStore, useBillStore, useSettingsStore } from '@/stores';
 import type { Karzedaar } from '@/types';
+import { flashListPerformanceProps } from '@/utils/performance';
 
 export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = ({ navigation }) => {
   // State
@@ -189,6 +189,7 @@ export const KarzedaarsListScreen: React.FC<KarzedaarsListScreenProps> = ({ navi
             )}
             keyExtractor={(item) => item.id}
             estimatedItemSize={120}
+            drawDistance={flashListPerformanceProps.drawDistance}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             refreshControl={

@@ -1,9 +1,7 @@
 /**
- * Hooks barrel export
- * Centralizes all custom hooks for easy importing
+ * Hooks - Custom React hooks for animations and interactions
  */
 
-export { useHaptics } from './useHaptics';
 export { useButtonAnimation } from './useButtonAnimation';
+export { useHaptics } from './useHaptics';
 export type { HapticType } from './useHaptics';
-export type { UseButtonAnimationOptions } from './useButtonAnimation';

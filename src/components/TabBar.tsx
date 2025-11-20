@@ -5,7 +5,7 @@
  * Follows earthen design system with terracotta accent for active tabs.
  */
 
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -17,6 +17,7 @@ import * as Haptics from 'expo-haptics';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Home, ClipboardList, TrendingUp, Users, User } from 'lucide-react-native';
 import { tokens } from '@/theme/tokens';
+import { springConfigs, timingConfigs, platformHardwareProps } from '@/utils/animations';
 
 /**
  * Tab Icon Components
@@ -92,37 +93,43 @@ const TabButton: React.FC<TabButtonProps> = ({ route, isFocused, onPress, onLong
     inactive: tokens.colors.text.tertiary
   };
 
-  // Animated styles for press state
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: withSpring(isFocused ? 1 : 0.95, tokens.animation.spring.gentle),
-      },
-    ],
-  }));
-
-  // Animated styles for active indicator
-  const indicatorStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(isFocused ? 1 : 0, {
-      duration: tokens.animation.duration.normal,
-    }),
-    transform: [
-      {
-        scaleX: withSpring(isFocused ? 1 : 0.5, tokens.animation.spring.snappy),
-      },
-    ],
-  }));
-
-  const handlePress = () => {
+  // Memoized press handler
+  const handlePress = useCallback(() => {
     if (!isFocused) {
       // Haptic feedback on tab switch
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     onPress();
-  };
+  }, [isFocused, onPress]);
 
-  const iconColor = isFocused ? colors.active : colors.inactive;
-  const labelColor = isFocused ? colors.active : tokens.colors.text.tertiary;
+  // Memoized animated styles for press state
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      transform: [
+        {
+          scale: withSpring(isFocused ? 1 : 0.95, springConfigs.gentle),
+        },
+      ],
+    };
+  }, [isFocused]);
+
+  // Memoized animated styles for active indicator
+  const indicatorStyle = useAnimatedStyle(() => {
+    'worklet';
+    return {
+      opacity: withTiming(isFocused ? 1 : 0, timingConfigs.quick),
+      transform: [
+        {
+          scaleX: withSpring(isFocused ? 1 : 0.5, springConfigs.snappy),
+        },
+      ],
+    };
+  }, [isFocused]);
+
+  // Memoized colors to prevent re-calculations
+  const iconColor = useMemo(() => isFocused ? colors.active : colors.inactive, [isFocused, colors]);
+  const labelColor = useMemo(() => isFocused ? colors.active : tokens.colors.text.tertiary, [isFocused, colors]);
 
   return (
     <AnimatedPressable
@@ -133,9 +140,13 @@ const TabButton: React.FC<TabButtonProps> = ({ route, isFocused, onPress, onLong
       accessibilityState={{ selected: isFocused }}
       accessibilityLabel={`${label} tab`}
       accessibilityHint={`Navigate to ${label} screen`}
+      {...platformHardwareProps}
     >
       {/* Active Indicator */}
-      <Animated.View style={[styles.activeIndicator, { backgroundColor: colors.active }, indicatorStyle]} />
+      <Animated.View
+        style={[styles.activeIndicator, { backgroundColor: colors.active }, indicatorStyle]}
+        {...platformHardwareProps}
+      />
 
       {/* Icon */}
       {IconComponent && (

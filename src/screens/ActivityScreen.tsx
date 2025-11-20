@@ -20,7 +20,6 @@ import {
   RefreshControl,
   KeyboardAvoidingView,
   ScrollView,
-  InteractionManager,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Search, X, FileText } from 'lucide-react-native';
@@ -32,6 +31,7 @@ import type { Bill } from '@/types';
 import { useBillStore } from '@/stores';
 import type { ActivityScreenProps } from '@/navigation/types';
 import { tokens } from '@/theme/ThemeProvider';
+import { flashListPerformanceProps } from '@/utils/performance';
 
 type FilterType = 'all' | 'thisMonth' | 'lastMonth' | 'settled' | 'unsettled';
 
@@ -345,7 +345,8 @@ export const ActivityScreen: React.FC<ActivityScreenProps> = ({ navigation }) =>
               ref={listRef}
               data={groupedActivities}
               renderItem={renderItem}
-              estimatedItemSize={100}
+              estimatedItemSize={flashListPerformanceProps.estimatedItemSize}
+              drawDistance={flashListPerformanceProps.drawDistance}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               refreshControl={

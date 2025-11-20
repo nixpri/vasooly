@@ -1,12 +1,18 @@
 /**
  * AnimatedButton - TouchableOpacity with built-in press animations and haptic feedback
  * Drop-in replacement for TouchableOpacity with smooth scale/opacity animations
+ *
+ * Performance optimizations:
+ * - Memoized animation handlers
+ * - GPU-accelerated transforms
+ * - Platform-specific hardware acceleration
  */
 
 import React from 'react';
 import { TouchableOpacity, type TouchableOpacityProps, type StyleProp, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useButtonAnimation } from '@/hooks';
+import { useButtonAnimation } from '../hooks/useButtonAnimation';
+import { platformHardwareProps } from '../utils/animations';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -65,6 +71,7 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       onPressIn={combinedPressIn}
       onPressOut={combinedPressOut}
       activeOpacity={1} // Disable default opacity since we handle it
+      {...platformHardwareProps}
       {...rest}
     >
       {children}

@@ -30,6 +30,7 @@ import { BalanceCard } from '../components/BalanceCard';
 import { TransactionCard } from '../components/TransactionCard';
 import { PaymentStatus } from '../types';
 import type { DashboardScreenProps } from '@/navigation/types';
+import { listPerformanceProps } from '../utils/performance';
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   // Zustand stores
@@ -179,8 +180,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           />
         }
         showsVerticalScrollIndicator={false}
-        removeClippedSubviews={false}
-        scrollEventThrottle={16}
+        removeClippedSubviews={listPerformanceProps.removeClippedSubviews}
+        scrollEventThrottle={listPerformanceProps.scrollEventThrottle}
       >
 
         {/* Balance Card */}

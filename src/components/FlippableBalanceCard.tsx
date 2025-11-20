@@ -8,10 +8,9 @@
  * Uses 3D flip animation with Reanimated 3
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle, Pressable, Platform } from 'react-native';
 import Animated, {
-  FadeInDown,
   useAnimatedStyle,
   withSpring,
   withTiming,
@@ -21,7 +20,7 @@ import Animated, {
 import { ChevronRight, TrendingUp, Calendar, Percent, RotateCcw } from 'lucide-react-native';
 import { tokens } from '../theme/tokens';
 import { GlassCard } from './GlassCard';
-import { springConfigs } from '../utils/animations';
+import { springConfigs, platformHardwareProps, timingConfigs } from '../utils/animations';
 
 interface BalanceCardProps {
   /** Total vasooly amount left to collect across all bills (in paise) */
@@ -81,11 +80,11 @@ export const FlippableBalanceCard: React.FC<BalanceCardProps> = ({
     if (Platform.OS === 'android') {
       // Android: Use simple opacity transition (Fabric-compatible)
       if (newFlipped) {
-        frontOpacity.value = withTiming(0, { duration: 300 });
-        backOpacity.value = withTiming(1, { duration: 300 });
+        frontOpacity.value = withTiming(0, timingConfigs.standard);
+        backOpacity.value = withTiming(1, timingConfigs.standard);
       } else {
-        frontOpacity.value = withTiming(1, { duration: 300 });
-        backOpacity.value = withTiming(0, { duration: 300 });
+        frontOpacity.value = withTiming(1, timingConfigs.standard);
+        backOpacity.value = withTiming(0, timingConfigs.standard);
       }
     } else {
       // iOS: Keep 3D flip animation
@@ -93,7 +92,7 @@ export const FlippableBalanceCard: React.FC<BalanceCardProps> = ({
     }
   };
 
-  // Front face animation
+  // Front face animation (memoized for performance)
   const frontAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
 
@@ -103,7 +102,7 @@ export const FlippableBalanceCard: React.FC<BalanceCardProps> = ({
         opacity: frontOpacity.value,
       };
     } else {
-      // iOS: 3D flip with rotateY
+      // iOS: 3D flip with rotateY and overshootClamping for smooth motion
       const rotateY = withSpring(rotation.value, {
         ...springConfigs.smooth,
         overshootClamping: true,
@@ -120,9 +119,9 @@ export const FlippableBalanceCard: React.FC<BalanceCardProps> = ({
         backfaceVisibility: 'hidden' as const,
       };
     }
-  });
+  }, [rotation, frontOpacity]);
 
-  // Back face animation
+  // Back face animation (memoized for performance)
   const backAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
 
@@ -132,7 +131,7 @@ export const FlippableBalanceCard: React.FC<BalanceCardProps> = ({
         opacity: backOpacity.value,
       };
     } else {
-      // iOS: 3D flip with rotateY
+      // iOS: 3D flip with rotateY and overshootClamping for smooth motion
       const rotateY = withSpring(rotation.value - 180, {
         ...springConfigs.smooth,
         overshootClamping: true,
@@ -149,15 +148,15 @@ export const FlippableBalanceCard: React.FC<BalanceCardProps> = ({
         backfaceVisibility: 'hidden' as const,
       };
     }
-  });
+  }, [rotation, backOpacity]);
 
   return (
-    <Animated.View
-      entering={FadeInDown.springify().damping(15).stiffness(150)}
-      style={style}
-    >
+    <View style={style}>
       {/* Front Face */}
-      <Animated.View style={[styles.cardFace, frontAnimatedStyle]}>
+      <Animated.View
+        style={[styles.cardFace, frontAnimatedStyle]}
+        {...platformHardwareProps}
+      >
         <GlassCard borderRadius={tokens.radius.lg}>
           <Pressable onPress={handleFlip} style={styles.container}>
             {/* Flip hint icon */}
@@ -223,7 +222,10 @@ export const FlippableBalanceCard: React.FC<BalanceCardProps> = ({
       </Animated.View>
 
       {/* Back Face */}
-      <Animated.View style={[styles.cardFace, styles.backFace, backAnimatedStyle]}>
+      <Animated.View
+        style={[styles.cardFace, styles.backFace, backAnimatedStyle]}
+        {...platformHardwareProps}
+      >
         <GlassCard borderRadius={tokens.radius.lg}>
           <Pressable onPress={handleFlip} style={styles.container}>
             {/* Flip hint icon */}
@@ -273,7 +275,7 @@ export const FlippableBalanceCard: React.FC<BalanceCardProps> = ({
           </Pressable>
         </GlassCard>
       </Animated.View>
-    </Animated.View>
+    </View>
   );
 };
 

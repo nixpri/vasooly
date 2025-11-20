@@ -27,6 +27,12 @@ import {
 import { TabBar } from '@/components/TabBar';
 import { useBillStore, useHistoryStore, useSettingsStore, useKarzedaarsStore } from '@/stores';
 import { tokens } from '@/theme/ThemeProvider';
+import {
+  performanceStackOptions,
+  performanceTabOptions,
+  configureHighFrameRate,
+  deferAfterInteraction,
+} from '@/utils/performance';
 import type {
   RootStackParamList,
   TabParamList,
@@ -57,7 +63,7 @@ const HomeNavigator: React.FC = () => {
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
-        detachInactiveScreens: false,
+        ...performanceStackOptions,
       }}
     >
       <HomeStack.Screen name="Dashboard" component={DashboardScreen} />
@@ -92,7 +98,7 @@ const ActivityNavigator: React.FC = () => {
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
-        detachInactiveScreens: false,
+        ...performanceStackOptions,
       }}
     >
       <ActivityStack.Screen
@@ -141,7 +147,7 @@ const KarzedaarsNavigator: React.FC = () => {
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
-        detachInactiveScreens: false,
+        ...performanceStackOptions,
       }}
     >
       <KarzedaarsStack.Screen name="KarzedaarsList" component={KarzedaarsListScreen} />
@@ -175,7 +181,7 @@ const ProfileNavigator: React.FC = () => {
         headerShown: false,
         gestureEnabled: true,
         cardStyle: { backgroundColor: tokens.colors.background.base },
-        detachInactiveScreens: false,
+        ...performanceStackOptions,
       }}
     >
       <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
@@ -201,6 +207,7 @@ const MainTabNavigator: React.FC = () => {
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{
         headerShown: false,
+        ...performanceTabOptions,
       }}
     >
       <Tab.Screen
@@ -288,16 +295,24 @@ export const AppNavigator: React.FC = () => {
   const { loadSettings, onboardingCompleted } = useSettingsStore();
   const { loadKarzedaars } = useKarzedaarsStore();
 
-  // Load initial data on mount
+  // Configure 120 FPS support on mount
+  useEffect(() => {
+    configureHighFrameRate();
+  }, []);
+
+  // Load initial data on mount - deferred after interactions for smooth app start
   useEffect(() => {
     const initializeStores = async () => {
       try {
-        await Promise.all([
-          loadAllBills(),
-          loadBills(),
-          loadSettings(),
-          loadKarzedaars(),
-        ]);
+        // Defer heavy data loading until after initial navigation animations
+        await deferAfterInteraction(async () => {
+          await Promise.all([
+            loadAllBills(),
+            loadBills(),
+            loadSettings(),
+            loadKarzedaars(),
+          ]);
+        });
       } catch (error) {
         console.error('Failed to initialize stores:', error);
       }

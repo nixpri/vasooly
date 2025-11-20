@@ -7,10 +7,15 @@
  * - Badge pulse animation
  * - Haptic feedback integration
  *
+ * Performance optimizations:
+ * - Memoized animated styles
+ * - GPU-accelerated transforms
+ * - Platform-specific hardware acceleration
+ *
  * Uses Reanimated 3 for smooth 60fps animations
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -22,7 +27,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LucideIcon } from 'lucide-react-native';
 import { tokens } from '../theme/tokens';
-import { springConfigs } from '../utils/animations';
+import { springConfigs, timingConfigs, platformHardwareProps } from '../utils/animations';
 
 interface AnimatedTabIconProps {
   /** Lucide icon component */
@@ -81,42 +86,47 @@ export const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({
     }
   }, [badgeCount, badgeScale]);
 
-  const handlePress = () => {
-    // Immediate press feedback
+  const handlePress = useCallback(() => {
+    // Immediate press feedback with optimized spring
     scale.value = withSequence(
       withSpring(0.85, springConfigs.snappy),
       withSpring(1, springConfigs.bouncy)
     );
 
     onPress?.();
-  };
+  }, [onPress, scale]);
 
+  // Memoized animated style for icon with worklet directive
   const iconAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
     return {
       transform: [{ scale: scale.value }],
     };
-  });
+  }, [scale]);
 
+  // Memoized animated style for badge with improved timing
   const badgeAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
     return {
       transform: [{ scale: badgeScale.value }],
-      opacity: withTiming(badgeCount > 0 ? 1 : 0, {
-        duration: 200,
-        easing: Easing.inOut(Easing.ease),
-      }),
+      opacity: withTiming(badgeCount > 0 ? 1 : 0, timingConfigs.quick),
     };
-  });
+  }, [badgeScale, badgeCount]);
 
   return (
     <Pressable onPress={handlePress} hitSlop={8} style={[styles.container, style]}>
-      <Animated.View style={[styles.iconContainer, iconAnimatedStyle]}>
+      <Animated.View
+        style={[styles.iconContainer, iconAnimatedStyle]}
+        {...platformHardwareProps}
+      >
         <Icon size={size} color={iconColor} strokeWidth={focused ? 2.5 : 2} />
 
         {/* Badge */}
         {badgeCount > 0 && (
-          <Animated.View style={[styles.badge, badgeAnimatedStyle]}>
+          <Animated.View
+            style={[styles.badge, badgeAnimatedStyle]}
+            {...platformHardwareProps}
+          >
             <View style={styles.badgeDot} />
           </Animated.View>
         )}
